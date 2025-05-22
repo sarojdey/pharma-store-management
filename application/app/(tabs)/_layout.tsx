@@ -1,11 +1,13 @@
-import { Tabs } from "expo-router";
-import React from "react";
-
 import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { Colors } from "@/constants/Colors";
-
+import { Tabs } from "expo-router";
+import React from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const barHeight = Math.max(insets.bottom + 65, insets.bottom * 2 + 10);
+
   return (
     <Tabs
       screenOptions={{
@@ -13,21 +15,22 @@ export default function TabLayout() {
         tabBarInactiveTintColor: Colors.tabIconInactive,
         headerShown: false,
         tabBarButton: HapticTab,
-
         tabBarStyle: {
           backgroundColor: Colors.background,
-          borderRadius: 35,
-          height: 65,
           position: "absolute",
           left: 0,
           right: 0,
           bottom: 0,
-          marginHorizontal: 20,
-          marginBottom: 30,
           elevation: 2,
-          borderWidth: 1,
-          borderColor: "#fafafa",
+          borderTopWidth: 1,
+          borderColor: "#ddd",
           paddingTop: 5,
+          minHeight: barHeight,
+        },
+
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "500",
         },
       }}
     >
@@ -36,7 +39,7 @@ export default function TabLayout() {
         options={{
           title: "Inventory",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={26} name="house.fill" color={color} />
+            <IconSymbol size={24} name="house.fill" color={color} />
           ),
         }}
       />
@@ -45,7 +48,7 @@ export default function TabLayout() {
         options={{
           title: "Orders",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={26} name="cart.fill" color={color} />
+            <IconSymbol size={24} name="cart.fill" color={color} />
           ),
         }}
       />
@@ -54,7 +57,7 @@ export default function TabLayout() {
         options={{
           title: "Notifications",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={26} name="bell.fill" color={color} />
+            <IconSymbol size={24} name="bell.fill" color={color} />
           ),
         }}
       />
@@ -63,7 +66,7 @@ export default function TabLayout() {
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={26} name="chart.bar.fill" color={color} />
+            <IconSymbol size={24} name="chart.bar.fill" color={color} />
           ),
         }}
       />

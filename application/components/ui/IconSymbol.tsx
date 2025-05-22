@@ -10,9 +10,9 @@ type IconMapping = Record<
 type IconSymbolName = keyof typeof MAPPING;
 
 const MAPPING = {
-  "house.fill": "inventory",
-  "cart.fill": "shopping-cart",
-  "bell.fill": "notifications",
+  "house.fill": "storefront",
+  "cart.fill": "add-shopping-cart",
+  "bell.fill": "notifications-none",
   "chart.bar.fill": "bar-chart",
   "chevron.left.forwardslash.chevron.right": "code",
   "chevron.right": "chevron-right",

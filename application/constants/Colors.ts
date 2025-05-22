@@ -4,5 +4,5 @@ export const Colors = {
   icon: "#687076",
   tabIconDefault: "#687076",
   tabIconActive: "#0087EB",
-  tabIconInactive: "#c0c0c0",
+  tabIconInactive: "#595959",
 };
