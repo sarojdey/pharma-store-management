@@ -28,7 +28,7 @@ const BUTTONS: {
     icon: "storefront",
     bg: "rgba(212, 236, 255, 0.10)",
     border: "rgba(97, 129, 155, 0.30)",
-    text: "rgb(97, 129, 155)",
+    text: "rgb(96, 148, 189)",
   },
   {
     key: "orders",
@@ -36,7 +36,7 @@ const BUTTONS: {
     icon: "cart",
     bg: "rgba(172, 255, 214, 0.10)",
     border: "rgba(85, 149, 117, 0.30)",
-    text: "rgb(32, 137, 84)",
+    text: "rgb(102, 173, 137)",
   },
   {
     key: "dashboard",
@@ -44,7 +44,7 @@ const BUTTONS: {
     icon: "chart.bar",
     bg: "rgba(227, 216, 255, 0.10)",
     border: "rgba(128, 109, 176, 0.30)",
-    text: "rgb(79, 46, 161)",
+    text: "rgb(128, 105, 185)",
   },
   {
     key: "alerts",
@@ -52,7 +52,7 @@ const BUTTONS: {
     icon: "bell",
     bg: "rgba(255, 232, 216, 0.10)",
     border: "rgba(155, 122, 98, 0.30)",
-    text: "rgb(161, 91, 40)",
+    text: "rgb(189, 135, 96)",
   },
 ];
 
