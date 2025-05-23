@@ -1,12 +1,7 @@
 import DrugCard from "@/components/ui/DrugCard";
 import { ScrollView, StyleSheet } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 export default function HomeScreen() {
-  const insets = useSafeAreaInsets();
-  const barHeight = Math.max(insets.bottom + 65, insets.bottom * 2 + 10);
   const drugs = [
     {
       id: "5255",
@@ -92,12 +87,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView>
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContainer,
-          { paddingBottom: barHeight },
-        ]}
-      >
+      <ScrollView contentContainerStyle={[styles.scrollContainer]}>
         {drugs.map((drug) => (
           <DrugCard key={drug.id} drug={drug} />
         ))}
