@@ -37,9 +37,18 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          title: "Home",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={24} name="house" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="inventory"
+        options={{
           title: "Inventory",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={24} name="house.fill" color={color} />
+            <IconSymbol size={24} name="storefront" color={color} />
           ),
         }}
       />
@@ -48,16 +57,7 @@ export default function TabLayout() {
         options={{
           title: "Orders",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={24} name="cart.fill" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: "Notifications",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={24} name="bell.fill" color={color} />
+            <IconSymbol size={24} name="cart" color={color} />
           ),
         }}
       />
@@ -66,7 +66,16 @@ export default function TabLayout() {
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={24} name="chart.bar.fill" color={color} />
+            <IconSymbol size={24} name="chart.bar" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: "Alerts",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={24} name="bell" color={color} />
           ),
         }}
       />

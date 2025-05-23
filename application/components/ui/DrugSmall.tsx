@@ -1,7 +1,13 @@
 import { StyleSheet, Image, View, Text } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-export default function BottleSmall({ drugName }: { drugName: string }) {
+export default function DrugSmall({
+  drugName,
+  drugType,
+}: {
+  drugName: string;
+  drugType: string;
+}) {
   const colorPalettes = [
     {
       dark: "#1b4039",
@@ -34,6 +40,15 @@ export default function BottleSmall({ drugName }: { drugName: string }) {
       accent: "#5a8b3c",
     },
   ];
+
+  type DrugType = "pills" | "syrup" | "syringe";
+
+  const typeImageMap: Record<DrugType, any> = {
+    pills: require("../../assets/images/bottle.png"),
+    syrup: require("../../assets/images/syrup.png"),
+    syringe: require("../../assets/images/syringe.png"),
+  };
+
   const randomNumber = Math.floor(Math.random() * 5);
   return (
     <LinearGradient
@@ -52,11 +67,13 @@ export default function BottleSmall({ drugName }: { drugName: string }) {
       ></LinearGradient>
       <View style={styles.imageContainer}>
         <Image
-          source={require("../../assets/images/bottle.png")}
+          source={typeImageMap[drugType as DrugType]}
           style={styles.image}
           resizeMode="contain"
         />
-        <Text style={styles.overlayText}>{drugName}</Text>
+        {drugType !== "syringe" && (
+          <Text style={styles.overlayText}>{drugName}</Text>
+        )}
       </View>
     </LinearGradient>
   );
@@ -67,9 +84,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     aspectRatio: 1,
-    width: 100,
+    width: 110,
     position: "relative",
-
     borderRadius: 10,
   },
   imageContainer: {
@@ -97,7 +113,7 @@ const styles = StyleSheet.create({
   overlayText: {
     position: "absolute",
     color: "black",
-    maxWidth: "50%",
+    maxWidth: "45%",
     height: "100%",
     textAlignVertical: "center",
     paddingTop: 20,

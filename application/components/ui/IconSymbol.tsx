@@ -1,22 +1,21 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { SymbolWeight, SymbolViewProps } from "expo-symbols";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import { SymbolViewProps } from "expo-symbols";
 import { ComponentProps } from "react";
 import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
 
-type IconMapping = Record<
-  SymbolViewProps["name"],
-  ComponentProps<typeof MaterialIcons>["name"]
+type IconMapping = Partial<
+  Record<SymbolViewProps["name"], ComponentProps<typeof AntDesign>["name"]>
 >;
-type IconSymbolName = keyof typeof MAPPING;
 
-const MAPPING = {
-  "house.fill": "storefront",
-  "cart.fill": "add-shopping-cart",
-  "bell.fill": "notifications-none",
-  "chart.bar.fill": "bar-chart",
-  "chevron.left.forwardslash.chevron.right": "code",
-  "chevron.right": "chevron-right",
-} as IconMapping;
+export type IconSymbolName = keyof typeof MAPPING;
+
+const MAPPING: IconMapping = {
+  house: "home",
+  storefront: "profile",
+  cart: "shoppingcart",
+  bell: "notification",
+  "chart.bar": "barschart",
+};
 
 export function IconSymbol({
   name,
@@ -28,14 +27,7 @@ export function IconSymbol({
   size?: number;
   color: string | OpaqueColorValue;
   style?: StyleProp<TextStyle>;
-  weight?: SymbolWeight;
 }) {
-  return (
-    <MaterialIcons
-      color={color}
-      size={size}
-      name={MAPPING[name]}
-      style={style}
-    />
-  );
+  const iconName = MAPPING[name]!;
+  return <AntDesign color={color} size={size} name={iconName} style={style} />;
 }

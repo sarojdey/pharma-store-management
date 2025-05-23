@@ -1,106 +1,135 @@
-import DrugCard from "@/components/ui/DrugCard";
-import { ScrollView, StyleSheet } from "react-native";
+import { IconSymbol } from "@/components/ui/IconSymbol";
+import React from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+
+import type { IconSymbolName } from "@/components/ui/IconSymbol";
+
+const BUTTONS: {
+  key: string;
+  label: string;
+  icon: IconSymbolName;
+  bg?: string;
+  border?: string;
+  text?: string;
+}[] = [
+  {
+    key: "inventory",
+    label: "Inventory",
+    icon: "storefront",
+    bg: "rgba(212, 236, 255, 0.10)",
+    border: "rgba(97, 129, 155, 0.30)",
+    text: "rgb(97, 129, 155)",
+  },
+  {
+    key: "orders",
+    label: "Orders",
+    icon: "cart",
+    bg: "rgba(172, 255, 214, 0.10)",
+    border: "rgba(85, 149, 117, 0.30)",
+    text: "rgb(32, 137, 84)",
+  },
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    icon: "chart.bar",
+    bg: "rgba(227, 216, 255, 0.10)",
+    border: "rgba(128, 109, 176, 0.30)",
+    text: "rgb(79, 46, 161)",
+  },
+  {
+    key: "alerts",
+    label: "Alerts",
+    icon: "bell",
+    bg: "rgba(255, 232, 216, 0.10)",
+    border: "rgba(155, 122, 98, 0.30)",
+    text: "rgb(161, 91, 40)",
+  },
+];
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const barHeight = Math.max(insets.bottom + 65, insets.bottom * 2 + 10);
-  const drugs = [
-    {
-      id: "5255",
-      drugName: "Zetramyline Velmoracil 500mg",
-      inStock: 100,
-      price: 19.99,
-      expiry: "2025-12-31",
-    },
-    {
-      id: "5256",
-      drugName: "Xentoril Dapsomine 250mg",
-      inStock: 54,
-      price: 12.49,
-      expiry: "2026-03-15",
-    },
-    {
-      id: "5257",
-      drugName: "Lortrazil Monohydrate 100mg",
-      inStock: 210,
-      price: 9.99,
-      expiry: "2025-08-20",
-    },
-    {
-      id: "5258",
-      drugName: "Vemotrazol Citrine 75mg",
-      inStock: 30,
-      price: 7.45,
-      expiry: "2024-11-10",
-    },
-    {
-      id: "5259",
-      drugName: "Tetravine Hydrex 150mg",
-      inStock: 120,
-      price: 14.25,
-      expiry: "2026-01-01",
-    },
-    {
-      id: "5260",
-      drugName: "Remorinax Plus 600mg",
-      inStock: 65,
-      price: 22.75,
-      expiry: "2026-06-30",
-    },
-    {
-      id: "5261",
-      drugName: "Carbotran Aezuline 50mg",
-      inStock: 98,
-      price: 5.99,
-      expiry: "2025-04-12",
-    },
-    {
-      id: "5262",
-      drugName: "Dextroquil Phenate 200mg",
-      inStock: 17,
-      price: 18.5,
-      expiry: "2024-09-05",
-    },
-    {
-      id: "5263",
-      drugName: "Nortazidine Omephex 400mg",
-      inStock: 300,
-      price: 27.3,
-      expiry: "2026-10-10",
-    },
-    {
-      id: "5264",
-      drugName: "Flumetox Ardanol 80mg",
-      inStock: 45,
-      price: 11.0,
-      expiry: "2025-07-07",
-    },
-  ];
+  const bottomPadding = Math.max(insets.bottom + 65, insets.bottom * 2 + 10);
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={styles.safe}>
       <ScrollView
         contentContainerStyle={[
           styles.scrollContainer,
-          { paddingBottom: barHeight },
+          { paddingBottom: bottomPadding },
         ]}
       >
-        {drugs.map((drug) => (
-          <DrugCard key={drug.id} drug={drug} />
-        ))}
+        <View style={styles.grid}>
+          {BUTTONS.map((btn) => (
+            <TouchableOpacity
+              key={btn.key}
+              style={[
+                styles.card,
+                {
+                  backgroundColor: btn.bg || "#fff",
+                  borderColor: btn.border || "#ccc",
+                },
+              ]}
+              onPress={() => console.log(`${btn.label} pressed`)}
+              activeOpacity={0.7}
+            >
+              <IconSymbol
+                style={styles.icon}
+                size={20}
+                name={btn.icon}
+                color={btn.text || "#000"}
+              />
+              <Text style={[styles.label, { color: btn.text || "#000" }]}>
+                {btn.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+  },
   scrollContainer: {
     justifyContent: "center",
     alignItems: "center",
-    padding: 8,
-    gap: 10,
+    padding: 18,
+  },
+  grid: {
+    width: "100%",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  card: {
+    width: "48%",
+    aspectRatio: 2.5,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+  },
+  icon: {
+    marginRight: 8,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "500",
   },
 });
