@@ -1,8 +1,10 @@
+import Feather from "@expo/vector-icons/Feather";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Image, Text, View } from "react-native";
 import "react-native-reanimated";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -15,12 +17,50 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="inventory" options={{ headerShown: false }} />
-        <Stack.Screen name="dashboard" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="dark" />
+      <SafeAreaView style={{ flex: 1 }}>
+        <View
+          style={{
+            width: "100%",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: "#f2f2f2",
+            borderBottomWidth: 1,
+            borderTopWidth: 1,
+            borderBottomColor: "#ccc",
+            borderTopColor: "#ccc",
+            paddingVertical: 20,
+            paddingHorizontal: 18,
+          }}
+        >
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <View
+              style={{
+                height: 24,
+                width: 24,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                source={require("../assets/images/capsule.png")}
+                style={{ height: "100%", width: "100%" }}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={{ fontWeight: "500", fontSize: 18, color: "#333333" }}>
+              Medicine Stockist
+            </Text>
+          </View>
+          <Feather name="menu" size={24} color="black" />
+        </View>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="inventory" options={{ headerShown: false }} />
+          <Stack.Screen name="dashboard" options={{ headerShown: false }} />
+        </Stack>
+      </SafeAreaView>
+      <StatusBar style="auto" />
     </SafeAreaProvider>
   );
 }
