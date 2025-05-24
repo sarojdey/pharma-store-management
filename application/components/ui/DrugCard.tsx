@@ -18,34 +18,84 @@ export default function DrugCard({
   const formattedPrice = Number(drug.price).toFixed(2);
 
   return (
-    <View style={styles.card}>
-      <View style={styles.mrpContainer}>
-        <Text style={styles.mrpLabel}>MRP</Text>
+    <View
+      style={[
+        styles.card,
+        drug.inStock > 50
+          ? { backgroundColor: "#f2f2f2", borderColor: "#ccc" }
+          : drug.inStock > 30
+          ? {
+              backgroundColor: "rgba(255, 228, 196, 0.76)", // orange-ish
+              borderColor: "rgb(201, 181, 153)",
+            }
+          : {
+              backgroundColor: "rgba(255, 184, 184, 0.76)", // red-ish
+              borderColor: "rgb(196, 147, 147)",
+            },
+      ]}
+    >
+      <View
+        style={[
+          styles.mrpContainer,
+          drug.inStock > 50 ? { borderColor: "#ccc" } : { borderColor: "#555" },
+        ]}
+      >
+        <Text
+          style={[
+            styles.mrpLabel,
+            drug.inStock > 50 ? { color: "#888" } : { color: "#555" },
+          ]}
+        >
+          MRP
+        </Text>
         <Text style={styles.mrpPrice}>₹{formattedPrice}</Text>
       </View>
 
-      <View style={styles.imageContainer}>
+      {/* <View style={styles.imageContainer}>
         <DrugSmall drugType={drug.drugType} drugName={drug.drugName} />
-      </View>
+      </View> */}
 
       <View style={styles.detailsContainer}>
         <View style={styles.headerRow}>
-          <Text style={styles.drugId}>
+          <Text
+            style={[
+              styles.drugId,
+              drug.inStock > 50 ? { color: "#888" } : { color: "#444" },
+            ]}
+          >
             ID: <Text>{drug.id}</Text>
           </Text>
           <View style={styles.editIcon}>
-            <AntDesign name="form" size={20} color="#bbb" />
+            <AntDesign
+              name="form"
+              size={20}
+              color={drug.inStock > 50 ? "#aaa" : "#666"}
+            />
           </View>
         </View>
 
         <Text style={styles.title}>{drug.drugName}</Text>
-        <Text style={styles.expiry}>Expiry: {drug.expiry}</Text>
+        <Text
+          style={[
+            styles.expiry,
+            drug.inStock > 50 ? { color: "#888" } : { color: "#444" },
+          ]}
+        >
+          Expiry: {drug.expiry}
+        </Text>
 
         <Text style={styles.price}>₹{formattedPrice}</Text>
         <Text style={styles.inStock}>
           In Stock:{" "}
           <Text
-            style={drug.inStock > 50 ? styles.inStockYes : styles.inStockNo}
+            style={[
+              { fontWeight: "500" },
+              drug.inStock > 50
+                ? { color: "#1fb005" }
+                : drug.inStock > 30
+                ? { color: "rgb(228, 125, 0)" }
+                : { color: "rgb(212, 0, 0)" },
+            ]}
           >
             {drug.inStock}
           </Text>
@@ -58,25 +108,20 @@ export default function DrugCard({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
     alignItems: "center",
     borderWidth: 1,
     borderRadius: 10,
-    borderColor: "#ddd",
-    marginHorizontal: 10,
-    marginVertical: 5,
-    backgroundColor: "#ffffff",
     position: "relative",
   },
   mrpContainer: {
     position: "absolute",
-    right: 10,
-    bottom: 10,
+    right: 14,
+    bottom: 14,
     borderWidth: 1,
     borderRadius: 8,
     padding: 8,
-    borderColor: "#ddd",
   },
   mrpLabel: {
     fontSize: 8,
@@ -115,23 +160,14 @@ const styles = StyleSheet.create({
   },
   drugId: {
     fontSize: 12,
-    color: "#aaa",
     marginVertical: 1,
   },
   inStock: {
     fontSize: 13,
     color: "#444",
   },
-  inStockYes: {
-    color: "#1fb005",
-    fontWeight: "500",
-  },
-  inStockNo: {
-    color: "#c7220c",
-    fontWeight: "500",
-  },
+
   expiry: {
     fontSize: 12,
-    color: "#aaa",
   },
 });

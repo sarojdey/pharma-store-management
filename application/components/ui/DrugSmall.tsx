@@ -39,6 +39,12 @@ export default function DrugSmall({
       light: "#a0c887",
       accent: "#5a8b3c",
     },
+    {
+      dark: "hsl(0, 0.00%, 25.50%)",
+      primary: "hsl(0, 0.00%, 39.60%)",
+      light: "hsl(95, 0%, 68%)",
+      accent: "hsl(95, 0%, 39%)",
+    },
   ];
 
   type DrugType = "pills" | "syrup" | "syringe";
@@ -52,17 +58,11 @@ export default function DrugSmall({
   const randomNumber = Math.floor(Math.random() * 5);
   return (
     <LinearGradient
-      colors={[
-        colorPalettes[randomNumber].dark,
-        colorPalettes[randomNumber].primary,
-      ]}
+      colors={[colorPalettes[5].dark, colorPalettes[5].primary]}
       style={styles.container}
     >
       <LinearGradient
-        colors={[
-          colorPalettes[randomNumber].light,
-          colorPalettes[randomNumber].accent,
-        ]}
+        colors={[colorPalettes[5].light, colorPalettes[5].accent]}
         style={styles.bgUpper}
       ></LinearGradient>
       <View style={styles.imageContainer}>

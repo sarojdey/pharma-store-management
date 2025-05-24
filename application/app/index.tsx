@@ -1,8 +1,8 @@
 import AntDesign from "@expo/vector-icons/AntDesign";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,66 +22,66 @@ const BUTTONS: {
   {
     key: "addStock",
     label: "Add to Stock",
-    icon: require("../assets/images/blueCard.png"),
+    icon: "store",
     description: "Add a new batch of medicine to your inventory.",
     bg: "rgba(201, 231, 255, 0.1)",
     border: "rgba(97, 129, 155, 0.30)",
-    text: "rgb(87, 134, 170)",
+    text: "rgb(70, 125, 168)",
   },
   {
     key: "stock",
     label: "View All Stock",
-    icon: require("../assets/images/greenCard.png"),
+    icon: "view-list",
     description: "See a list of all medicine batches in stock.",
     bg: "rgba(208, 255, 231, 0.1)",
     border: "rgba(85, 149, 117, 0.30)",
-    text: "rgb(92, 155, 123)",
+    text: "rgb(66, 160, 113)",
   },
   {
     key: "sales",
     label: "Sales",
-    icon: require("../assets/images/cyanCard.png"),
+    icon: "area-chart",
     description: "See a list of all completed sales transactions.",
     bg: "rgba(209, 253, 255, 0.1)",
     border: "rgba(109, 176, 171, 0.30)",
-    text: "rgb(83, 145, 141)",
+    text: "rgb(73, 147, 142)",
   },
   {
     key: "expiryAlerts",
     label: "Expiry Alerts",
-    icon: require("../assets/images/redCard.png"),
+    icon: "calendar-month",
     description: "Check which medicine batches are close to expiry.",
     bg: "rgba(255, 219, 219, 0.1)",
     border: "rgba(155, 98, 98, 0.30)",
-    text: "rgb(176, 99, 99)",
+    text: "rgb(178, 85, 85)",
   },
 
   {
     key: "createOrderList",
     label: "Create Order List",
-    icon: require("../assets/images/purpleCard.png"),
+    icon: "shopping-cart",
     description: "Create a sale entry and update stock.",
     bg: "rgba(236, 219, 255, 0.1)",
     border: "rgba(115, 98, 155, 0.3)",
-    text: "rgb(130, 107, 175)",
+    text: "rgb(122, 96, 176)",
   },
   {
     key: "lowStockAlerts",
     label: "Low Stock Alerts",
-    icon: require("../assets/images/orangeCard.png"),
+    icon: "move-to-inbox",
     description: "Check medicines that need restocking.",
     bg: "rgba(255, 233, 219, 0.1)",
     border: "rgba(155, 115, 98, 0.3)",
-    text: "rgb(178, 123, 90)",
+    text: "rgb(181, 115, 74)",
   },
   {
     key: "history",
     label: "History",
-    icon: require("../assets/images/yellowCard.png"),
+    icon: "watch-later",
     description: "View a log of all actions like stock updates and sales.",
     bg: "rgba(255, 251, 219, 0.1)",
     border: "rgba(155, 151, 98, 0.3)",
-    text: "rgb(142, 134, 66)",
+    text: "rgb(153, 133, 52)",
   },
 ];
 
@@ -114,13 +114,7 @@ export default function HomeScreen() {
             ]}
             activeOpacity={0.7}
           >
-            <View style={styles.imageContainer}>
-              <Image
-                source={btn.icon}
-                style={styles.image}
-                resizeMode="contain"
-              />
-            </View>
+            <MaterialIcons name={btn.icon} size={100} color={btn.text} />
             <Text style={[styles.label, { color: btn.text || "#000" }]}>
               {btn.label}
             </Text>
@@ -147,17 +141,6 @@ const styles = StyleSheet.create({
   },
   chartLabel: { color: "#212121", fontWeight: "500" },
   chartIcon: { color: "#212121", marginRight: 8 },
-  imageContainer: {
-    height: 100,
-    width: 100,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  image: {
-    height: "100%",
-    width: "100%",
-  },
 
   scrollContainer: {
     justifyContent: "center",

@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     justifyContent: "center",
     alignItems: "center",
-    padding: 8,
-    gap: 10,
+    padding: 18,
+    gap: 14,
   },
 });

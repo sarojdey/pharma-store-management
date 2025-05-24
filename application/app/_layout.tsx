@@ -48,11 +48,11 @@ export default function RootLayout() {
                 resizeMode="contain"
               />
             </View>
-            <Text style={{ fontWeight: "500", fontSize: 18, color: "#333333" }}>
+            <Text style={{ fontWeight: "500", fontSize: 18, color: "#212121" }}>
               Medicine Stockist
             </Text>
           </View>
-          <Feather name="menu" size={24} color="black" />
+          <Feather name="menu" size={24} color="#212121" />
         </View>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
