@@ -1,5 +1,5 @@
 export interface Drug {
-  id: string;
+  id: number;
   drugName: string;
   inStock: number;
   price: number;

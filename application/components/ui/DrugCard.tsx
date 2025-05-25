@@ -1,8 +1,7 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import DrugSmall from "@/components/ui/DrugSmall";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import { Drug } from "@/types";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 export default function DrugCard({ drug }: { drug: Drug }) {
   const formattedPrice = Number(drug.price).toFixed(2);
@@ -15,11 +14,11 @@ export default function DrugCard({ drug }: { drug: Drug }) {
           ? { backgroundColor: "#f2f2f2", borderColor: "#ccc" }
           : drug.inStock > 30
           ? {
-              backgroundColor: "rgba(255, 228, 196, 0.76)", // orange-ish
+              backgroundColor: "rgba(255, 228, 196, 0.76)",
               borderColor: "rgb(201, 181, 153)",
             }
           : {
-              backgroundColor: "rgba(255, 184, 184, 0.76)", // red-ish
+              backgroundColor: "rgba(255, 184, 184, 0.76)",
               borderColor: "rgb(196, 147, 147)",
             },
       ]}
