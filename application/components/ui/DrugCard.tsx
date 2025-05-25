@@ -2,19 +2,9 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import DrugSmall from "@/components/ui/DrugSmall";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { Drug } from "@/types";
 
-export default function DrugCard({
-  drug,
-}: {
-  drug: {
-    id: string;
-    drugName: string;
-    inStock: number;
-    price: number;
-    expiry: string;
-    drugType: string;
-  };
-}) {
+export default function DrugCard({ drug }: { drug: Drug }) {
   const formattedPrice = Number(drug.price).toFixed(2);
 
   return (
