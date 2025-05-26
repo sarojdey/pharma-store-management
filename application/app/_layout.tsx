@@ -1,4 +1,4 @@
-import { seedDatabase } from "@/utils/seedData";
+import { createDatabase } from "@/utils/dbActions";
 import Feather from "@expo/vector-icons/Feather";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -8,7 +8,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   useEffect(() => {
-    seedDatabase();
+    createDatabase();
   }, []);
   return (
     <SafeAreaProvider>
@@ -54,7 +54,7 @@ export default function RootLayout() {
           <Stack.Screen name="inventory" options={{ headerShown: false }} />
         </Stack>
       </SafeAreaView>
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
     </SafeAreaProvider>
   );
 }
