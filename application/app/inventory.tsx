@@ -14,7 +14,7 @@ export default function HomeScreen() {
     const spin = Animated.loop(
       Animated.timing(spinValue, {
         toValue: 1,
-        duration: 1000,
+        duration: 2000,
         easing: Easing.linear,
         useNativeDriver: true,
       })
@@ -45,7 +45,7 @@ export default function HomeScreen() {
     return (
       <View style={[styles.scrollContainer, styles.loadingContainer]}>
         <Animated.View style={{ transform: [{ rotate: spin }] }}>
-          <EvilIcons name="spinner-3" size={48} color="#888" />
+          <EvilIcons name="spinner" size={40} color="#888" />
         </Animated.View>
       </View>
     );
