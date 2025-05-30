@@ -19,13 +19,15 @@ export default function RootLayout() {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            backgroundColor: "#f2f2f2",
+            backgroundColor: "#f5f5f5",
             borderBottomWidth: 1,
             borderTopWidth: 1,
             borderBottomColor: "#ccc",
             borderTopColor: "#ccc",
             paddingVertical: 20,
             paddingHorizontal: 18,
+            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+            zIndex: 1000,
           }}
         >
           <View style={{ flexDirection: "row", gap: 8 }}>

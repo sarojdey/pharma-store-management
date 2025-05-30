@@ -137,6 +137,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: "#ccc",
+    backgroundColor: "#f5f5f5",
+    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
     borderRadius: 8,
   },
   chartLabel: { color: "#212121", fontWeight: "500" },
@@ -160,6 +162,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderRadius: 8,
+    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
   },
   icon: {
     marginRight: 8,

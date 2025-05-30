@@ -11,7 +11,7 @@ export default function DrugCard({ drug }: { drug: Drug }) {
       style={[
         styles.card,
         drug.inStock > 50
-          ? { backgroundColor: "#f2f2f2", borderColor: "#ccc" }
+          ? { backgroundColor: "#f5f5f5", borderColor: "#ccc" }
           : drug.inStock > 30
           ? {
               backgroundColor: "rgba(255, 228, 196, 0.76)",
@@ -103,6 +103,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 10,
     position: "relative",
+    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
   },
   mrpContainer: {
     position: "absolute",
