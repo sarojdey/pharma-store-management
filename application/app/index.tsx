@@ -103,7 +103,7 @@ export default function HomeScreen() {
       <View style={styles.grid}>
         {BUTTONS.map((btn) => (
           <TouchableOpacity
-            onPress={() => router.push("/inventory")}
+            onPress={() => router.push("/addStock")}
             key={btn.key}
             style={[
               styles.card,
