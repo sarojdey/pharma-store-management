@@ -4,15 +4,15 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 export default function DrugCard({ drug }: { drug: Drug }) {
-  const formattedPrice = Number(drug.price).toFixed(2);
+  const formattedPrice = (price: number) => Number(drug.price).toFixed(2);
 
   return (
     <View
       style={[
         styles.card,
-        drug.inStock > 50
+        drug.quantity > 50
           ? { backgroundColor: "#f5f5f5", borderColor: "#ccc" }
-          : drug.inStock > 30
+          : drug.quantity > 30
           ? {
               backgroundColor: "rgba(255, 228, 196, 0.76)",
               borderColor: "rgb(201, 181, 153)",
@@ -26,30 +26,28 @@ export default function DrugCard({ drug }: { drug: Drug }) {
       <View
         style={[
           styles.mrpContainer,
-          drug.inStock > 50 ? { borderColor: "#ccc" } : { borderColor: "#555" },
+          drug.quantity > 50
+            ? { borderColor: "#ccc" }
+            : { borderColor: "#555" },
         ]}
       >
         <Text
           style={[
             styles.mrpLabel,
-            drug.inStock > 50 ? { color: "#888" } : { color: "#555" },
+            drug.quantity > 50 ? { color: "#888" } : { color: "#555" },
           ]}
         >
           MRP
         </Text>
-        <Text style={styles.mrpPrice}>₹{formattedPrice}</Text>
+        <Text style={styles.mrpPrice}>₹{formattedPrice(drug.mrp)}</Text>
       </View>
-
-      {/* <View style={styles.imageContainer}>
-        <DrugSmall drugType={drug.drugType} drugName={drug.drugName} />
-      </View> */}
 
       <View style={styles.detailsContainer}>
         <View style={styles.headerRow}>
           <Text
             style={[
               styles.drugId,
-              drug.inStock > 50 ? { color: "#888" } : { color: "#444" },
+              drug.quantity > 50 ? { color: "#888" } : { color: "#444" },
             ]}
           >
             ID: <Text>{drug.id}</Text>
@@ -58,35 +56,35 @@ export default function DrugCard({ drug }: { drug: Drug }) {
             <AntDesign
               name="form"
               size={20}
-              color={drug.inStock > 50 ? "#aaa" : "#666"}
+              color={drug.quantity > 50 ? "#aaa" : "#666"}
             />
           </View>
         </View>
 
-        <Text style={styles.title}>{drug.drugName}</Text>
+        <Text style={styles.title}>{drug.medicineName}</Text>
         <Text
           style={[
             styles.expiry,
-            drug.inStock > 50 ? { color: "#888" } : { color: "#444" },
+            drug.quantity > 50 ? { color: "#888" } : { color: "#444" },
           ]}
         >
-          Expiry: {drug.expiry}
+          Expiry: {drug.expiryDate}
         </Text>
 
-        <Text style={styles.price}>₹{formattedPrice}</Text>
+        <Text style={styles.price}>₹{formattedPrice(drug.price)}</Text>
         <Text style={styles.inStock}>
           In Stock:{" "}
           <Text
             style={[
               { fontWeight: "500" },
-              drug.inStock > 50
+              drug.quantity > 50
                 ? { color: "#1fb005" }
-                : drug.inStock > 30
+                : drug.quantity > 30
                 ? { color: "rgb(228, 125, 0)" }
                 : { color: "rgb(212, 0, 0)" },
             ]}
           >
-            {drug.inStock}
+            {drug.quantity}
           </Text>
         </Text>
       </View>
@@ -121,9 +119,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#444",
     marginVertical: 2,
-  },
-  imageContainer: {
-    marginRight: 12,
   },
   detailsContainer: {
     flex: 1,

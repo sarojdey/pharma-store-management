@@ -54,7 +54,7 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="inventory" options={{ headerShown: false }} />
-          <Stack.Screen name="addStock" options={{ headerShown: false }} />
+          <Stack.Screen name="addstock" options={{ headerShown: false }} />
         </Stack>
       </SafeAreaView>
       <StatusBar style="light" />

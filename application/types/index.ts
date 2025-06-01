@@ -1,8 +1,9 @@
 export interface Drug {
   id: number;
-  drugName: string;
-  inStock: number;
+  idCode: string;
+  medicineName: string;
+  quantity: number;
   price: number;
-  expiry: string;
-  drugType: "pills" | "syrup" | "syringe";
+  mrp: number;
+  expiryDate: string;
 }

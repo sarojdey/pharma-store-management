@@ -15,6 +15,7 @@ const BUTTONS: {
   label: string;
   description: string;
   icon: any;
+  navigateTo: any;
   bg?: string;
   border?: string;
   text?: string;
@@ -23,6 +24,7 @@ const BUTTONS: {
     key: "addStock",
     label: "Add to Stock",
     icon: "store",
+    navigateTo: "/addstock",
     description: "Add a new batch of medicine to your inventory.",
     bg: "rgba(201, 231, 255, 0.1)",
     border: "rgba(97, 129, 155, 0.30)",
@@ -32,6 +34,7 @@ const BUTTONS: {
     key: "stock",
     label: "View All Stock",
     icon: "view-list",
+    navigateTo: "/inventory",
     description: "See a list of all medicine batches in stock.",
     bg: "rgba(208, 255, 231, 0.1)",
     border: "rgba(85, 149, 117, 0.30)",
@@ -41,6 +44,7 @@ const BUTTONS: {
     key: "sales",
     label: "Sales",
     icon: "area-chart",
+    navigateTo: "/",
     description: "See a list of all completed sales transactions.",
     bg: "rgba(209, 253, 255, 0.1)",
     border: "rgba(109, 176, 171, 0.30)",
@@ -50,6 +54,7 @@ const BUTTONS: {
     key: "expiryAlerts",
     label: "Expiry Alerts",
     icon: "calendar-month",
+    navigateTo: "/",
     description: "Check which medicine batches are close to expiry.",
     bg: "rgba(255, 219, 219, 0.1)",
     border: "rgba(155, 98, 98, 0.30)",
@@ -60,6 +65,7 @@ const BUTTONS: {
     key: "createOrderList",
     label: "Create Order List",
     icon: "shopping-cart",
+    navigateTo: "/",
     description: "Create a sale entry and update stock.",
     bg: "rgba(236, 219, 255, 0.1)",
     border: "rgba(115, 98, 155, 0.3)",
@@ -69,6 +75,7 @@ const BUTTONS: {
     key: "lowStockAlerts",
     label: "Low Stock Alerts",
     icon: "move-to-inbox",
+    navigateTo: "/",
     description: "Check medicines that need restocking.",
     bg: "rgba(255, 233, 219, 0.1)",
     border: "rgba(155, 115, 98, 0.3)",
@@ -78,6 +85,7 @@ const BUTTONS: {
     key: "history",
     label: "History",
     icon: "watch-later",
+    navigateTo: "/",
     description: "View a log of all actions like stock updates and sales.",
     bg: "rgba(255, 251, 219, 0.1)",
     border: "rgba(155, 151, 98, 0.3)",
@@ -103,7 +111,7 @@ export default function HomeScreen() {
       <View style={styles.grid}>
         {BUTTONS.map((btn) => (
           <TouchableOpacity
-            onPress={() => router.push("/addStock")}
+            onPress={() => router.push(btn.navigateTo)}
             key={btn.key}
             style={[
               styles.card,
