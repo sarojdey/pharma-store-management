@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { z } from "zod";
 import { addDrug } from "../utils/dbActions";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 const schema = z.object({
   medicineName: z.string().min(1, "Medicine name is required"),
@@ -140,15 +141,6 @@ export default function AddInventoryItem() {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.container}>
-              {/* Header */}
-              <View style={styles.header}>
-                <Text style={styles.heading}>Add New Medicine</Text>
-                <Text style={styles.subheading}>
-                  Enter medicine details to add to inventory
-                </Text>
-              </View>
-
-              {/* Form Card */}
               <View style={styles.formCard}>
                 <FormField
                   label="Medicine Name"
@@ -167,7 +159,7 @@ export default function AddInventoryItem() {
                 </FormField>
 
                 <FormField
-                  label="ID Code"
+                  label="Medicine ID"
                   required
                   error={errors.idCode?.message}
                 >
@@ -202,7 +194,11 @@ export default function AddInventoryItem() {
                         ? expiryDate.toLocaleDateString()
                         : "Select expiry date"}
                     </Text>
-                    <Text style={styles.dateIcon}>📅</Text>
+                    <MaterialIcons
+                      name="calendar-month"
+                      size={24}
+                      color="#aaa"
+                    />
                   </TouchableOpacity>
                   {showDatePicker && (
                     <DateTimePicker
@@ -217,7 +213,7 @@ export default function AddInventoryItem() {
                 <View style={styles.row}>
                   <View style={styles.halfWidth}>
                     <FormField
-                      label="Buy Price (₹)"
+                      label="Cost"
                       required
                       error={errors.price?.message}
                     >
@@ -228,23 +224,19 @@ export default function AddInventoryItem() {
                         ]}
                         keyboardType="decimal-pad"
                         onChangeText={(text) => setValue("price", Number(text))}
-                        placeholder="e.g., 18.50"
+                        placeholder="e.g., 30"
                         placeholderTextColor="#9ca3af"
                       />
                     </FormField>
                   </View>
 
                   <View style={styles.halfWidth}>
-                    <FormField
-                      label="MRP (₹)"
-                      required
-                      error={errors.mrp?.message}
-                    >
+                    <FormField label="MRP" required error={errors.mrp?.message}>
                       <TextInput
                         style={[styles.input, errors.mrp && styles.inputError]}
                         keyboardType="decimal-pad"
                         onChangeText={(text) => setValue("mrp", Number(text))}
-                        placeholder="e.g., 22.75"
+                        placeholder="e.g., 50"
                         placeholderTextColor="#9ca3af"
                       />
                     </FormField>
@@ -260,20 +252,18 @@ export default function AddInventoryItem() {
                     style={[styles.input, errors.quantity && styles.inputError]}
                     keyboardType="number-pad"
                     onChangeText={(text) => setValue("quantity", Number(text))}
-                    placeholder="e.g., 65"
+                    placeholder="e.g., 100"
                     placeholderTextColor="#9ca3af"
                   />
                 </FormField>
               </View>
 
-              {/* Submit Button */}
               <TouchableOpacity
                 style={styles.submitButton}
                 onPress={handleSubmit(onSubmit)}
                 activeOpacity={0.8}
               >
                 <Text style={styles.submitButtonText}>Add to Inventory</Text>
-                <Text style={styles.buttonIcon}>✚</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -295,38 +285,16 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 20,
+    padding: 18,
   },
-  header: {
-    marginBottom: 24,
-    alignItems: "center",
-  },
-  heading: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#1e293b",
-    marginBottom: 2,
-    textAlign: "center",
-  },
-  subheading: {
-    fontSize: 16,
-    color: "#64748b",
-    textAlign: "center",
-    lineHeight: 22,
-  },
+
   formCard: {
     backgroundColor: "#fcfcfc",
     borderRadius: 8,
     padding: 20,
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
+    borderColor: "#ccc",
+    borderWidth: 1,
   },
   fieldContainer: {
     marginBottom: 20,
@@ -334,7 +302,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#374151",
+    color: "#212121",
     marginBottom: 8,
   },
   required: {
@@ -343,7 +311,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#ccc",
     borderRadius: 8,
     padding: 10,
     fontSize: 16,
@@ -367,9 +335,7 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: "#9ca3af",
   },
-  dateIcon: {
-    fontSize: 18,
-  },
+
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -390,21 +356,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   submitButton: {
-    backgroundColor: "#0ea5e9",
+    backgroundColor: "rgb(70, 125, 168)",
     borderRadius: 8,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    flexDirection: "row",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#0ea5e9",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 2,
   },
   submitButtonText: {
     color: "#ffffff",
@@ -412,13 +369,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginRight: 8,
   },
-  buttonIcon: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
+
   submitButtonDisabled: {
-    backgroundColor: "#94a3b8",
+    backgroundColor: "rgb(61, 108, 145)",
     opacity: 0.6,
   },
   error: {

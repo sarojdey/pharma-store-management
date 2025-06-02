@@ -2,6 +2,8 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import React from "react";
+import { Image } from "react-native";
+import Feather from "@expo/vector-icons/Feather";
 import {
   ScrollView,
   StyleSheet,
@@ -26,9 +28,9 @@ const BUTTONS: {
     icon: "store",
     navigateTo: "/addstock",
     description: "Add a new batch of medicine to your inventory.",
-    bg: "rgba(201, 231, 255, 0.1)",
-    border: "rgba(97, 129, 155, 0.30)",
-    text: "rgb(70, 125, 168)",
+    bg: "rgba(209, 253, 255, 0.1)",
+    border: "rgba(109, 176, 171, 0.30)",
+    text: "rgb(73, 147, 142)",
   },
   {
     key: "stock",
@@ -36,9 +38,9 @@ const BUTTONS: {
     icon: "view-list",
     navigateTo: "/inventory",
     description: "See a list of all medicine batches in stock.",
-    bg: "rgba(208, 255, 231, 0.1)",
-    border: "rgba(85, 149, 117, 0.30)",
-    text: "rgb(66, 160, 113)",
+    bg: "rgba(201, 231, 255, 0.1)",
+    border: "rgba(97, 129, 155, 0.30)",
+    text: "rgb(70, 125, 168)",
   },
   {
     key: "sales",
@@ -46,9 +48,19 @@ const BUTTONS: {
     icon: "area-chart",
     navigateTo: "/",
     description: "See a list of all completed sales transactions.",
-    bg: "rgba(209, 253, 255, 0.1)",
-    border: "rgba(109, 176, 171, 0.30)",
-    text: "rgb(73, 147, 142)",
+    bg: "rgba(236, 219, 255, 0.1)",
+    border: "rgba(115, 98, 155, 0.3)",
+    text: "rgb(122, 96, 176)",
+  },
+  {
+    key: "createOrderList",
+    label: "Create Order List",
+    icon: "shopping-cart",
+    navigateTo: "/",
+    description: "Create a sale entry and update stock.",
+    bg: "rgba(208, 255, 231, 0.1)",
+    border: "rgba(85, 149, 117, 0.30)",
+    text: "rgb(66, 160, 113)",
   },
   {
     key: "expiryAlerts",
@@ -61,16 +73,6 @@ const BUTTONS: {
     text: "rgb(178, 85, 85)",
   },
 
-  {
-    key: "createOrderList",
-    label: "Create Order List",
-    icon: "shopping-cart",
-    navigateTo: "/",
-    description: "Create a sale entry and update stock.",
-    bg: "rgba(236, 219, 255, 0.1)",
-    border: "rgba(115, 98, 155, 0.3)",
-    text: "rgb(122, 96, 176)",
-  },
   {
     key: "lowStockAlerts",
     label: "Low Stock Alerts",
@@ -97,42 +99,82 @@ export default function HomeScreen() {
   const router = useRouter();
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={[styles.grid, { marginBottom: 24, marginTop: 12 }]}>
-        <TouchableOpacity style={styles.chartButton} activeOpacity={0.7}>
-          <AntDesign name="linechart" size={24} style={styles.chartIcon} />
-          <Text style={styles.chartLabel}>Sales Report</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.chartButton} activeOpacity={0.7}>
-          <AntDesign name="profile" size={24} style={styles.chartIcon} />
-          <Text style={styles.chartLabel}>Stock Report</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.grid}>
-        {BUTTONS.map((btn) => (
-          <TouchableOpacity
-            onPress={() => router.push(btn.navigateTo)}
-            key={btn.key}
-            style={[
-              styles.card,
-              {
-                backgroundColor: btn.bg || "#fff",
-                borderColor: btn.border || "#ccc",
-              },
-            ]}
-            activeOpacity={0.7}
+    <View style={{ flex: 1, position: "relative" }}>
+      <View
+        style={{
+          position: "fixed",
+          top: 0,
+          width: "100%",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: "#f5f5f5",
+          borderBottomWidth: 1,
+          borderTopWidth: 1,
+          borderBottomColor: "#ccc",
+          borderTopColor: "#ccc",
+          padding: 18,
+          zIndex: 1000,
+        }}
+      >
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <View
+            style={{
+              height: 24,
+              width: 24,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
           >
-            <MaterialIcons name={btn.icon} size={100} color={btn.text} />
-            <Text style={[styles.label, { color: btn.text || "#000" }]}>
-              {btn.label}
-            </Text>
-            <Text style={[styles.description, { color: btn.text || "#000" }]}>
-              {btn.description}
-            </Text>
-          </TouchableOpacity>
-        ))}
+            <Image
+              source={require("../assets/images/capsule.png")}
+              style={{ height: "100%", width: "100%" }}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={{ fontWeight: "500", fontSize: 18, color: "#212121" }}>
+            Medicine Stockist
+          </Text>
+        </View>
+        <Feather name="menu" size={24} color="#212121" />
       </View>
-    </ScrollView>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={[styles.grid, { marginBottom: 20, marginTop: 10 }]}>
+          <TouchableOpacity style={styles.chartButton} activeOpacity={0.7}>
+            <AntDesign name="linechart" size={24} style={styles.chartIcon} />
+            <Text style={styles.chartLabel}>Sales Report</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.chartButton} activeOpacity={0.7}>
+            <AntDesign name="profile" size={24} style={styles.chartIcon} />
+            <Text style={styles.chartLabel}>Stock Report</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.grid}>
+          {BUTTONS.map((btn) => (
+            <TouchableOpacity
+              onPress={() => router.push(btn.navigateTo)}
+              key={btn.key}
+              style={[
+                styles.card,
+                {
+                  backgroundColor: btn.bg || "#fff",
+                  borderColor: btn.border || "#ccc",
+                },
+              ]}
+              activeOpacity={0.7}
+            >
+              <MaterialIcons name={btn.icon} size={85} color={btn.text} />
+              <Text style={[styles.label, { color: btn.text || "#000" }]}>
+                {btn.label}
+              </Text>
+              <Text style={[styles.description, { color: btn.text || "#000" }]}>
+                {btn.description}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -146,16 +188,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     backgroundColor: "#f5f5f5",
-    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
     borderRadius: 8,
   },
   chartLabel: { color: "#212121", fontWeight: "500" },
   chartIcon: { color: "#212121", marginRight: 8 },
 
   scrollContainer: {
+    padding: 18,
     justifyContent: "center",
     alignItems: "center",
-    padding: 18,
   },
   grid: {
     width: "100%",
@@ -170,7 +211,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderRadius: 8,
-    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
   },
   icon: {
     marginRight: 8,

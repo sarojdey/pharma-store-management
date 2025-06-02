@@ -101,7 +101,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 10,
     position: "relative",
-    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
   },
   mrpContainer: {
     position: "absolute",

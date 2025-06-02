@@ -26,7 +26,7 @@ export const createDatabase = (): void => {
 export const getAllDrugs = async () => {
   try {
     const result = await db.getAllAsync(
-      "SELECT * FROM drugs ORDER BY createdAt DESC"
+      "SELECT * FROM drugs ORDER BY createdAt ASC"
     );
     return result;
   } catch (error) {

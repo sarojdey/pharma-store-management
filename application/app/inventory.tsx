@@ -63,12 +63,14 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   scrollContainer: {
     minHeight: "100%",
-    justifyContent: "center",
     alignItems: "center",
     padding: 18,
     gap: 14,
   },
   loadingContainer: {
     flex: 1,
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
