@@ -16,6 +16,11 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="inventory" options={{ headerShown: false }} />
           <Stack.Screen name="addstock" options={{ headerShown: false }} />
+          <Stack.Screen name="sales" options={{ headerShown: false }} />
+          <Stack.Screen name="createorder" options={{ headerShown: false }} />
+          <Stack.Screen name="expiry" options={{ headerShown: false }} />
+          <Stack.Screen name="outofstock" options={{ headerShown: false }} />
+          <Stack.Screen name="history" options={{ headerShown: false }} />
         </Stack>
       </SafeAreaView>
       <StatusBar style="light" />

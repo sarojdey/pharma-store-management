@@ -1,4 +1,4 @@
-import DrugCard from "@/components/ui/DrugCard";
+import DrugCard from "@/components/DrugCard";
 import { Drug } from "@/types";
 import { getAllDrugs } from "@/utils/dbActions";
 import { useEffect, useRef, useState } from "react";
