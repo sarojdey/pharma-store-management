@@ -77,7 +77,7 @@ const BUTTONS: {
     key: "lowStockAlerts",
     label: "Low Stock Alerts",
     icon: "move-to-inbox",
-    navigateTo: "/lowstock",
+    navigateTo: "/outofstock",
     description: "Check medicines that need restocking.",
     bg: "rgba(255, 233, 219, 0.1)",
     border: "rgba(155, 115, 98, 0.3)",

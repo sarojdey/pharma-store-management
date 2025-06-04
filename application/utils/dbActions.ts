@@ -144,15 +144,27 @@ export const getDrugByIdCode = async (idCode: string) => {
   }
 };
 
-export const getLowStockDrugs = async (threshold: number = 10) => {
+export const getLowStockDrugs = async (threshold: number = 30) => {
   try {
     const result = await db.getAllAsync(
-      "SELECT * FROM drugs WHERE quantity <= ? ORDER BY quantity ASC",
+      "SELECT * FROM drugs WHERE quantity > 0 AND quantity <= ? ORDER BY quantity ASC",
       [threshold]
     );
     return result;
   } catch (error) {
     console.error("Error fetching low stock drugs:", error);
+    return [];
+  }
+};
+
+export const getOutOfStockDrugs = async () => {
+  try {
+    const result = await db.getAllAsync(
+      "SELECT * FROM drugs WHERE quantity = 0 ORDER BY medicineName ASC"
+    );
+    return result;
+  } catch (error) {
+    console.error("Error fetching out of stock drugs:", error);
     return [];
   }
 };
@@ -244,5 +256,79 @@ export const resetDatabase = (): void => {
   } catch (error) {
     console.error("Error resetting database:", error);
     throw error;
+  }
+};
+
+export const dynamicSearchDrugs = async ({
+  searchTerm = "",
+  page = "inventory",
+  filterBy,
+  filterValue,
+  sortBy = "medicineName",
+}: {
+  searchTerm?: string;
+  page?:
+    | "inventory"
+    | "nostockalert"
+    | "lowstockalert"
+    | "expiringalert"
+    | "expiredalert";
+  filterBy?: "expiryDate" | "quantity";
+  filterValue?: string | number | [string | number, string | number];
+  sortBy?: string;
+}) => {
+  try {
+    const conditions: string[] = [];
+    const values: any[] = [];
+
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const futureDateStr = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
+
+    switch (page) {
+      case "nostockalert":
+        conditions.push("quantity = 0");
+        break;
+      case "lowstockalert":
+        conditions.push("quantity > 0 AND quantity <= 30");
+        break;
+      case "expiredalert":
+        conditions.push("expiryDate <= ?");
+        values.push(todayStr);
+        break;
+      case "expiringalert":
+        conditions.push("expiryDate BETWEEN ? AND ?");
+        values.push(todayStr, futureDateStr);
+        break;
+    }
+
+    if (searchTerm) {
+      conditions.push("(medicineName LIKE ? OR idCode LIKE ?)");
+      values.push(`%${searchTerm}%`, `%${searchTerm}%`);
+    }
+
+    if (filterBy && filterValue !== undefined) {
+      if (Array.isArray(filterValue) && filterValue.length === 2) {
+        conditions.push(`${filterBy} BETWEEN ? AND ?`);
+        values.push(filterValue[0], filterValue[1]);
+      } else {
+        conditions.push(`${filterBy} = ?`);
+        values.push(filterValue);
+      }
+    }
+
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const orderByClause = `ORDER BY ${sortBy}`;
+
+    const query = `SELECT * FROM drugs ${whereClause} ${orderByClause}`;
+    const result = await db.getAllAsync(query, values);
+
+    return result;
+  } catch (error) {
+    console.error("Error in dynamic drug search:", error);
+    return [];
   }
 };
