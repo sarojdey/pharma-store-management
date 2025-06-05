@@ -23,7 +23,7 @@ export default function RootLayout() {
           <Stack.Screen name="history" options={{ headerShown: false }} />
         </Stack>
       </SafeAreaView>
-      <StatusBar style="light" />
+      <StatusBar style="auto" />
     </SafeAreaProvider>
   );
 }
