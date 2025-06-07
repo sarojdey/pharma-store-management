@@ -264,7 +264,7 @@ export const dynamicSearchDrugs = async ({
   page = "inventory",
   filterBy,
   filterValue,
-  sortBy = "medicineName",
+  sortBy,
 }: {
   searchTerm?: string;
   page?:
@@ -305,11 +305,11 @@ export const dynamicSearchDrugs = async ({
     }
 
     if (searchTerm) {
-      conditions.push("(medicineName LIKE ? OR idCode LIKE ?)");
-      values.push(`%${searchTerm}%`, `%${searchTerm}%`);
+      conditions.push("(medicineName LIKE ? )");
+      values.push(`%${searchTerm}%`);
     }
 
-    if (filterBy && filterValue !== undefined) {
+    if (filterBy !== undefined && filterValue !== undefined) {
       if (Array.isArray(filterValue) && filterValue.length === 2) {
         conditions.push(`${filterBy} BETWEEN ? AND ?`);
         values.push(filterValue[0], filterValue[1]);
@@ -319,9 +319,11 @@ export const dynamicSearchDrugs = async ({
       }
     }
 
-    const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-    const orderByClause = `ORDER BY ${sortBy}`;
+    const whereClause = conditions.length
+      ? `WHERE ${conditions.join(" AND ")}`
+      : "";
+
+    const orderByClause = `ORDER BY ${sortBy ?? "id"}`;
 
     const query = `SELECT * FROM drugs ${whereClause} ${orderByClause}`;
     const result = await db.getAllAsync(query, values);

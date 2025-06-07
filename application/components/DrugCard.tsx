@@ -1,87 +1,81 @@
 import { Drug } from "@/types";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
+const LOW_STOCK_THRESHOLD = 30;
+const EXPIRY_WARNING_DAYS = 30;
+
+const formatPrice = (value: number) => `₹${Number(value).toFixed(2)}`;
+
+const bgColorMap: Record<string, string> = {
+  "out of stock": "rgba(255, 206, 206, 0.76)",
+  "low in stock": "rgba(255, 235, 211, 0.76)",
+  "in stock": "#f5f5f5",
+};
+
+const borderColorMap: Record<string, string> = {
+  "out of stock": "rgb(196, 147, 147)",
+  "low in stock": "rgb(201, 181, 153)",
+  "in stock": "#ccc",
+};
+
+const textColorMap: Record<string, string> = {
+  expired: "rgb(212, 0, 0)",
+  expiring: "rgb(228, 125, 0)",
+  consumable: "#444",
+};
+
 export default function DrugCard({ drug }: { drug: Drug }) {
-  const [isExpired, setIsExpired] = useState("");
-  const [stockStatus, setStockStatus] = useState("");
+  const currentDate = new Date();
+  const expiryDate = new Date(drug.expiryDate);
+  const daysLeft =
+    (expiryDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24);
 
-  useEffect(() => {
-    const currentDate = new Date();
-    const expiryDate = new Date(drug.expiryDate);
-    const daysLeft =
-      (expiryDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24);
+  const expiryStatus =
+    expiryDate < currentDate
+      ? "expired"
+      : daysLeft <= EXPIRY_WARNING_DAYS
+      ? "expiring"
+      : "consumable";
 
-    if (expiryDate < currentDate) {
-      setIsExpired("expired");
-    } else if (daysLeft <= 30) {
-      setIsExpired("expiring");
-    } else {
-      setIsExpired("consumable");
-    }
+  const stockStatus =
+    drug.quantity === 0
+      ? "out of stock"
+      : drug.quantity <= LOW_STOCK_THRESHOLD
+      ? "low in stock"
+      : "in stock";
 
-    if (drug.quantity === 0) {
-      setStockStatus("out of stock");
-    } else if (drug.quantity <= 30) {
-      setStockStatus("low in stock");
-    } else {
-      setStockStatus("in stock");
-    }
-  }, [drug]);
-
-  const formattedPrice = (value: number) => Number(value).toFixed(2);
+  const isLowOrOut =
+    stockStatus === "low in stock" || stockStatus === "out of stock";
 
   return (
     <View
       style={[
         styles.card,
-
-        stockStatus === "out of stock"
-          ? {
-              backgroundColor: "rgba(255, 206, 206, 0.76)",
-              borderColor: "rgb(196, 147, 147)",
-            }
-          : stockStatus === "low in stock"
-          ? {
-              backgroundColor: "rgba(255, 235, 211, 0.76)",
-              borderColor: "rgb(201, 181, 153)",
-            }
-          : { backgroundColor: "#f5f5f5", borderColor: "#ccc" },
+        {
+          backgroundColor: bgColorMap[stockStatus],
+          borderColor: borderColorMap[stockStatus],
+        },
       ]}
     >
       <View
         style={[
           styles.mrpContainer,
-
-          !(stockStatus === "low in stock" || stockStatus === "out of stock")
-            ? { borderColor: "#ccc" }
-            : { borderColor: "#555" },
+          { borderColor: isLowOrOut ? "#555" : "#ccc" },
         ]}
       >
         <Text
-          style={[
-            styles.mrpLabel,
-
-            !(stockStatus === "low in stock" || stockStatus === "out of stock")
-              ? { color: "#888" }
-              : { color: "#555" },
-          ]}
+          style={[styles.mrpLabel, { color: isLowOrOut ? "#555" : "#888" }]}
         >
           MRP
         </Text>
-        <Text style={styles.mrpPrice}>₹{formattedPrice(drug.mrp)}</Text>
+        <Text style={styles.mrpPrice}>{formatPrice(drug.mrp)}</Text>
       </View>
 
       <View style={styles.detailsContainer}>
         <View style={styles.headerRow}>
           <Text
-            style={[
-              styles.drugId,
-              stockStatus === "low in stock" || stockStatus === "out of stock"
-                ? { color: "#444" }
-                : { color: "#888" },
-            ]}
+            style={[styles.drugId, { color: isLowOrOut ? "#444" : "#888" }]}
           >
             ID: <Text>{drug.id}</Text>
           </Text>
@@ -89,32 +83,21 @@ export default function DrugCard({ drug }: { drug: Drug }) {
             <AntDesign
               name="form"
               size={20}
-              color={
-                !(
-                  stockStatus === "low in stock" ||
-                  stockStatus === "out of stock"
-                )
-                  ? "#aaa"
-                  : "#666"
-              }
+              color={isLowOrOut ? "#666" : "#aaa"}
             />
           </View>
         </View>
 
         <Text style={styles.title}>{drug.medicineName}</Text>
-        <Text style={styles.price}>₹{formattedPrice(drug.price)}</Text>
+        <Text style={styles.price}>{formatPrice(drug.price)}</Text>
+
         <Text style={styles.expiry}>
           Expiry:{" "}
           <Text
-            style={[
-              { fontWeight: "500" },
-
-              isExpired === "expired"
-                ? { color: "rgb(212, 0, 0)" }
-                : isExpired === "expiring"
-                ? { color: "rgb(228, 125, 0)" }
-                : { color: "#444" },
-            ]}
+            style={{
+              fontWeight: "500",
+              color: textColorMap[expiryStatus],
+            }}
           >
             {drug.expiryDate}
           </Text>
@@ -123,15 +106,17 @@ export default function DrugCard({ drug }: { drug: Drug }) {
         <Text style={styles.inStock}>
           In Stock:{" "}
           <Text
-            style={[
-              { fontWeight: "500" },
-
-              stockStatus === "out of stock"
-                ? { color: "rgb(212, 0, 0)" }
-                : stockStatus === "low in stock"
-                ? { color: "rgb(228, 125, 0)" }
-                : { color: "#444" },
-            ]}
+            style={{
+              fontWeight: "500",
+              color:
+                textColorMap[
+                  stockStatus === "out of stock"
+                    ? "expired"
+                    : stockStatus === "low in stock"
+                    ? "expiring"
+                    : "consumable"
+                ],
+            }}
           >
             {drug.quantity}
           </Text>
@@ -161,7 +146,6 @@ const styles = StyleSheet.create({
   },
   mrpLabel: {
     fontSize: 8,
-    color: "#aaa",
   },
   mrpPrice: {
     fontSize: 15,
@@ -197,11 +181,8 @@ const styles = StyleSheet.create({
   },
   inStock: {
     fontSize: 13,
-    color: "#444",
   },
-
   expiry: {
     fontSize: 13,
-    color: "#444",
   },
 });

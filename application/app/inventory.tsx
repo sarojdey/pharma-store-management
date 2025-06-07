@@ -1,13 +1,12 @@
 import DrugCard from "@/components/DrugCard";
+import Loader from "@/components/Loader";
 import { Drug } from "@/types";
-import { getAllDrugs } from "@/utils/dbActions";
-import EvilIcons from "@expo/vector-icons/EvilIcons";
+import { dynamicSearchDrugs } from "@/utils/dbActions";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Easing,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -21,80 +20,108 @@ import {
 export default function HomeScreen() {
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterBy, setFilterBy] = useState<
+    "expiryDate" | "quantity" | undefined
+  >();
+  const [filterValue, setFilterValue] = useState<
+    string | number | [string | number, string | number] | undefined
+  >();
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isSortVisible, setIsSortVisible] = useState(false);
+  const [activeFilterTab, setActiveFilterTab] = useState<"expiry" | "quantity">(
+    "expiry"
+  );
+  const [selectedPreset, setSelectedPreset] = useState("");
+  const [customRange, setCustomRange] = useState({ start: "", end: "" });
 
   const navigation = useNavigation();
-  const spinValue = useRef(new Animated.Value(0)).current;
   const filterAnim = useRef(new Animated.Value(300)).current;
   const sortAnim = useRef(new Animated.Value(300)).current;
 
+  const fetchDrugs = async () => {
+    setIsLoading(true);
+    try {
+      const data = await dynamicSearchDrugs({
+        searchTerm,
+        page: "inventory",
+        filterBy,
+        filterValue,
+        sortBy,
+      });
+      setDrugs(data as Drug[]);
+    } catch (err) {
+      console.error(err);
+    }
+    setIsLoading(false);
+  };
+
   useEffect(() => {
-    const spin = Animated.loop(
-      Animated.timing(spinValue, {
-        toValue: 1,
-        duration: 2000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
-    );
-    spin.start();
-    return () => spin.stop();
-  }, []);
-
-  const spin = spinValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
-
-  useEffect(() => {
-    const fetchDrugs = async () => {
-      try {
-        const drugsData = (await getAllDrugs()) as Drug[];
-        setDrugs(drugsData);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchDrugs();
   }, []);
 
-  const showPanel = (animRef: Animated.Value) => {
+  const showPanel = (animRef: Animated.Value) =>
     Animated.timing(animRef, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
-  };
-
-  const hidePanel = (animRef: Animated.Value, setVisible: any) => {
+  const hidePanel = (animRef: Animated.Value, setter: any) =>
     Animated.timing(animRef, {
       toValue: 1000,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => setVisible(false));
-  };
+    }).start(() => setter(false));
 
   const openFilter = () => {
     setIsFilterVisible(true);
     showPanel(filterAnim);
   };
-
   const openSort = () => {
     setIsSortVisible(true);
     showPanel(sortAnim);
   };
+  const switchTab = (tab: "expiry" | "quantity") => {
+    setActiveFilterTab(tab);
+    setSelectedPreset("");
+    setCustomRange({ start: "", end: "" });
+  };
 
-  if (isLoading) {
-    return (
-      <View style={[styles.scrollContainer, styles.loadingContainer]}>
-        <Animated.View style={{ transform: [{ rotate: spin }] }}>
-          <EvilIcons name="spinner" size={40} color="#888" />
-        </Animated.View>
-      </View>
-    );
-  }
+  const onSearch = () => fetchDrugs();
+
+  const applyFilter = () => {
+    if (selectedPreset === "Custom") {
+      setFilterBy(activeFilterTab === "expiry" ? "expiryDate" : "quantity");
+      setFilterValue(
+        activeFilterTab === "expiry"
+          ? [customRange.start, customRange.end]
+          : [Number(customRange.start), Number(customRange.end)]
+      );
+    } else {
+      if (activeFilterTab === "expiry") {
+        const days = Number(selectedPreset.split(" ")[0]);
+
+        setFilterBy("expiryDate");
+        setFilterValue([`${0}`, `${days}`]);
+      } else {
+        setFilterBy("quantity");
+        setFilterValue(Number(selectedPreset));
+      }
+    }
+    hidePanel(filterAnim, setIsFilterVisible);
+    fetchDrugs();
+  };
+
+  const applySort = (field: string) => {
+    setSortBy(field);
+    hidePanel(sortAnim, setIsSortVisible);
+    fetchDrugs();
+  };
+
+  if (isLoading) return <Loader />;
 
   return (
     <View style={styles.wrapper}>
@@ -108,8 +135,10 @@ export default function HomeScreen() {
             placeholder="Search..."
             placeholderTextColor="#666"
             style={styles.searchInput}
+            value={searchTerm}
+            onChangeText={setSearchTerm}
           />
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={onSearch}>
             <Ionicons
               name="search-outline"
               size={24}
@@ -121,51 +150,160 @@ export default function HomeScreen() {
         <TouchableOpacity onPress={openFilter}>
           <Ionicons name="filter-outline" size={24} color="#333" />
         </TouchableOpacity>
-
         <TouchableOpacity onPress={openSort}>
           <Ionicons name="swap-vertical-outline" size={24} color="#333" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={[styles.scrollContainer]}>
-        {drugs.map((drug) => (
-          <DrugCard key={drug.id} drug={drug} />
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {drugs.map((d) => (
+          <DrugCard key={d.id} drug={d} />
         ))}
       </ScrollView>
 
-      {/* Filter Bottom Modal */}
       {isFilterVisible && (
         <Pressable
           style={styles.overlay}
           onPress={() => hidePanel(filterAnim, setIsFilterVisible)}
         >
-          <TouchableWithoutFeedback onPress={() => {}}>
+          <TouchableWithoutFeedback>
             <Animated.View
               style={[
                 styles.bottomSheet,
                 { transform: [{ translateY: filterAnim }] },
               ]}
             >
-              <View style={styles.bottomSheetHandle}></View>
-              <View style={{ height: 500 }}></View>
+              <View style={styles.bottomSheetHandle} />
+              <Text style={styles.modalTitle}>Filter</Text>
+              <Text style={styles.sectionTitle}>
+                {activeFilterTab === "expiry" ? "Expiry Date" : "Quantity"}
+              </Text>
+
+              <View style={styles.segmentContainer}>
+                {["expiry", "quantity"].map((tab) => (
+                  <TouchableOpacity
+                    key={tab}
+                    onPress={() => switchTab(tab as any)}
+                    style={[
+                      styles.segmentButton,
+                      activeFilterTab === tab && styles.segmentButtonActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        activeFilterTab === tab && styles.segmentTextActive,
+                      ]}
+                    >
+                      {tab === "expiry" ? "Expiry Date" : "Quantity"}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <View style={styles.presetContainer}>
+                {(activeFilterTab === "expiry"
+                  ? ["30 Days", "60 Days", "90 Days", "Custom"]
+                  : ["50", "100", "500", "Custom"]
+                ).map((label) => (
+                  <TouchableOpacity
+                    key={label}
+                    onPress={() => setSelectedPreset(label)}
+                    style={[
+                      styles.presetButton,
+                      selectedPreset === label && styles.presetButtonActive,
+                    ]}
+                  >
+                    <Text style={styles.presetButtonText}>{label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {selectedPreset === "Custom" && (
+                <View style={styles.customInputRow}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder={
+                      activeFilterTab === "expiry" ? "Start Date" : "Min Qty"
+                    }
+                    placeholderTextColor="#999"
+                    value={customRange.start}
+                    onChangeText={(t) =>
+                      setCustomRange((pr) => ({ ...pr, start: t }))
+                    }
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder={
+                      activeFilterTab === "expiry" ? "End Date" : "Max Qty"
+                    }
+                    placeholderTextColor="#999"
+                    value={customRange.end}
+                    onChangeText={(t) =>
+                      setCustomRange((pr) => ({ ...pr, end: t }))
+                    }
+                  />
+                </View>
+              )}
+              <View style={styles.footerButtons}>
+                <TouchableOpacity
+                  style={styles.footerBtnClear}
+                  onPress={() => {
+                    setFilterBy(undefined);
+                    setFilterValue(undefined);
+                    setSelectedPreset("");
+                    setCustomRange({ start: "", end: "" });
+                    hidePanel(filterAnim, setIsFilterVisible);
+                  }}
+                >
+                  <Text style={styles.footerBtnText}>Clear</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.footerBtnApply}
+                  onPress={applyFilter}
+                >
+                  <Text style={styles.footerBtnText}>Apply</Text>
+                </TouchableOpacity>
+              </View>
             </Animated.View>
           </TouchableWithoutFeedback>
         </Pressable>
       )}
+
       {isSortVisible && (
         <Pressable
           style={styles.overlay}
           onPress={() => hidePanel(sortAnim, setIsSortVisible)}
         >
-          <TouchableWithoutFeedback onPress={() => {}}>
+          <TouchableWithoutFeedback>
             <Animated.View
               style={[
                 styles.bottomSheet,
                 { transform: [{ translateY: sortAnim }] },
               ]}
             >
-              <View style={styles.bottomSheetHandle}></View>
-              <View style={{ height: 500 }}></View>
+              <Text style={styles.modalTitle}>Sort By</Text>
+              {["medicineName", "price", "quantity", "expiryDate"].map(
+                (field) => (
+                  <TouchableOpacity
+                    key={field}
+                    onPress={() => applySort(field)}
+                    style={[
+                      styles.segmentButton,
+                      sortBy === field && styles.segmentButtonActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentText,
+                        sortBy === field && styles.segmentTextActive,
+                      ]}
+                    >
+                      {field}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              )}
             </Animated.View>
           </TouchableWithoutFeedback>
         </Pressable>
@@ -175,10 +313,8 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flex: 1,
-    position: "relative",
-  },
+  wrapper: { flex: 1, position: "relative" },
+
   topbar: {
     position: "absolute",
     top: 0,
@@ -196,6 +332,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     gap: 10,
   },
+
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -205,12 +342,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     flex: 1,
   },
+
   searchInput: {
     flex: 1,
     padding: 10,
     fontSize: 14,
     color: "#000",
   },
+
   iconButton: {
     backgroundColor: "rgb(230, 244, 255)",
     borderTopRightRadius: 8,
@@ -220,20 +359,15 @@ const styles = StyleSheet.create({
     borderLeftWidth: 1,
     borderLeftColor: "#ccc",
   },
+
   scrollContainer: {
     minHeight: "100%",
     alignItems: "center",
     paddingTop: 90,
     padding: 18,
-
     gap: 14,
   },
-  loadingContainer: {
-    flex: 1,
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+
   overlay: {
     position: "absolute",
     top: 0,
@@ -244,6 +378,7 @@ const styles = StyleSheet.create({
     zIndex: 2000,
     justifyContent: "flex-end",
   },
+
   bottomSheet: {
     backgroundColor: "#fff",
     paddingHorizontal: 20,
@@ -254,6 +389,7 @@ const styles = StyleSheet.create({
     elevation: 8,
     zIndex: 3000,
   },
+
   bottomSheetHandle: {
     width: 40,
     borderRadius: 100,
@@ -261,15 +397,114 @@ const styles = StyleSheet.create({
     backgroundColor: "#ddd",
     marginHorizontal: "auto",
     marginBottom: 10,
+    alignSelf: "center",
   },
+
   modalTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "600",
     marginBottom: 10,
+    alignSelf: "flex-start",
   },
-  closeButton: {
+
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    alignSelf: "flex-start",
+  },
+
+  segmentContainer: {
+    flexDirection: "row",
+    backgroundColor: "#f0f0f0",
+    borderRadius: 10,
+    marginBottom: 20,
+    overflow: "hidden",
+  },
+
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 10,
+  },
+
+  segmentButtonActive: {
+    backgroundColor: "#e0eaff",
+  },
+
+  segmentText: {
+    color: "#777",
+    fontWeight: "500",
+  },
+
+  segmentTextActive: {
+    color: "#000",
+    fontWeight: "600",
+  },
+
+  presetContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginBottom: 15,
+  },
+
+  presetButton: {
+    backgroundColor: "#f1f1f1",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+
+  presetButtonActive: {
+    backgroundColor: "#d8e8ff",
+  },
+
+  presetButtonText: {
+    fontWeight: "500",
+  },
+
+  customInputRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 20,
+  },
+
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: "#000",
+    backgroundColor: "#fafafa",
+  },
+
+  footerButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 10,
-    color: "gray",
+  },
+
+  footerBtnClear: {
+    backgroundColor: "#eee",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+
+  footerBtnApply: {
+    backgroundColor: "#aad4ff",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+
+  footerBtnText: {
+    fontWeight: "600",
     fontSize: 14,
   },
 });
