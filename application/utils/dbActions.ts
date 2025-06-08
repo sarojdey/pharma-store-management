@@ -287,6 +287,7 @@ export const dynamicSearchDrugs = async ({
       .toISOString()
       .split("T")[0];
 
+    // Page-specific conditions
     switch (page) {
       case "nostockalert":
         conditions.push("quantity = 0");
@@ -304,12 +305,20 @@ export const dynamicSearchDrugs = async ({
         break;
     }
 
+    // Search term condition
     if (searchTerm) {
-      conditions.push("(medicineName LIKE ? )");
+      conditions.push("(medicineName LIKE ?)");
       values.push(`%${searchTerm}%`);
     }
 
-    if (filterBy !== undefined && filterValue !== undefined) {
+    // Filter conditions
+    if (filterBy && filterValue !== undefined) {
+      // Validate filterBy to prevent SQL injection
+      const validFilterColumns = ["expiryDate", "quantity"];
+      if (!validFilterColumns.includes(filterBy)) {
+        throw new Error(`Invalid filterBy value: ${filterBy}`);
+      }
+
       if (Array.isArray(filterValue) && filterValue.length === 2) {
         conditions.push(`${filterBy} BETWEEN ? AND ?`);
         values.push(filterValue[0], filterValue[1]);
@@ -323,7 +332,11 @@ export const dynamicSearchDrugs = async ({
       ? `WHERE ${conditions.join(" AND ")}`
       : "";
 
-    const orderByClause = `ORDER BY ${sortBy ?? "id"}`;
+    // Validate and sanitize sortBy
+    const validSortColumns = ["id", "medicineName", "quantity", "expiryDate"];
+    const safeSortBy =
+      sortBy && validSortColumns.includes(sortBy) ? sortBy : "id";
+    const orderByClause = `ORDER BY ${safeSortBy}`;
 
     const query = `SELECT * FROM drugs ${whereClause} ${orderByClause}`;
     const result = await db.getAllAsync(query, values);

@@ -42,16 +42,37 @@ export default function HomeScreen() {
   const filterAnim = useRef(new Animated.Value(300)).current;
   const sortAnim = useRef(new Animated.Value(300)).current;
 
-  const fetchDrugs = async () => {
+  const fetchDrugs = async (params?: {
+    searchTerm?: string;
+    filterBy?: typeof filterBy;
+    filterValue?: typeof filterValue;
+    sortBy?: typeof sortBy;
+  }) => {
     setIsLoading(true);
     try {
-      const data = await dynamicSearchDrugs({
-        searchTerm,
-        page: "inventory",
-        filterBy,
-        filterValue,
-        sortBy,
+      const finalParams = {
+        searchTerm: params?.hasOwnProperty("searchTerm")
+          ? params.searchTerm
+          : searchTerm,
+        filterBy: params?.hasOwnProperty("filterBy")
+          ? params.filterBy
+          : filterBy,
+        filterValue: params?.hasOwnProperty("filterValue")
+          ? params.filterValue
+          : filterValue,
+        sortBy: params?.hasOwnProperty("sortBy") ? params.sortBy : sortBy,
+      };
+
+      console.log({
+        ...finalParams,
+        page: "expiredalert",
       });
+
+      const data = await dynamicSearchDrugs({
+        ...finalParams,
+        page: "expiredalert",
+      });
+
       setDrugs(data as Drug[]);
     } catch (err) {
       console.error(err);
@@ -69,6 +90,7 @@ export default function HomeScreen() {
       duration: 300,
       useNativeDriver: true,
     }).start();
+
   const hidePanel = (animRef: Animated.Value, setter: any) =>
     Animated.timing(animRef, {
       toValue: 1000,
@@ -80,10 +102,12 @@ export default function HomeScreen() {
     setIsFilterVisible(true);
     showPanel(filterAnim);
   };
+
   const openSort = () => {
     setIsSortVisible(true);
     showPanel(sortAnim);
   };
+
   const switchTab = (tab: "expiry" | "quantity") => {
     setActiveFilterTab(tab);
     setSelectedPreset("");
@@ -92,33 +116,79 @@ export default function HomeScreen() {
 
   const onSearch = () => fetchDrugs();
 
+  const getDateRange = (days: number) => {
+    const today = new Date();
+    const futureDate = new Date(today.getTime() + days * 24 * 60 * 60 * 1000);
+    return [
+      today.toISOString().split("T")[0],
+      futureDate.toISOString().split("T")[0],
+    ];
+  };
+
   const applyFilter = () => {
+    let updatedFilterBy: typeof filterBy;
+    let updatedFilterValue: typeof filterValue;
+
     if (selectedPreset === "Custom") {
-      setFilterBy(activeFilterTab === "expiry" ? "expiryDate" : "quantity");
-      setFilterValue(
+      updatedFilterBy =
+        activeFilterTab === "expiry" ? "expiryDate" : "quantity";
+      updatedFilterValue =
         activeFilterTab === "expiry"
           ? [customRange.start, customRange.end]
-          : [Number(customRange.start), Number(customRange.end)]
-      );
+          : [Number(customRange.start), Number(customRange.end)];
     } else {
       if (activeFilterTab === "expiry") {
         const days = Number(selectedPreset.split(" ")[0]);
-
-        setFilterBy("expiryDate");
-        setFilterValue([`${0}`, `${days}`]);
+        updatedFilterBy = "expiryDate";
+        updatedFilterValue = getDateRange(days) as [string, string];
       } else {
-        setFilterBy("quantity");
-        setFilterValue(Number(selectedPreset));
+        updatedFilterBy = "quantity";
+        updatedFilterValue = [0, Number(selectedPreset)];
       }
     }
-    hidePanel(filterAnim, setIsFilterVisible);
-    fetchDrugs();
+
+    setFilterBy(updatedFilterBy);
+    setFilterValue(updatedFilterValue);
+
+    hidePanel(filterAnim, () => {
+      setIsFilterVisible(false);
+      setTimeout(() => {
+        fetchDrugs({
+          filterBy: updatedFilterBy,
+          filterValue: updatedFilterValue,
+        });
+      }, 50);
+    });
   };
 
   const applySort = (field: string) => {
     setSortBy(field);
-    hidePanel(sortAnim, setIsSortVisible);
-    fetchDrugs();
+    hidePanel(sortAnim, () => {
+      setIsSortVisible(false);
+      setTimeout(() => {
+        fetchDrugs();
+      }, 50);
+    });
+  };
+  const clearFilters = () => {
+    const updatedFilterBy = undefined;
+    const updatedFilterValue = undefined;
+
+    setFilterBy(updatedFilterBy);
+    setFilterValue(updatedFilterValue);
+    setSelectedPreset("");
+    setCustomRange({ start: "", end: "" });
+
+    hidePanel(filterAnim, () => {
+      setIsFilterVisible(false);
+
+      setTimeout(() => {
+        fetchDrugs({
+          filterBy: updatedFilterBy,
+          filterValue: updatedFilterValue,
+        });
+      }, 50);
+    });
   };
 
   if (isLoading) return <Loader />;
@@ -224,7 +294,9 @@ export default function HomeScreen() {
                   <TextInput
                     style={styles.input}
                     placeholder={
-                      activeFilterTab === "expiry" ? "Start Date" : "Min Qty"
+                      activeFilterTab === "expiry"
+                        ? "Start Date (YYYY-MM-DD)"
+                        : "Min Qty"
                     }
                     placeholderTextColor="#999"
                     value={customRange.start}
@@ -235,7 +307,9 @@ export default function HomeScreen() {
                   <TextInput
                     style={styles.input}
                     placeholder={
-                      activeFilterTab === "expiry" ? "End Date" : "Max Qty"
+                      activeFilterTab === "expiry"
+                        ? "End Date (YYYY-MM-DD)"
+                        : "Max Qty"
                     }
                     placeholderTextColor="#999"
                     value={customRange.end}
@@ -248,13 +322,7 @@ export default function HomeScreen() {
               <View style={styles.footerButtons}>
                 <TouchableOpacity
                   style={styles.footerBtnClear}
-                  onPress={() => {
-                    setFilterBy(undefined);
-                    setFilterValue(undefined);
-                    setSelectedPreset("");
-                    setCustomRange({ start: "", end: "" });
-                    hidePanel(filterAnim, setIsFilterVisible);
-                  }}
+                  onPress={clearFilters}
                 >
                   <Text style={styles.footerBtnText}>Clear</Text>
                 </TouchableOpacity>
