@@ -32,14 +32,15 @@ export default function HomeScreen() {
   const [filterValue, setFilterValue] = useState<
     string | number | [string | number, string | number] | undefined
   >(undefined);
-  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined); // actual sort
+  const [tempSortBy, setTempSortBy] = useState<string | undefined>(undefined); // temporary
 
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isSortVisible, setIsSortVisible] = useState(false);
   const [activeFilterTab, setActiveFilterTab] = useState<"expiry" | "quantity">(
     "expiry"
   );
-  // Set "30 Days" as the default selected preset
+
   const [selectedPreset, setSelectedPreset] = useState("30 Days");
   const [customRange, setCustomRange] = useState({
     startDate: new Date(),
@@ -50,7 +51,6 @@ export default function HomeScreen() {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
-  // Zod schemas for validation
   const dateRangeSchema = z
     .object({
       startDate: z.date(),
@@ -99,12 +99,12 @@ export default function HomeScreen() {
 
       console.log({
         ...finalParams,
-        page: "expiredalert",
+        page: "inventory",
       });
 
       const data = await dynamicSearchDrugs({
         ...finalParams,
-        page: "expiredalert",
+        page: "inventory",
       });
 
       setDrugs(data as Drug[]);
@@ -138,13 +138,14 @@ export default function HomeScreen() {
   };
 
   const openSort = () => {
+    setTempSortBy(sortBy); // copy current sort into temp
     setIsSortVisible(true);
     showPanel(sortAnim);
   };
 
   const switchTab = (tab: "expiry" | "quantity") => {
     setActiveFilterTab(tab);
-    // Set default preset based on the active tab
+
     setSelectedPreset(tab === "expiry" ? "30 Days" : "50");
     setCustomRange({
       startDate: new Date(),
@@ -190,7 +191,6 @@ export default function HomeScreen() {
 
     if (selectedPreset === "Custom") {
       if (activeFilterTab === "expiry") {
-        // Validate date range
         const validation = dateRangeSchema.safeParse({
           startDate: customRange.startDate,
           endDate: customRange.endDate,
@@ -207,7 +207,6 @@ export default function HomeScreen() {
           customRange.endDate.toISOString().split("T")[0],
         ];
       } else {
-        // Validate quantity range
         const validation = quantityRangeSchema.safeParse({
           minQty: customRange.minQty,
           maxQty: customRange.maxQty,
@@ -249,23 +248,22 @@ export default function HomeScreen() {
     });
   };
 
-  const applySort = (field: string) => {
-    setSortBy(field);
+  const applySort = () => {
+    setSortBy(tempSortBy); // commit the tempSortBy
     hidePanel(sortAnim, () => {
       setIsSortVisible(false);
       setTimeout(() => {
-        fetchDrugs();
+        fetchDrugs({ sortBy: tempSortBy });
       }, 50);
     });
   };
+
   const clearFilters = () => {
     const updatedFilterBy = undefined;
     const updatedFilterValue = undefined;
 
     setFilterBy(updatedFilterBy);
     setFilterValue(updatedFilterValue);
-    // Don't reset UI selection - keep the selected preset as is
-    // setSelectedPreset and setCustomRange remain unchanged
 
     hidePanel(filterAnim, () => {
       setIsFilterVisible(false);
@@ -275,6 +273,16 @@ export default function HomeScreen() {
           filterBy: updatedFilterBy,
           filterValue: updatedFilterValue,
         });
+      }, 50);
+    });
+  };
+  const clearSort = () => {
+    setTempSortBy(undefined);
+    setSortBy(undefined);
+    hidePanel(sortAnim, () => {
+      setIsSortVisible(false);
+      setTimeout(() => {
+        fetchDrugs({ sortBy: undefined });
       }, 50);
     });
   };
@@ -369,7 +377,15 @@ export default function HomeScreen() {
                       selectedPreset === label && styles.presetButtonActive,
                     ]}
                   >
-                    <Text style={styles.presetButtonText}>{label}</Text>
+                    <Text
+                      style={[
+                        styles.presetButtonText,
+                        selectedPreset === label &&
+                          styles.presetButtonTextActive,
+                      ]}
+                    >
+                      {label}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -469,7 +485,7 @@ export default function HomeScreen() {
                   style={styles.footerBtnApply}
                   onPress={applyFilter}
                 >
-                  <Text style={styles.footerBtnText}>Apply</Text>
+                  <Text style={styles.footerBtnTextApply}>Apply</Text>
                 </TouchableOpacity>
               </View>
             </Animated.View>
@@ -489,28 +505,46 @@ export default function HomeScreen() {
                 { transform: [{ translateY: sortAnim }] },
               ]}
             >
+              <View style={styles.bottomSheetHandle} />
               <Text style={styles.modalTitle}>Sort By</Text>
-              {["medicineName", "price", "quantity", "expiryDate"].map(
-                (field) => (
-                  <TouchableOpacity
-                    key={field}
-                    onPress={() => applySort(field)}
-                    style={[
-                      styles.segmentButton,
-                      sortBy === field && styles.segmentButtonActive,
-                    ]}
-                  >
-                    <Text
+              <View style={styles.segmentContainerSort}>
+                {["medicineName", "price", "quantity", "expiryDate"].map(
+                  (field) => (
+                    <TouchableOpacity
+                      key={field}
+                      onPress={() => setTempSortBy(field)}
                       style={[
-                        styles.segmentText,
-                        sortBy === field && styles.segmentTextActive,
+                        styles.segmentButtonSort,
+                        tempSortBy === field && styles.segmentButtonActive,
                       ]}
                     >
-                      {field}
-                    </Text>
-                  </TouchableOpacity>
-                )
-              )}
+                      <Text
+                        style={[
+                          styles.segmentText,
+                          tempSortBy === field && styles.segmentTextActive,
+                        ]}
+                      >
+                        {field}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                )}
+              </View>
+
+              <View style={styles.footerButtons}>
+                <TouchableOpacity
+                  style={styles.footerBtnClear}
+                  onPress={clearSort}
+                >
+                  <Text style={styles.footerBtnText}>Clear</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.footerBtnApply}
+                  onPress={applySort}
+                >
+                  <Text style={styles.footerBtnTextApply}>Apply</Text>
+                </TouchableOpacity>
+              </View>
             </Animated.View>
           </TouchableWithoutFeedback>
         </Pressable>
@@ -630,9 +664,19 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     padding: 5,
   },
+  segmentContainerSort: {
+    marginBottom: 20,
+    overflow: "hidden",
+    padding: 5,
+  },
 
   segmentButton: {
     flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  segmentButtonSort: {
     paddingVertical: 10,
     alignItems: "center",
     borderRadius: 8,
@@ -662,18 +706,25 @@ const styles = StyleSheet.create({
   },
 
   presetButton: {
-    backgroundColor: "#f1f1f1",
+    backgroundColor: "#fafafa",
     paddingHorizontal: 18,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: 100,
   },
 
   presetButtonActive: {
-    backgroundColor: "#d8e8ff",
+    backgroundColor: "rgb(233, 243, 251)",
+    borderWidth: 1,
+    borderColor: "rgb(152, 175, 192)",
   },
 
   presetButtonText: {
     fontWeight: "500",
+    color: "#777",
+  },
+  presetButtonTextActive: {
+    fontWeight: "600",
+    color: "rgb(57, 104, 139)",
   },
 
   customInputContainer: {
@@ -702,7 +753,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 12,
+    borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
     backgroundColor: "#fafafa",
@@ -718,7 +769,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 12,
+    borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 14,
@@ -733,21 +784,31 @@ const styles = StyleSheet.create({
   },
 
   footerBtnClear: {
-    backgroundColor: "#eee",
+    backgroundColor: "rgb(246, 246, 246)",
+    borderWidth: 1,
+    borderColor: "rgb(149, 149, 149)",
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 20,
+    borderRadius: 100,
   },
 
   footerBtnApply: {
-    backgroundColor: "#aad4ff",
+    backgroundColor: "rgb(233, 243, 251)",
+    borderWidth: 1,
+    borderColor: "rgb(152, 175, 192)",
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 20,
+    borderRadius: 100,
   },
 
   footerBtnText: {
     fontWeight: "600",
     fontSize: 14,
+    color: "#444",
+  },
+  footerBtnTextApply: {
+    fontWeight: "600",
+    fontSize: 14,
+    color: "rgb(57, 104, 139)",
   },
 });

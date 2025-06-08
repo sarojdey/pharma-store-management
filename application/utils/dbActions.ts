@@ -333,7 +333,13 @@ export const dynamicSearchDrugs = async ({
       : "";
 
     // Validate and sanitize sortBy
-    const validSortColumns = ["id", "medicineName", "quantity", "expiryDate"];
+    const validSortColumns = [
+      "id",
+      "medicineName",
+      "quantity",
+      "expiryDate",
+      "price",
+    ];
     const safeSortBy =
       sortBy && validSortColumns.includes(sortBy) ? sortBy : "id";
     const orderByClause = `ORDER BY ${safeSortBy}`;
