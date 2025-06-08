@@ -3,9 +3,12 @@ import Loader from "@/components/Loader";
 import { Drug } from "@/types";
 import { dynamicSearchDrugs } from "@/utils/dbActions";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   Pressable,
   ScrollView,
@@ -16,6 +19,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { z } from "zod";
 
 export default function HomeScreen() {
   const [drugs, setDrugs] = useState<Drug[]>([]);
@@ -24,10 +28,10 @@ export default function HomeScreen() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBy, setFilterBy] = useState<
     "expiryDate" | "quantity" | undefined
-  >();
+  >(undefined);
   const [filterValue, setFilterValue] = useState<
     string | number | [string | number, string | number] | undefined
-  >();
+  >(undefined);
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
 
   const [isFilterVisible, setIsFilterVisible] = useState(false);
@@ -35,8 +39,38 @@ export default function HomeScreen() {
   const [activeFilterTab, setActiveFilterTab] = useState<"expiry" | "quantity">(
     "expiry"
   );
-  const [selectedPreset, setSelectedPreset] = useState("");
-  const [customRange, setCustomRange] = useState({ start: "", end: "" });
+  // Set "30 Days" as the default selected preset
+  const [selectedPreset, setSelectedPreset] = useState("30 Days");
+  const [customRange, setCustomRange] = useState({
+    startDate: new Date(),
+    endDate: new Date(),
+    minQty: "",
+    maxQty: "",
+  });
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+
+  // Zod schemas for validation
+  const dateRangeSchema = z
+    .object({
+      startDate: z.date(),
+      endDate: z.date(),
+    })
+    .refine((data) => data.startDate <= data.endDate, {
+      message: "Start date must be before or equal to end date",
+      path: ["endDate"],
+    });
+
+  const quantityRangeSchema = z
+    .object({
+      minQty: z.coerce.number().min(0, "Minimum quantity must be 0 or greater"),
+      maxQty: z.coerce.number().min(0, "Maximum quantity must be 0 or greater"),
+    })
+    .refine((data) => data.minQty <= data.maxQty, {
+      message:
+        "Minimum quantity must be less than or equal to maximum quantity",
+      path: ["maxQty"],
+    });
 
   const navigation = useNavigation();
   const filterAnim = useRef(new Animated.Value(300)).current;
@@ -110,8 +144,33 @@ export default function HomeScreen() {
 
   const switchTab = (tab: "expiry" | "quantity") => {
     setActiveFilterTab(tab);
-    setSelectedPreset("");
-    setCustomRange({ start: "", end: "" });
+    // Set default preset based on the active tab
+    setSelectedPreset(tab === "expiry" ? "30 Days" : "50");
+    setCustomRange({
+      startDate: new Date(),
+      endDate: new Date(),
+      minQty: "",
+      maxQty: "",
+    });
+  };
+
+  const handleDateChange = (
+    type: "start" | "end",
+    event: any,
+    selectedDate?: Date
+  ) => {
+    if (type === "start") {
+      setShowStartDatePicker(false);
+    } else {
+      setShowEndDatePicker(false);
+    }
+
+    if (selectedDate) {
+      setCustomRange((prev) => ({
+        ...prev,
+        [type === "start" ? "startDate" : "endDate"]: selectedDate,
+      }));
+    }
   };
 
   const onSearch = () => fetchDrugs();
@@ -130,12 +189,41 @@ export default function HomeScreen() {
     let updatedFilterValue: typeof filterValue;
 
     if (selectedPreset === "Custom") {
-      updatedFilterBy =
-        activeFilterTab === "expiry" ? "expiryDate" : "quantity";
-      updatedFilterValue =
-        activeFilterTab === "expiry"
-          ? [customRange.start, customRange.end]
-          : [Number(customRange.start), Number(customRange.end)];
+      if (activeFilterTab === "expiry") {
+        // Validate date range
+        const validation = dateRangeSchema.safeParse({
+          startDate: customRange.startDate,
+          endDate: customRange.endDate,
+        });
+
+        if (!validation.success) {
+          Alert.alert("Validation Error", validation.error.errors[0].message);
+          return;
+        }
+
+        updatedFilterBy = "expiryDate";
+        updatedFilterValue = [
+          customRange.startDate.toISOString().split("T")[0],
+          customRange.endDate.toISOString().split("T")[0],
+        ];
+      } else {
+        // Validate quantity range
+        const validation = quantityRangeSchema.safeParse({
+          minQty: customRange.minQty,
+          maxQty: customRange.maxQty,
+        });
+
+        if (!validation.success) {
+          Alert.alert("Validation Error", validation.error.errors[0].message);
+          return;
+        }
+
+        updatedFilterBy = "quantity";
+        updatedFilterValue = [
+          Number(customRange.minQty),
+          Number(customRange.maxQty),
+        ];
+      }
     } else {
       if (activeFilterTab === "expiry") {
         const days = Number(selectedPreset.split(" ")[0]);
@@ -176,8 +264,8 @@ export default function HomeScreen() {
 
     setFilterBy(updatedFilterBy);
     setFilterValue(updatedFilterValue);
-    setSelectedPreset("");
-    setCustomRange({ start: "", end: "" });
+    // Don't reset UI selection - keep the selected preset as is
+    // setSelectedPreset and setCustomRange remain unchanged
 
     hidePanel(filterAnim, () => {
       setIsFilterVisible(false);
@@ -244,10 +332,7 @@ export default function HomeScreen() {
               ]}
             >
               <View style={styles.bottomSheetHandle} />
-              <Text style={styles.modalTitle}>Filter</Text>
-              <Text style={styles.sectionTitle}>
-                {activeFilterTab === "expiry" ? "Expiry Date" : "Quantity"}
-              </Text>
+              <Text style={styles.modalTitle}>Filter by</Text>
 
               <View style={styles.segmentContainer}>
                 {["expiry", "quantity"].map((tab) => (
@@ -290,33 +375,87 @@ export default function HomeScreen() {
               </View>
 
               {selectedPreset === "Custom" && (
-                <View style={styles.customInputRow}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={
-                      activeFilterTab === "expiry"
-                        ? "Start Date (YYYY-MM-DD)"
-                        : "Min Qty"
-                    }
-                    placeholderTextColor="#999"
-                    value={customRange.start}
-                    onChangeText={(t) =>
-                      setCustomRange((pr) => ({ ...pr, start: t }))
-                    }
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder={
-                      activeFilterTab === "expiry"
-                        ? "End Date (YYYY-MM-DD)"
-                        : "Max Qty"
-                    }
-                    placeholderTextColor="#999"
-                    value={customRange.end}
-                    onChangeText={(t) =>
-                      setCustomRange((pr) => ({ ...pr, end: t }))
-                    }
-                  />
+                <View style={styles.customInputContainer}>
+                  {activeFilterTab === "expiry" ? (
+                    <View style={styles.customInputRow}>
+                      <View style={styles.dateInputContainer}>
+                        <Text style={styles.dateLabel}>Start Date</Text>
+                        <TouchableOpacity
+                          style={styles.dateInput}
+                          onPress={() => setShowStartDatePicker(true)}
+                        >
+                          <Text style={styles.dateText}>
+                            {customRange.startDate.toLocaleDateString()}
+                          </Text>
+                          <MaterialIcons
+                            name="calendar-month"
+                            size={20}
+                            color="#aaa"
+                          />
+                        </TouchableOpacity>
+                        {showStartDatePicker && (
+                          <DateTimePicker
+                            value={customRange.startDate}
+                            mode="date"
+                            display="default"
+                            onChange={(event, date) =>
+                              handleDateChange("start", event, date)
+                            }
+                          />
+                        )}
+                      </View>
+
+                      <View style={styles.dateInputContainer}>
+                        <Text style={styles.dateLabel}>End Date</Text>
+                        <TouchableOpacity
+                          style={styles.dateInput}
+                          onPress={() => setShowEndDatePicker(true)}
+                        >
+                          <Text style={styles.dateText}>
+                            {customRange.endDate.toLocaleDateString()}
+                          </Text>
+                          <MaterialIcons
+                            name="calendar-month"
+                            size={20}
+                            color="#aaa"
+                          />
+                        </TouchableOpacity>
+                        {showEndDatePicker && (
+                          <DateTimePicker
+                            value={customRange.endDate}
+                            mode="date"
+                            display="default"
+                            onChange={(event, date) =>
+                              handleDateChange("end", event, date)
+                            }
+                          />
+                        )}
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.customInputRow}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Min Qty"
+                        placeholderTextColor="#999"
+                        keyboardType="number-pad"
+                        value={customRange.minQty}
+                        onChangeText={(t) =>
+                          setCustomRange((pr) => ({ ...pr, minQty: t }))
+                        }
+                      />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Max Qty"
+                        placeholderTextColor="#999"
+                        keyboardType="number-pad"
+                        value={customRange.maxQty}
+                        onChangeText={(t) =>
+                          setCustomRange((pr) => ({ ...pr, maxQty: t }))
+                        }
+                      />
+                    </View>
+                  )}
                 </View>
               )}
               <View style={styles.footerButtons}>
@@ -469,9 +608,10 @@ const styles = StyleSheet.create({
   },
 
   modalTitle: {
-    fontSize: 22,
-    fontWeight: "600",
-    marginBottom: 10,
+    color: "#444",
+    fontSize: 18,
+    fontWeight: "500",
+    marginBottom: 5,
     alignSelf: "flex-start",
   },
 
@@ -484,21 +624,24 @@ const styles = StyleSheet.create({
 
   segmentContainer: {
     flexDirection: "row",
-    backgroundColor: "#f0f0f0",
-    borderRadius: 10,
+    backgroundColor: "#fafafa",
+    borderRadius: 8,
     marginBottom: 20,
     overflow: "hidden",
+    padding: 5,
   },
 
   segmentButton: {
     flex: 1,
     paddingVertical: 10,
     alignItems: "center",
-    borderRadius: 10,
+    borderRadius: 8,
   },
 
   segmentButtonActive: {
-    backgroundColor: "#e0eaff",
+    backgroundColor: "rgb(233, 243, 251)",
+    borderWidth: 1,
+    borderColor: "rgb(152, 175, 192)",
   },
 
   segmentText: {
@@ -507,7 +650,7 @@ const styles = StyleSheet.create({
   },
 
   segmentTextActive: {
-    color: "#000",
+    color: "rgb(57, 104, 139)",
     fontWeight: "600",
   },
 
@@ -533,10 +676,42 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
+  customInputContainer: {
+    marginBottom: 20,
+  },
+
   customInputRow: {
     flexDirection: "row",
     gap: 10,
-    marginBottom: 20,
+  },
+
+  dateInputContainer: {
+    flex: 1,
+  },
+
+  dateLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#444",
+    marginBottom: 8,
+  },
+
+  dateInput: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: "#fafafa",
+    minHeight: 45,
+  },
+
+  dateText: {
+    fontSize: 14,
+    color: "#000",
   },
 
   input: {
