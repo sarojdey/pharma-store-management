@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import {
   Alert,
   Keyboard,
@@ -23,9 +23,16 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 const schema = z.object({
   medicineName: z.string().min(1, "Medicine name is required"),
   idCode: z.string().min(1, "ID Code is required"),
-  price: z.coerce.number().min(0, "Buy price must be a valid number"),
-  mrp: z.coerce.number().min(0, "MRP must be a valid number"),
-  quantity: z.coerce.number().int().min(0, "Quantity must be a whole number"),
+  price: z.coerce
+    .number()
+    .min(0.01, "Buy price is required and must be greater than 0"),
+  mrp: z.coerce
+    .number()
+    .min(0.01, "MRP is required and must be greater than 0"),
+  quantity: z.coerce
+    .number()
+    .int()
+    .min(1, "Quantity is required and must be at least 1"),
   expiryDate: z.date({ required_error: "Expiry Date is required" }),
 });
 
@@ -34,23 +41,21 @@ export default function AddInventoryItem() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
-    setValue,
+    control,
     handleSubmit,
-    watch,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       medicineName: "",
       idCode: "",
-      price: 0,
-      mrp: 0,
-      quantity: 0,
+      price: undefined,
+      mrp: undefined,
+      quantity: undefined,
       expiryDate: new Date(),
     },
   });
-
-  const expiryDate = watch("expiryDate");
 
   const onSubmit = async (data: z.infer<typeof schema>) => {
     setIsSubmitting(true);
@@ -71,14 +76,7 @@ export default function AddInventoryItem() {
         Alert.alert("Success", "Medicine added to inventory successfully!", [
           {
             text: "OK",
-            onPress: () => {
-              setValue("medicineName", "");
-              setValue("idCode", "");
-              setValue("price", 0);
-              setValue("mrp", 0);
-              setValue("quantity", 0);
-              setValue("expiryDate", new Date());
-            },
+            onPress: () => reset(),
           },
         ]);
       } else {
@@ -89,21 +87,6 @@ export default function AddInventoryItem() {
       Alert.alert("Error", "An error occurred while adding the medicine");
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  interface DateChangeEvent {
-    type: string;
-    nativeEvent: any;
-  }
-
-  const handleDateChange = (
-    event: DateChangeEvent | undefined,
-    selectedDate?: Date | undefined
-  ): void => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setValue("expiryDate", selectedDate, { shouldValidate: true });
     }
   };
 
@@ -147,14 +130,21 @@ export default function AddInventoryItem() {
                   required
                   error={errors.medicineName?.message}
                 >
-                  <TextInput
-                    style={[
-                      styles.input,
-                      errors.medicineName && styles.inputError,
-                    ]}
-                    onChangeText={(text) => setValue("medicineName", text)}
-                    placeholder="e.g., Remorinax Plus 600mg"
-                    placeholderTextColor="#9ca3af"
+                  <Controller
+                    control={control}
+                    name="medicineName"
+                    render={({ field }) => (
+                      <TextInput
+                        style={[
+                          styles.input,
+                          errors.medicineName && styles.inputError,
+                        ]}
+                        onChangeText={field.onChange}
+                        value={field.value}
+                        placeholder="e.g., Remorinax Plus 600mg"
+                        placeholderTextColor="#9ca3af"
+                      />
+                    )}
                   />
                 </FormField>
 
@@ -163,11 +153,21 @@ export default function AddInventoryItem() {
                   required
                   error={errors.idCode?.message}
                 >
-                  <TextInput
-                    style={[styles.input, errors.idCode && styles.inputError]}
-                    onChangeText={(text) => setValue("idCode", text)}
-                    placeholder="e.g., 5260"
-                    placeholderTextColor="#9ca3af"
+                  <Controller
+                    control={control}
+                    name="idCode"
+                    render={({ field }) => (
+                      <TextInput
+                        style={[
+                          styles.input,
+                          errors.idCode && styles.inputError,
+                        ]}
+                        onChangeText={field.onChange}
+                        value={field.value}
+                        placeholder="e.g., 5260"
+                        placeholderTextColor="#9ca3af"
+                      />
+                    )}
                   />
                 </FormField>
 
@@ -176,38 +176,51 @@ export default function AddInventoryItem() {
                   required
                   error={errors.expiryDate?.message}
                 >
-                  <TouchableOpacity
-                    style={[
-                      styles.input,
-                      styles.dateInput,
-                      errors.expiryDate && styles.inputError,
-                    ]}
-                    onPress={() => setShowDatePicker(true)}
-                  >
-                    <Text
-                      style={[
-                        styles.dateText,
-                        !expiryDate && styles.placeholderText,
-                      ]}
-                    >
-                      {expiryDate
-                        ? expiryDate.toLocaleDateString()
-                        : "Select expiry date"}
-                    </Text>
-                    <MaterialIcons
-                      name="calendar-month"
-                      size={24}
-                      color="#aaa"
-                    />
-                  </TouchableOpacity>
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={expiryDate || new Date()}
-                      mode="date"
-                      display="default"
-                      onChange={handleDateChange}
-                    />
-                  )}
+                  <Controller
+                    control={control}
+                    name="expiryDate"
+                    render={({ field }) => (
+                      <>
+                        <TouchableOpacity
+                          style={[
+                            styles.input,
+                            styles.dateInput,
+                            errors.expiryDate && styles.inputError,
+                          ]}
+                          onPress={() => setShowDatePicker(true)}
+                        >
+                          <Text
+                            style={[
+                              styles.dateText,
+                              !field.value && styles.placeholderText,
+                            ]}
+                          >
+                            {field.value
+                              ? field.value.toLocaleDateString()
+                              : "Select expiry date"}
+                          </Text>
+                          <MaterialIcons
+                            name="calendar-month"
+                            size={24}
+                            color="#aaa"
+                          />
+                        </TouchableOpacity>
+                        {showDatePicker && (
+                          <DateTimePicker
+                            value={field.value || new Date()}
+                            mode="date"
+                            display="default"
+                            onChange={(_, selectedDate) => {
+                              setShowDatePicker(false);
+                              if (selectedDate) {
+                                field.onChange(selectedDate);
+                              }
+                            }}
+                          />
+                        )}
+                      </>
+                    )}
+                  />
                 </FormField>
 
                 <View style={styles.row}>
@@ -217,27 +230,70 @@ export default function AddInventoryItem() {
                       required
                       error={errors.price?.message}
                     >
-                      <TextInput
-                        style={[
-                          styles.input,
-                          errors.price && styles.inputError,
-                        ]}
-                        keyboardType="decimal-pad"
-                        onChangeText={(text) => setValue("price", Number(text))}
-                        placeholder="e.g., 30"
-                        placeholderTextColor="#9ca3af"
+                      <Controller
+                        control={control}
+                        name="price"
+                        render={({ field }) => (
+                          <TextInput
+                            style={[
+                              styles.input,
+                              errors.price && styles.inputError,
+                            ]}
+                            keyboardType="decimal-pad"
+                            onChangeText={(text) => {
+                              if (text.trim() === "") {
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = parseFloat(text);
+                                if (!isNaN(numValue)) {
+                                  field.onChange(numValue);
+                                }
+                              }
+                            }}
+                            value={
+                              field.value !== undefined
+                                ? field.value.toString()
+                                : ""
+                            }
+                            placeholder="e.g., 30"
+                            placeholderTextColor="#9ca3af"
+                          />
+                        )}
                       />
                     </FormField>
                   </View>
 
                   <View style={styles.halfWidth}>
                     <FormField label="MRP" required error={errors.mrp?.message}>
-                      <TextInput
-                        style={[styles.input, errors.mrp && styles.inputError]}
-                        keyboardType="decimal-pad"
-                        onChangeText={(text) => setValue("mrp", Number(text))}
-                        placeholder="e.g., 50"
-                        placeholderTextColor="#9ca3af"
+                      <Controller
+                        control={control}
+                        name="mrp"
+                        render={({ field }) => (
+                          <TextInput
+                            style={[
+                              styles.input,
+                              errors.mrp && styles.inputError,
+                            ]}
+                            keyboardType="decimal-pad"
+                            onChangeText={(text) => {
+                              if (text.trim() === "") {
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = parseFloat(text);
+                                if (!isNaN(numValue)) {
+                                  field.onChange(numValue);
+                                }
+                              }
+                            }}
+                            value={
+                              field.value !== undefined
+                                ? field.value.toString()
+                                : ""
+                            }
+                            placeholder="e.g., 50"
+                            placeholderTextColor="#9ca3af"
+                          />
+                        )}
                       />
                     </FormField>
                   </View>
@@ -248,20 +304,47 @@ export default function AddInventoryItem() {
                   required
                   error={errors.quantity?.message}
                 >
-                  <TextInput
-                    style={[styles.input, errors.quantity && styles.inputError]}
-                    keyboardType="number-pad"
-                    onChangeText={(text) => setValue("quantity", Number(text))}
-                    placeholder="e.g., 100"
-                    placeholderTextColor="#9ca3af"
+                  <Controller
+                    control={control}
+                    name="quantity"
+                    render={({ field }) => (
+                      <TextInput
+                        style={[
+                          styles.input,
+                          errors.quantity && styles.inputError,
+                        ]}
+                        keyboardType="number-pad"
+                        onChangeText={(text) => {
+                          if (text.trim() === "") {
+                            field.onChange(undefined);
+                          } else {
+                            const numValue = parseInt(text, 10);
+                            if (!isNaN(numValue)) {
+                              field.onChange(numValue);
+                            }
+                          }
+                        }}
+                        value={
+                          field.value !== undefined
+                            ? field.value.toString()
+                            : ""
+                        }
+                        placeholder="e.g., 100"
+                        placeholderTextColor="#9ca3af"
+                      />
+                    )}
                   />
                 </FormField>
               </View>
 
               <TouchableOpacity
-                style={styles.submitButton}
+                style={[
+                  styles.submitButton,
+                  isSubmitting && styles.submitButtonDisabled,
+                ]}
                 onPress={handleSubmit(onSubmit)}
                 activeOpacity={0.8}
+                disabled={isSubmitting}
               >
                 <Text style={styles.submitButtonText}>Add to Inventory</Text>
               </TouchableOpacity>
@@ -287,7 +370,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 18,
   },
-
   formCard: {
     backgroundColor: "#fcfcfc",
     borderRadius: 8,
@@ -335,7 +417,6 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: "#9ca3af",
   },
-
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -344,34 +425,22 @@ const styles = StyleSheet.create({
   halfWidth: {
     flex: 1,
   },
-  divider: {
-    height: 1,
-    backgroundColor: "#e2e8f0",
-    marginVertical: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#475569",
-    marginBottom: 16,
-  },
   submitButton: {
-    backgroundColor: "rgb(70, 125, 168)",
+    backgroundColor: "rgba(223, 241, 255, 0.49)",
+    borderWidth: 1,
+    borderColor: "rgb(152, 175, 192)",
     borderRadius: 8,
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 20,
     justifyContent: "center",
     alignItems: "center",
   },
   submitButtonText: {
-    color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "700",
-    marginRight: 8,
+    color: "rgb(57, 104, 139)",
+    fontSize: 16,
+    fontWeight: "600",
   },
-
   submitButtonDisabled: {
-    backgroundColor: "rgb(61, 108, 145)",
     opacity: 0.6,
   },
   error: {

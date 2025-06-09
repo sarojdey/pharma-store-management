@@ -21,6 +21,13 @@ import {
 } from "react-native";
 import { z } from "zod";
 
+const SORT_OPTIONS: Record<string, string> = {
+  medicineName: "Name",
+  price: "Price",
+  quantity: "Quantity",
+  expiryDate: "Expiry Date",
+};
+
 export default function HomeScreen() {
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -138,7 +145,7 @@ export default function HomeScreen() {
   };
 
   const openSort = () => {
-    setTempSortBy(sortBy); // copy current sort into temp
+    setTempSortBy(sortBy ?? "medicineName");
     setIsSortVisible(true);
     showPanel(sortAnim);
   };
@@ -515,7 +522,9 @@ export default function HomeScreen() {
                       onPress={() => setTempSortBy(field)}
                       style={[
                         styles.segmentButtonSort,
-                        tempSortBy === field && styles.segmentButtonActive,
+                        tempSortBy === field
+                          ? styles.segmentButtonActive
+                          : styles.segmentButtonInactive,
                       ]}
                     >
                       <Text
@@ -524,7 +533,7 @@ export default function HomeScreen() {
                           tempSortBy === field && styles.segmentTextActive,
                         ]}
                       >
-                        {field}
+                        {SORT_OPTIONS[field]}
                       </Text>
                     </TouchableOpacity>
                   )
@@ -668,6 +677,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     overflow: "hidden",
     padding: 5,
+    gap: 10,
   },
 
   segmentButton: {
@@ -686,6 +696,9 @@ const styles = StyleSheet.create({
     backgroundColor: "rgb(233, 243, 251)",
     borderWidth: 1,
     borderColor: "rgb(152, 175, 192)",
+  },
+  segmentButtonInactive: {
+    backgroundColor: "#fafafa",
   },
 
   segmentText: {
