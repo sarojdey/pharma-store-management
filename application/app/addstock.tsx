@@ -1,13 +1,15 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { useNavigation } from "expo-router";
 import React, { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,28 +20,52 @@ import {
 } from "react-native";
 import { z } from "zod";
 import { addDrug } from "../utils/dbActions";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Picker } from "@react-native-picker/picker";
 
-const schema = z.object({
-  medicineName: z.string().min(1, "Medicine name is required"),
-  idCode: z.string().min(1, "ID Code is required"),
-  price: z.coerce
-    .number()
-    .min(0.01, "Buy price is required and must be greater than 0"),
-  mrp: z.coerce
-    .number()
-    .min(0.01, "MRP is required and must be greater than 0"),
-  quantity: z.coerce
-    .number()
-    .int()
-    .min(1, "Quantity is required and must be at least 1"),
-  expiryDate: z.date({ required_error: "Expiry Date is required" }),
-});
+const schema = z
+  .object({
+    medicineName: z.string().min(1, "Medicine name is required"),
+    idCode: z.string().min(1, "ID Code is required"),
+    price: z.coerce
+      .number()
+      .min(0.01, "Buy price is required and must be greater than 0"),
+    mrp: z.coerce
+      .number()
+      .min(0.01, "MRP is required and must be greater than 0"),
+    quantity: z.coerce
+      .number()
+      .int()
+      .min(1, "Quantity is required and must be at least 1"),
+    expiryDate: z.date({ required_error: "Expiry Date is required" }),
+    medicineType: z.string().min(1, "Medicine type is required"),
+    otherMedicineType: z.string().optional(),
+    batchNo: z
+      .string()
+      .transform((val) => val.trim() || null)
+      .optional(),
+    distributorName: z
+      .string()
+      .transform((val) => val.trim() || null)
+      .optional(),
+    purchaseInvoiceNumber: z
+      .string()
+      .transform((val) => val.trim() || null)
+      .optional(),
+  })
+  .refine(
+    (data) =>
+      data.medicineType !== "Other" ||
+      (data.otherMedicineType && data.otherMedicineType.trim() !== ""),
+    {
+      message: "Please specify the other medicine type",
+      path: ["otherMedicineType"],
+    }
+  );
 
 export default function AddInventoryItem() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const navigation = useNavigation();
   const {
     control,
     handleSubmit,
@@ -54,8 +80,14 @@ export default function AddInventoryItem() {
       mrp: undefined,
       quantity: undefined,
       expiryDate: new Date(),
+      medicineType: "",
+      otherMedicineType: "",
+      batchNo: "",
+      distributorName: "",
+      purchaseInvoiceNumber: "",
     },
   });
+  const medicineType = useWatch({ control, name: "medicineType" });
 
   const onSubmit = async (data: z.infer<typeof schema>) => {
     setIsSubmitting(true);
@@ -68,6 +100,13 @@ export default function AddInventoryItem() {
         mrp: data.mrp,
         quantity: data.quantity,
         expiryDate: data.expiryDate.toISOString().split("T")[0],
+        medicineType:
+          data.medicineType === "Other"
+            ? data.otherMedicineType
+            : data.medicineType,
+        batchNo: data.batchNo,
+        distributorName: data.distributorName,
+        purchaseInvoiceNumber: data.purchaseInvoiceNumber,
       };
 
       const result = await addDrug(drugData);
@@ -111,7 +150,24 @@ export default function AddInventoryItem() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.wrapper}>
+      <View style={styles.topbar}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back-sharp" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text
+          style={{
+            fontSize: 18,
+            fontWeight: "600",
+            color: "#333",
+            flex: 1,
+            textAlign: "center",
+            paddingRight: 40,
+          }}
+        >
+          Add Medicine
+        </Text>
+      </View>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -222,6 +278,59 @@ export default function AddInventoryItem() {
                     )}
                   />
                 </FormField>
+                <FormField
+                  label="Medicine Type"
+                  required
+                  error={errors.medicineType?.message}
+                >
+                  <Controller
+                    control={control}
+                    name="medicineType"
+                    render={({ field }) => (
+                      <View style={styles.pickerWrapper}>
+                        <Picker
+                          selectedValue={field.value}
+                          onValueChange={field.onChange}
+                          style={styles.picker}
+                        >
+                          <Picker.Item
+                            label="Select medicine type..."
+                            value=""
+                          />
+                          <Picker.Item label="Syringe" value="Syringe" />
+                          <Picker.Item label="Syrup" value="Syrup" />
+                          <Picker.Item label="Pills" value="Pills" />
+                          <Picker.Item label="Other" value="Other" />
+                        </Picker>
+                      </View>
+                    )}
+                  />
+                </FormField>
+
+                {medicineType === "Other" && (
+                  <FormField
+                    label="Specify Other Type"
+                    required
+                    error={errors.otherMedicineType?.message}
+                  >
+                    <Controller
+                      control={control}
+                      name="otherMedicineType"
+                      render={({ field }) => (
+                        <TextInput
+                          style={[
+                            styles.input,
+                            errors.otherMedicineType && styles.inputError,
+                          ]}
+                          onChangeText={field.onChange}
+                          value={field.value}
+                          placeholder="e.g., Inhaler"
+                          placeholderTextColor="#9ca3af"
+                        />
+                      )}
+                    />
+                  </FormField>
+                )}
 
                 <View style={styles.row}>
                   <View style={styles.halfWidth}>
@@ -335,6 +444,68 @@ export default function AddInventoryItem() {
                     )}
                   />
                 </FormField>
+                <FormField label="Batch No." error={errors.batchNo?.message}>
+                  <Controller
+                    control={control}
+                    name="batchNo"
+                    render={({ field }) => (
+                      <TextInput
+                        style={[
+                          styles.input,
+                          errors.batchNo && styles.inputError,
+                        ]}
+                        onChangeText={field.onChange}
+                        value={field.value}
+                        placeholder="e.g., B123456"
+                        placeholderTextColor="#9ca3af"
+                      />
+                    )}
+                  />
+                </FormField>
+
+                <FormField
+                  label="Distributor Name"
+                  error={errors.distributorName?.message}
+                >
+                  <Controller
+                    control={control}
+                    name="distributorName"
+                    render={({ field }) => (
+                      <TextInput
+                        style={[
+                          styles.input,
+                          errors.distributorName && styles.inputError,
+                        ]}
+                        onChangeText={field.onChange}
+                        value={field.value}
+                        placeholder="e.g., ABC Pharma Pvt Ltd"
+                        placeholderTextColor="#9ca3af"
+                      />
+                    )}
+                  />
+                </FormField>
+
+                <FormField
+                  label="Purchase Invoice No."
+                  error={errors.purchaseInvoiceNumber?.message}
+                >
+                  <Controller
+                    control={control}
+                    name="purchaseInvoiceNumber"
+                    render={({ field }) => (
+                      <TextInput
+                        style={[
+                          styles.input,
+                          errors.purchaseInvoiceNumber && styles.inputError,
+                        ]}
+                        onChangeText={field.onChange}
+                        value={field.value}
+                        placeholder="e.g., INV-7890"
+                        placeholderTextColor="#9ca3af"
+                      />
+                    )}
+                  />
+                </FormField>
               </View>
 
               <TouchableOpacity
@@ -352,15 +523,32 @@ export default function AddInventoryItem() {
           </ScrollView>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
+  wrapper: { flex: 1, position: "relative" },
+
+  topbar: {
+    position: "absolute",
+    top: 0,
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderBottomWidth: 1,
+    borderTopWidth: 1,
+    borderBottomColor: "#ccc",
+    borderTopColor: "#ccc",
+    paddingHorizontal: 10,
+    paddingVertical: 16,
+    zIndex: 1000,
+    gap: 10,
   },
+
   scrollView: {
+    marginTop: 60,
     flex: 1,
   },
   scrollContent: {
@@ -448,5 +636,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 6,
     fontWeight: "500",
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    overflow: "hidden",
+    marginTop: 4,
+  },
+  picker: {
+    height: 50,
+    width: "100%",
+    color: "#111",
   },
 });

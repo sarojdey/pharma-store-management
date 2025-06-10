@@ -11,6 +11,9 @@ export const createDatabase = (): void => {
         mrp REAL NOT NULL,
         quantity INTEGER NOT NULL,
         expiryDate TEXT NOT NULL,
+        batchNo TEXT,
+        distributorName TEXT,
+        purchaseInvoiceNumber TEXT,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
         updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
       );
@@ -54,11 +57,25 @@ export const addDrug = async (drugData: {
   mrp: number;
   quantity: number;
   expiryDate: string;
+  batchNo?: string | null;
+  distributorName?: string | null;
+  purchaseInvoiceNumber?: string | null;
 }) => {
   try {
     const result = await db.runAsync(
-      `INSERT INTO drugs (medicineName, idCode, price, mrp, quantity, expiryDate, createdAt, updatedAt) 
-       VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      `INSERT INTO drugs (
+        medicineName,
+        idCode,
+        price,
+        mrp,
+        quantity,
+        expiryDate,
+        batchNo,
+        distributorName,
+        purchaseInvoiceNumber,
+        createdAt,
+        updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
       [
         drugData.medicineName,
         drugData.idCode,
@@ -66,6 +83,9 @@ export const addDrug = async (drugData: {
         drugData.mrp,
         drugData.quantity,
         drugData.expiryDate,
+        drugData.batchNo ?? null,
+        drugData.distributorName ?? null,
+        drugData.purchaseInvoiceNumber ?? null,
       ]
     );
 
@@ -86,11 +106,14 @@ export const updateDrug = async (
     mrp?: number;
     quantity?: number;
     expiryDate?: string;
+    batchNo?: string;
+    distributorName?: string;
+    purchaseInvoiceNumber?: string;
   }
 ) => {
   try {
-    const fields = [];
-    const values = [];
+    const fields: string[] = [];
+    const values: any[] = [];
 
     Object.entries(drugData).forEach(([key, value]) => {
       if (value !== undefined) {
@@ -247,6 +270,9 @@ export const resetDatabase = (): void => {
         mrp REAL NOT NULL,
         quantity INTEGER NOT NULL,
         expiryDate TEXT NOT NULL,
+        batchNo TEXT NOT NULL,
+        distributorName TEXT NOT NULL,
+        purchaseInvoiceNumber TEXT NOT NULL,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
         updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
       );
@@ -287,7 +313,6 @@ export const dynamicSearchDrugs = async ({
       .toISOString()
       .split("T")[0];
 
-    // Page-specific conditions
     switch (page) {
       case "nostockalert":
         conditions.push("quantity = 0");
@@ -305,15 +330,12 @@ export const dynamicSearchDrugs = async ({
         break;
     }
 
-    // Search term condition
     if (searchTerm) {
       conditions.push("(medicineName LIKE ?)");
       values.push(`%${searchTerm}%`);
     }
 
-    // Filter conditions
     if (filterBy && filterValue !== undefined) {
-      // Validate filterBy to prevent SQL injection
       const validFilterColumns = ["expiryDate", "quantity"];
       if (!validFilterColumns.includes(filterBy)) {
         throw new Error(`Invalid filterBy value: ${filterBy}`);
@@ -332,7 +354,6 @@ export const dynamicSearchDrugs = async ({
       ? `WHERE ${conditions.join(" AND ")}`
       : "";
 
-    // Validate and sanitize sortBy
     const validSortColumns = [
       "id",
       "medicineName",
