@@ -7,7 +7,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   useEffect(() => {
-    resetDatabase();
+    // resetDatabase();
     createDatabase();
   }, []);
   return (

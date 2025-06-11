@@ -6,6 +6,7 @@ export interface Drug {
   price: number;
   mrp: number;
   expiryDate: string;
+  medicineType: string;
   batchNo?: string | null;
   distributorName?: string | null;
   purchaseInvoiceNumber?: string | null;

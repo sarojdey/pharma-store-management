@@ -80,7 +80,7 @@ export default function AddInventoryItem() {
       mrp: undefined,
       quantity: undefined,
       expiryDate: new Date(),
-      medicineType: "",
+      medicineType: "Pills",
       otherMedicineType: "",
       batchNo: "",
       distributorName: "",
@@ -100,13 +100,12 @@ export default function AddInventoryItem() {
         mrp: data.mrp,
         quantity: data.quantity,
         expiryDate: data.expiryDate.toISOString().split("T")[0],
-        medicineType:
-          data.medicineType === "Other"
-            ? data.otherMedicineType
-            : data.medicineType,
-        batchNo: data.batchNo,
-        distributorName: data.distributorName,
-        purchaseInvoiceNumber: data.purchaseInvoiceNumber,
+        medicineType: (data.medicineType === "Other"
+          ? data.otherMedicineType
+          : data.medicineType) as string,
+        batchNo: data.batchNo || null,
+        distributorName: data.distributorName || null,
+        purchaseInvoiceNumber: data.purchaseInvoiceNumber || null,
       };
 
       const result = await addDrug(drugData);
@@ -293,13 +292,9 @@ export default function AddInventoryItem() {
                           onValueChange={field.onChange}
                           style={styles.picker}
                         >
-                          <Picker.Item
-                            label="Select medicine type..."
-                            value=""
-                          />
-                          <Picker.Item label="Syringe" value="Syringe" />
-                          <Picker.Item label="Syrup" value="Syrup" />
                           <Picker.Item label="Pills" value="Pills" />
+                          <Picker.Item label="Syrup" value="Syrup" />
+                          <Picker.Item label="Syringe" value="Syringe" />
                           <Picker.Item label="Other" value="Other" />
                         </Picker>
                       </View>
@@ -643,9 +638,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
     marginTop: 4,
+    padding: 2,
   },
   picker: {
-    height: 50,
+    height: 55,
     width: "100%",
     color: "#111",
   },

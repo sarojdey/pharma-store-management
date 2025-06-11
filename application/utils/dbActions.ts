@@ -11,6 +11,7 @@ export const createDatabase = (): void => {
         mrp REAL NOT NULL,
         quantity INTEGER NOT NULL,
         expiryDate TEXT NOT NULL,
+        medicineType TEXT NOT NULL,
         batchNo TEXT,
         distributorName TEXT,
         purchaseInvoiceNumber TEXT,
@@ -57,6 +58,7 @@ export const addDrug = async (drugData: {
   mrp: number;
   quantity: number;
   expiryDate: string;
+  medicineType: string;
   batchNo?: string | null;
   distributorName?: string | null;
   purchaseInvoiceNumber?: string | null;
@@ -70,12 +72,13 @@ export const addDrug = async (drugData: {
         mrp,
         quantity,
         expiryDate,
+        medicineType,
         batchNo,
         distributorName,
         purchaseInvoiceNumber,
         createdAt,
         updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
       [
         drugData.medicineName,
         drugData.idCode,
@@ -83,6 +86,7 @@ export const addDrug = async (drugData: {
         drugData.mrp,
         drugData.quantity,
         drugData.expiryDate,
+        drugData.medicineType,
         drugData.batchNo ?? null,
         drugData.distributorName ?? null,
         drugData.purchaseInvoiceNumber ?? null,
@@ -106,6 +110,7 @@ export const updateDrug = async (
     mrp?: number;
     quantity?: number;
     expiryDate?: string;
+    medicineType?: string;
     batchNo?: string;
     distributorName?: string;
     purchaseInvoiceNumber?: string;
@@ -244,19 +249,6 @@ export const updateDrugQuantity = async (
   }
 };
 
-export const searchDrugs = async (searchTerm: string) => {
-  try {
-    const result = await db.getAllAsync(
-      "SELECT * FROM drugs WHERE medicineName LIKE ? OR idCode LIKE ? ORDER BY medicineName ASC",
-      [`%${searchTerm}%`, `%${searchTerm}%`]
-    );
-    return result;
-  } catch (error) {
-    console.error("Error searching drugs:", error);
-    return [];
-  }
-};
-
 export const resetDatabase = (): void => {
   try {
     db.execSync(`DROP TABLE IF EXISTS drugs;`);
@@ -270,9 +262,10 @@ export const resetDatabase = (): void => {
         mrp REAL NOT NULL,
         quantity INTEGER NOT NULL,
         expiryDate TEXT NOT NULL,
-        batchNo TEXT NOT NULL,
-        distributorName TEXT NOT NULL,
-        purchaseInvoiceNumber TEXT NOT NULL,
+        medicineType TEXT NOT NULL,
+        batchNo TEXT,
+        distributorName TEXT,
+        purchaseInvoiceNumber TEXT,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
         updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
       );

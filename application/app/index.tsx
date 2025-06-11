@@ -93,6 +93,16 @@ const BUTTONS: {
     border: "rgba(155, 151, 98, 0.3)",
     text: "rgb(153, 133, 52)",
   },
+  {
+    key: "suppliers",
+    label: "Suppliers",
+    icon: "people",
+    navigateTo: "/history",
+    description: "List of suppliers and their corresponding details.",
+    bg: "rgba(192, 198, 201, 0.1)",
+    border: "rgba(125, 134, 139, 0.3)",
+    text: "rgb(92, 112, 121)",
+  },
 ];
 
 export default function HomeScreen() {
@@ -169,7 +179,7 @@ export default function HomeScreen() {
               ]}
               activeOpacity={0.7}
             >
-              <MaterialIcons name={btn.icon} size={85} color={btn.text} />
+              <MaterialIcons name={btn.icon} size={55} color={btn.text} />
               <Text style={[styles.label, { color: btn.text || "#000" }]}>
                 {btn.label}
               </Text>
@@ -213,7 +223,8 @@ const styles = StyleSheet.create({
   card: {
     width: "48%",
     alignItems: "center",
-    padding: 12,
+    paddingVertical: 18,
+    paddingHorizontal: 12,
     marginBottom: 12,
     borderWidth: 1,
     borderRadius: 8,
@@ -225,7 +236,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     fontWeight: "500",
-    marginBottom: 4,
+    marginTop: 8,
   },
   description: {
     fontSize: 12,
