@@ -1,5 +1,7 @@
 import { Drug } from "@/types";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { router } from "expo-router";
+import { TouchableOpacity } from "react-native";
 import { StyleSheet, Text, View } from "react-native";
 
 const LOW_STOCK_THRESHOLD = 30;
@@ -48,8 +50,11 @@ export default function DrugCard({ drug }: { drug: Drug }) {
   const isLowOrOut =
     stockStatus === "low in stock" || stockStatus === "out of stock";
 
+  const handleCardPress = () => {
+    router.push(`/product?id=${drug.id}`);
+  };
   return (
-    <View
+    <TouchableOpacity
       style={[
         styles.card,
         {
@@ -57,6 +62,7 @@ export default function DrugCard({ drug }: { drug: Drug }) {
           borderColor: borderColorMap[stockStatus],
         },
       ]}
+      onPress={handleCardPress}
     >
       <View
         style={[
@@ -122,7 +128,7 @@ export default function DrugCard({ drug }: { drug: Drug }) {
           </Text>
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
