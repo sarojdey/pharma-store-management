@@ -47,41 +47,35 @@ export default function DrugBanner({
     },
   ];
 
-  type DrugType = "pills" | "syrup" | "syringe";
+  type DrugType = "Pills" | "Syrup" | "Syringe";
 
   const typeImageMap: Record<DrugType, any> = {
-    pills: require("../assets/images/bottle.png"),
-    syrup: require("../assets/images/syrup.png"),
-    syringe: require("../assets/images/syringe.png"),
+    Pills: require("../assets/images/bottle.png"),
+    Syrup: require("../assets/images/syrup.png"),
+    Syringe: require("../assets/images/syringe.png"),
   };
 
   const randomNumber = Math.floor(Math.random() * 5);
   return (
     <LinearGradient
-      colors={[
-        colorPalettes[randomNumber].dark,
-        colorPalettes[randomNumber].primary,
-      ]}
+      colors={[colorPalettes[3].dark, colorPalettes[3].primary]}
       style={styles.container}
     >
       <LinearGradient
-        colors={[
-          colorPalettes[randomNumber].light,
-          colorPalettes[randomNumber].accent,
-        ]}
+        colors={[colorPalettes[3].light, colorPalettes[3].accent]}
         style={styles.bgUpper}
       ></LinearGradient>
       <View style={styles.imageContainer}>
         <Image
           source={
-            drugName === "syrup" || drugName === "syringe"
+            drugType === "Syrup" || drugType === "Syringe"
               ? typeImageMap[drugType as DrugType]
-              : typeImageMap["pills"]
+              : typeImageMap["Pills"]
           }
           style={styles.image}
           resizeMode="contain"
         />
-        {drugType !== "syringe" && (
+        {drugType !== "Syringe" && (
           <Text style={styles.overlayText}>{drugName}</Text>
         )}
       </View>
@@ -94,7 +88,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     aspectRatio: 1,
-    width: 110,
+    width: "100%",
     position: "relative",
     borderRadius: 10,
   },
@@ -104,7 +98,7 @@ const styles = StyleSheet.create({
     position: "relative",
     justifyContent: "center",
     alignItems: "center",
-    padding: 10,
+    padding: 40,
   },
   bgUpper: {
     position: "absolute",
@@ -126,8 +120,8 @@ const styles = StyleSheet.create({
     maxWidth: "45%",
     height: "100%",
     textAlignVertical: "center",
-    paddingTop: 20,
-    fontSize: 5,
+    paddingTop: 60,
+    fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
     flexWrap: "wrap",

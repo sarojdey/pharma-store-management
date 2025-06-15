@@ -1,15 +1,17 @@
+import DrugBanner from "@/components/DrugBanner";
+import { getDrugById } from "@/utils/dbActions";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  ScrollView,
   ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import { getDrugById } from "@/utils/dbActions";
-import DrugBanner from "@/components/DrugBanner";
 
 interface Drug {
   id: number;
@@ -32,6 +34,8 @@ const MedicineDetails = () => {
   const [drug, setDrug] = useState<Drug | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchDrug = async () => {
@@ -118,81 +122,121 @@ const MedicineDetails = () => {
   const isLowStock = drug.quantity > 0 && drug.quantity <= 10;
 
   return (
-    <ScrollView style={styles.container}>
-      <View
-        style={[
-          styles.imageContainer,
-          isExpired
-            ? styles.expiredContainer
-            : isExpiringSoon
-            ? styles.expiringSoonContainer
-            : isOutOfStock
-            ? styles.outOfStockContainer
-            : {},
-        ]}
-      >
-        <DrugBanner
-          drugName={drug.medicineName}
-          drugType={drug.medicineType}
-        ></DrugBanner>
-
-        {(isExpired || isExpiringSoon || isOutOfStock || isLowStock) && (
-          <View
-            style={[
-              styles.statusBadge,
-              isExpired
-                ? styles.expiredBadge
-                : isExpiringSoon
-                ? styles.expiringSoonBadge
-                : isOutOfStock
-                ? styles.outOfStockBadge
-                : styles.lowStockBadge,
-            ]}
-          >
-            <Text style={styles.statusText}>
-              {isExpired
-                ? "EXPIRED"
-                : isExpiringSoon
-                ? "EXPIRING SOON"
-                : isOutOfStock
-                ? "OUT OF STOCK"
-                : "LOW STOCK"}
-            </Text>
-          </View>
-        )}
+    <View style={styles.wrapper}>
+      <View style={styles.topbar}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back-sharp" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text
+          style={{
+            fontSize: 18,
+            fontWeight: "600",
+            color: "#333",
+            flex: 1,
+            textAlign: "center",
+            maxWidth: "70%",
+          }}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {drug.medicineName}
+        </Text>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <FontAwesome5 name="edit" size={20} color="#444" />
+        </TouchableOpacity>
       </View>
+      <ScrollView style={styles.container}>
+        <View style={[styles.imageContainer]}>
+          <DrugBanner
+            drugName={drug.medicineName}
+            drugType={drug.medicineType}
+          ></DrugBanner>
 
-      <View style={styles.detailsContainer}>
-        {medicineData.map((item, index) => (
-          <View key={index} style={styles.detailRow}>
-            <Text style={styles.label}>{item.label}</Text>
-            <Text
+          {(isExpired || isExpiringSoon || isOutOfStock || isLowStock) && (
+            <View
               style={[
-                styles.value,
-                item.label === "Quantity" && isOutOfStock
-                  ? styles.outOfStockText
-                  : item.label === "Quantity" && isLowStock
-                  ? styles.lowStockText
-                  : item.label === "Expiry Date" && isExpired
-                  ? styles.expiredText
-                  : item.label === "Expiry Date" && isExpiringSoon
-                  ? styles.expiringSoonText
+                styles.statusBadge,
+                isExpired
+                  ? styles.expiredBadge
+                  : isExpiringSoon
+                  ? styles.expiringSoonBadge
+                  : isOutOfStock
+                  ? styles.outOfStockBadge
+                  : styles.lowStockBadge,
+              ]}
+            >
+              <Text style={styles.statusText}>
+                {isExpired
+                  ? "EXPIRED"
+                  : isExpiringSoon
+                  ? "EXPIRING SOON"
+                  : isOutOfStock
+                  ? "OUT OF STOCK"
+                  : "LOW STOCK"}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.detailsContainer}>
+          {medicineData.map((item, index) => (
+            <View
+              key={index}
+              style={[
+                styles.detailRow,
+                medicineData.length - 1 != index
+                  ? { borderBottomWidth: 1, borderBottomColor: "#f0f0f0" }
                   : {},
               ]}
             >
-              {item.value}
-            </Text>
-          </View>
-        ))}
-      </View>
-    </ScrollView>
+              <Text style={styles.label}>{item.label}</Text>
+              <Text
+                style={[
+                  styles.value,
+                  item.label === "Quantity" && isOutOfStock
+                    ? styles.outOfStockText
+                    : item.label === "Quantity" && isLowStock
+                    ? styles.lowStockText
+                    : item.label === "Expiry Date" && isExpired
+                    ? styles.expiredText
+                    : item.label === "Expiry Date" && isExpiringSoon
+                    ? styles.expiringSoonText
+                    : {},
+                ]}
+              >
+                {item.value}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrapper: { flex: 1, position: "relative" },
   container: {
     flex: 1,
+    padding: 18,
+    marginTop: 60,
+  },
+  topbar: {
+    position: "absolute",
+    top: 0,
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: "#f5f5f5",
+    borderBottomWidth: 1,
+    borderTopWidth: 1,
+    borderBottomColor: "#ccc",
+    borderTopColor: "#ccc",
+    paddingHorizontal: 10,
+    paddingVertical: 16,
+    zIndex: 1000,
+    gap: 10,
   },
   loadingContainer: {
     flex: 1,
@@ -218,29 +262,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   imageContainer: {
-    backgroundColor: "#FF8A65",
-    margin: 16,
-    borderRadius: 12,
-    padding: 40,
     alignItems: "center",
     justifyContent: "center",
     minHeight: 300,
     position: "relative",
   },
-  expiredContainer: {
-    backgroundColor: "#ffcdd2",
-  },
-  expiringSoonContainer: {
-    backgroundColor: "#fff3e0",
-  },
-  outOfStockContainer: {
-    backgroundColor: "#f5f5f5",
-  },
-  medicineImage: {
-    width: 120,
-    height: 160,
-    borderRadius: 8,
-  },
+
   statusBadge: {
     position: "absolute",
     top: 16,
@@ -250,36 +277,37 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   expiredBadge: {
-    backgroundColor: "#d32f2f",
+    backgroundColor: "rgb(169, 20, 20)",
   },
   expiringSoonBadge: {
-    backgroundColor: "#f57c00",
+    backgroundColor: "rgb(188, 92, 14)",
   },
   outOfStockBadge: {
-    backgroundColor: "#616161",
+    backgroundColor: "rgb(169, 20, 20)",
   },
   lowStockBadge: {
-    backgroundColor: "#ffa000",
+    backgroundColor: "rgb(188, 92, 14)",
   },
   statusText: {
-    color: "white",
-    fontSize: 12,
+    color: "#fafafa",
+    fontSize: 10,
     fontWeight: "bold",
   },
   detailsContainer: {
-    backgroundColor: "white",
-    margin: 16,
-    marginTop: 0,
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: "#fcfcfc",
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    marginTop: 30,
+    marginBottom: 40,
+    borderColor: "#ccc",
+    borderWidth: 1,
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    paddingVertical: 10,
   },
   label: {
     fontSize: 16,

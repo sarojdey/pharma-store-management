@@ -2,6 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "expo-router";
 import React, { useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -20,7 +21,6 @@ import {
 } from "react-native";
 import { z } from "zod";
 import { addDrug } from "../utils/dbActions";
-import { Picker } from "@react-native-picker/picker";
 
 const schema = z
   .object({
