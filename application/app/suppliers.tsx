@@ -1,7 +1,7 @@
 import SupplierCard from "@/components/SupplierCard";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useNavigation } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import React from "react";
 import {
   ScrollView,
@@ -37,19 +37,13 @@ export default function Suppliers() {
           </TouchableOpacity>
         </View>
       </View>
-      <TouchableOpacity style={styles.add}>
+      <TouchableOpacity
+        style={styles.add}
+        onPress={() => router.push("/addSupplier")}
+      >
         <MaterialIcons name="add" size={35} color="rgb(70, 125, 168)" />
       </TouchableOpacity>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <SupplierCard />
-        <SupplierCard />
-        <SupplierCard />
-        <SupplierCard />
-        <SupplierCard />
-        <SupplierCard />
-        <SupplierCard />
-        <SupplierCard />
-        <SupplierCard />
         <SupplierCard />
       </ScrollView>
     </View>

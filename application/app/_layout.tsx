@@ -1,4 +1,5 @@
 import { createDatabase, resetDatabase } from "@/utils/dbActions";
+import { createSupplierDatabase } from "@/utils/supplierDb";
 
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -7,7 +8,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   useEffect(() => {
-    // resetDatabase();
+    createSupplierDatabase();
     createDatabase();
   }, []);
   return (
@@ -24,6 +25,7 @@ export default function RootLayout() {
           <Stack.Screen name="outofstock" options={{ headerShown: false }} />
           <Stack.Screen name="history" options={{ headerShown: false }} />
           <Stack.Screen name="suppliers" options={{ headerShown: false }} />
+          <Stack.Screen name="addSupplier" options={{ headerShown: false }} />
         </Stack>
       </SafeAreaView>
       <StatusBar style="auto" />
