@@ -39,8 +39,8 @@ export default function HomeScreen() {
   const [filterValue, setFilterValue] = useState<
     string | number | [string | number, string | number] | undefined
   >(undefined);
-  const [sortBy, setSortBy] = useState<string | undefined>(undefined); 
-  const [tempSortBy, setTempSortBy] = useState<string | undefined>(undefined); 
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [tempSortBy, setTempSortBy] = useState<string | undefined>(undefined);
 
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isSortVisible, setIsSortVisible] = useState(false);
@@ -256,7 +256,7 @@ export default function HomeScreen() {
   };
 
   const applySort = () => {
-    setSortBy(tempSortBy); 
+    setSortBy(tempSortBy);
     hidePanel(sortAnim, () => {
       setIsSortVisible(false);
       setTimeout(() => {

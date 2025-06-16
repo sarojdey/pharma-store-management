@@ -97,7 +97,7 @@ const BUTTONS: {
     key: "suppliers",
     label: "Suppliers",
     icon: "people",
-    navigateTo: "/history",
+    navigateTo: "/suppliers",
     description: "List of suppliers and their corresponding details.",
     bg: "rgba(192, 198, 201, 0.1)",
     border: "rgba(125, 134, 139, 0.3)",

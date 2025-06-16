@@ -23,6 +23,7 @@ export default function RootLayout() {
           <Stack.Screen name="expiry" options={{ headerShown: false }} />
           <Stack.Screen name="outofstock" options={{ headerShown: false }} />
           <Stack.Screen name="history" options={{ headerShown: false }} />
+          <Stack.Screen name="suppliers" options={{ headerShown: false }} />
         </Stack>
       </SafeAreaView>
       <StatusBar style="auto" />

@@ -1,6 +1,6 @@
 import DrugBanner from "@/components/DrugBanner";
 import { getDrugById } from "@/utils/dbActions";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -142,7 +142,7 @@ const MedicineDetails = () => {
           {drug.medicineName}
         </Text>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <FontAwesome5 name="edit" size={20} color="#444" />
+          <AntDesign name="form" size={22} color="#333" />
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.container}>
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderBottomColor: "#ccc",
     borderTopColor: "#ccc",
-    paddingHorizontal: 10,
+    paddingHorizontal: 18,
     paddingVertical: 16,
     zIndex: 1000,
     gap: 10,
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fcfcfc",
     borderRadius: 8,
     paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingVertical: 8,
     marginTop: 30,
     marginBottom: 40,
     borderColor: "#ccc",
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingVertical: 14,
   },
   label: {
     fontSize: 16,

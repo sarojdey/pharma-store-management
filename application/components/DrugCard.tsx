@@ -1,5 +1,8 @@
 import { Drug } from "@/types";
-import AntDesign from "@expo/vector-icons/AntDesign";
+import Entypo from "@expo/vector-icons/Entypo";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+
 import { router } from "expo-router";
 import { TouchableOpacity } from "react-native";
 import { StyleSheet, Text, View } from "react-native";
@@ -85,12 +88,23 @@ export default function DrugCard({ drug }: { drug: Drug }) {
           >
             ID: <Text>{drug.id}</Text>
           </Text>
-          <View style={styles.editIcon}>
-            <AntDesign
-              name="form"
-              size={20}
-              color={isLowOrOut ? "#666" : "#aaa"}
-            />
+          <View style={{ flexDirection: "row", gap: 8, marginBottom: 4 }}>
+            {expiryStatus === "expired" && (
+              <FontAwesome5 name="skull" size={15} color="rgb(189, 63, 63)" />
+            )}
+            {expiryStatus === "expiring" && (
+              <Entypo name="time-slot" size={15} color="rgb(197, 118, 45)" />
+            )}
+            {stockStatus === "out of stock" && (
+              <FontAwesome5
+                name="box-open"
+                size={15}
+                color="rgb(189, 63, 63)"
+              />
+            )}
+            {stockStatus === "low in stock" && (
+              <FontAwesome name="warning" size={15} color="rgb(197, 118, 45)" />
+            )}
           </View>
         </View>
 
@@ -167,9 +181,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  editIcon: {
-    marginBottom: 5,
-  },
+
   title: {
     fontSize: 16,
     fontWeight: "600",
