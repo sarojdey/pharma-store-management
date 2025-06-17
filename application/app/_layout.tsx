@@ -1,5 +1,5 @@
 import { createDatabase, resetDatabase } from "@/utils/dbActions";
-import { createSupplierDatabase } from "@/utils/supplierDb";
+import { createSupplierDatabase, resetSuppliers } from "@/utils/supplierDb";
 
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -8,6 +8,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   useEffect(() => {
+    // resetSuppliers();
     createSupplierDatabase();
     createDatabase();
   }, []);

@@ -11,3 +11,12 @@ export interface Drug {
   distributorName?: string | null;
   purchaseInvoiceNumber?: string | null;
 }
+
+export interface Supplier {
+  id?: number;
+  supplierName: string;
+  location: string;
+  phone: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

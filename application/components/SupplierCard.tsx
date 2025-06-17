@@ -1,28 +1,28 @@
+import { Supplier } from "@/types";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 
-export default function SupplierCard() {
+export default function SupplierCard({ supplier }: { supplier: Supplier }) {
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
-        <Text style={styles.supplierName}>PharmaCo Supplies Inc.</Text>
+        <Text style={styles.supplierName}>{supplier.supplierName}</Text>
         <AntDesign name="form" size={20} color="#aaa" />
       </View>
 
       <View style={styles.infoRow}>
         <AntDesign name="enviromento" size={16} color="rgb(31, 98, 149)" />
-        <Text style={styles.infoText}>
-          123 Health St, MedCity, PharmaState 12345
-        </Text>
+        <Text style={styles.infoText}>{supplier.location}</Text>
       </View>
 
       <View style={styles.infoRow}>
         <AntDesign name="phone" size={16} color="rgb(31, 98, 149)" />
-        <Text style={styles.infoText}>(555) 123-4567</Text>
+        <Text style={styles.infoText}>{supplier.phone}</Text>
       </View>
+
       <View style={{ alignItems: "flex-end" }}>
         <TouchableOpacity style={styles.orderButton}>
-          <Text style={styles.infoText}>Create Order List</Text>
+          <Text>Create Order List</Text>
         </TouchableOpacity>
       </View>
     </View>

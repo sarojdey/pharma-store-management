@@ -1,13 +1,5 @@
+import { Supplier } from "@/types";
 import { database as db } from "../db/index";
-
-export interface Supplier {
-  id?: number;
-  supplierName: string;
-  location: string;
-  phone: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 export const createSupplierDatabase = (): void => {
   try {
