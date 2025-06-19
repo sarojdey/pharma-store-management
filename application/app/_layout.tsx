@@ -1,5 +1,10 @@
 import { createDatabase, resetDatabase } from "@/utils/dbActions";
-import { createSupplierDatabase, resetSuppliers } from "@/utils/supplierDb";
+import { createHistoryDatabase, resetHistory } from "@/utils/historyDb";
+import {
+  createSupplierDatabase,
+  resetSuppliers,
+  resetSuppliersTable,
+} from "@/utils/supplierDb";
 
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -8,7 +13,10 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   useEffect(() => {
-    // resetSuppliers();
+    resetHistory();
+    resetSuppliersTable();
+    resetDatabase();
+    createHistoryDatabase();
     createSupplierDatabase();
     createDatabase();
   }, []);

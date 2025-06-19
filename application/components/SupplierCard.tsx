@@ -10,20 +10,41 @@ export default function SupplierCard({ supplier }: { supplier: Supplier }) {
         <AntDesign name="form" size={20} color="#aaa" />
       </View>
 
-      <View style={styles.infoRow}>
-        <AntDesign name="enviromento" size={16} color="rgb(31, 98, 149)" />
-        <Text style={styles.infoText}>{supplier.location}</Text>
-      </View>
+      <View
+        style={{
+          width: "100%",
+          flexDirection: "row",
+          gap: 5,
+          justifyContent: "space-between",
+          marginTop: 8,
+        }}
+      >
+        <View style={{ flex: 1, maxWidth: "60%", gap: 2 }}>
+          <View style={styles.infoRow}>
+            <AntDesign
+              style={{ marginTop: 3.5 }}
+              name="enviromento"
+              size={16}
+              color="rgb(31, 98, 149)"
+            />
+            <Text style={styles.infoText}>{supplier.location}</Text>
+          </View>
 
-      <View style={styles.infoRow}>
-        <AntDesign name="phone" size={16} color="rgb(31, 98, 149)" />
-        <Text style={styles.infoText}>{supplier.phone}</Text>
-      </View>
-
-      <View style={{ alignItems: "flex-end" }}>
-        <TouchableOpacity style={styles.orderButton}>
-          <Text>Create Order List</Text>
-        </TouchableOpacity>
+          <View style={styles.infoRow}>
+            <AntDesign
+              style={{ marginTop: 3.5 }}
+              name="phone"
+              size={16}
+              color="rgb(31, 98, 149)"
+            />
+            <Text style={styles.infoText}>{supplier.phone}</Text>
+          </View>
+        </View>
+        <View>
+          <TouchableOpacity style={styles.orderButton}>
+            <Text>Create Order List</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -53,13 +74,13 @@ const styles = StyleSheet.create({
   },
 
   supplierName: {
+    maxWidth: "90%",
     fontSize: 17,
     fontWeight: "600",
-    color: "#111",
+    color: "rgb(25, 76, 116)",
   },
   infoRow: {
     flexDirection: "row",
-    alignItems: "center",
     gap: 6,
   },
   infoText: {

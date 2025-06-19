@@ -15,6 +15,7 @@ import {
 
 import { Supplier } from "@/types";
 import { getAllSuppliers, searchSuppliers } from "@/utils/supplierDb";
+import Loader from "@/components/Loader";
 
 export default function Suppliers() {
   const navigation = useNavigation();
@@ -126,28 +127,31 @@ export default function Suppliers() {
       >
         <MaterialIcons name="add" size={35} color="rgb(70, 125, 168)" />
       </TouchableOpacity>
-
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {suppliers.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <MaterialIcons name="people" size={70} color="#ccc" />
-            <Text style={styles.emptyText}>
-              {searchTerm ? "No suppliers found" : "No suppliers added yet"}
-            </Text>
-            <Text style={styles.emptySubText}>
-              {searchTerm
-                ? "Try adjusting your search terms"
-                : "Add your first supplier"}
-            </Text>
-          </View>
-        ) : (
-          <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
-            {suppliers.map((supplier) => (
-              <SupplierCard key={supplier.id} supplier={supplier} />
-            ))}
-          </View>
-        )}
-      </ScrollView>
+      {loading ? (
+        <Loader />
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {suppliers.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <MaterialIcons name="people" size={70} color="#ccc" />
+              <Text style={styles.emptyText}>
+                {searchTerm ? "No suppliers found" : "No suppliers added yet"}
+              </Text>
+              <Text style={styles.emptySubText}>
+                {searchTerm
+                  ? "Try adjusting your search terms"
+                  : "Add your first supplier"}
+              </Text>
+            </View>
+          ) : (
+            <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
+              {suppliers.map((supplier) => (
+                <SupplierCard key={supplier.id} supplier={supplier} />
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }

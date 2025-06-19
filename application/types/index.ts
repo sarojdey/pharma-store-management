@@ -20,3 +20,10 @@ export interface Supplier {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface History {
+  id: number;
+  operation: string;
+  createdAt: string;
+  updatedAt: string;
+}

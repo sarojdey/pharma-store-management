@@ -22,6 +22,7 @@ import {
 import { z } from "zod";
 import { addDrug } from "../utils/dbActions";
 import { addSupplier } from "@/utils/supplierDb";
+import { addHistory } from "@/utils/historyDb";
 
 const schema = z.object({
   supplierName: z.string().min(1, "Supplier name is required"),
@@ -63,6 +64,9 @@ export default function AddInventoryItem() {
       const result = await addSupplier(supplierData);
 
       if (result.success) {
+        await addHistory({
+          operation: `Added supplier: ${data.supplierName}`,
+        });
         Alert.alert("Success", "Supplier added successfully!", [
           {
             text: "OK",
