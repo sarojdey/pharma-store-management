@@ -77,7 +77,6 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
           {
             text: "Add Another",
             onPress: () => {
-              // Keep supplier name but reset medicine fields
               reset({
                 supplierName: data.supplierName,
                 medicineName: "",

@@ -43,8 +43,8 @@ export default function OutOfStock() {
   const [filterValue, setFilterValue] = useState<
     string | number | [string | number, string | number] | undefined
   >(undefined);
-  const [sortBy, setSortBy] = useState<string | undefined>(undefined); // actual sort
-  const [tempSortBy, setTempSortBy] = useState<string | undefined>(undefined); // temporary
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [tempSortBy, setTempSortBy] = useState<string | undefined>(undefined);
 
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [isSortVisible, setIsSortVisible] = useState(false);
@@ -260,7 +260,7 @@ export default function OutOfStock() {
   };
 
   const applySort = () => {
-    setSortBy(tempSortBy); // commit the tempSortBy
+    setSortBy(tempSortBy);
     hidePanel(sortAnim, () => {
       setIsSortVisible(false);
       setTimeout(() => {

@@ -29,7 +29,6 @@ export default function HistoryPage() {
 
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
-  // Add state for active filters
   const [activeFilters, setActiveFilters] = useState({
     startDate: null as Date | null,
     endDate: null as Date | null,
@@ -46,21 +45,18 @@ export default function HistoryPage() {
 
   const filterAnim = useRef(new Animated.Value(300)).current;
 
-  // Updated loadHistory function with filtering and sorting
   const loadHistory = useCallback(async () => {
     try {
       setLoading(true);
       let historyData: History[];
 
       if (isFiltered && activeFilters.startDate && activeFilters.endDate) {
-        // Load filtered history
         const startDateStr = activeFilters.startDate
           .toISOString()
           .split("T")[0];
         const endDateStr = activeFilters.endDate.toISOString().split("T")[0];
         historyData = await getAllHistory(sortOrder, startDateStr, endDateStr);
       } else {
-        // Load all history with sorting
         historyData = await getAllHistory(sortOrder);
       }
 
@@ -156,7 +152,6 @@ export default function HistoryPage() {
       return;
     }
 
-    // Set active filters and trigger reload
     setActiveFilters({
       startDate: dateRange.startDate,
       endDate: dateRange.endDate,
@@ -174,14 +169,12 @@ export default function HistoryPage() {
   };
 
   const clearFilter = () => {
-    // Clear active filters
     setActiveFilters({
       startDate: null,
       endDate: null,
     });
     setIsFiltered(false);
 
-    // Reset date range to current date
     setDateRange({
       startDate: new Date(),
       endDate: new Date(),
@@ -194,7 +187,6 @@ export default function HistoryPage() {
     });
   };
 
-  // Effect to reload history when sort order or filters change
   useFocusEffect(
     useCallback(() => {
       loadHistory();
