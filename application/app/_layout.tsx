@@ -1,6 +1,10 @@
 import { createDatabase } from "@/utils/dbActions";
 import { createHistoryDatabase } from "@/utils/historyDb";
-import { createOrderListDatabase } from "@/utils/orderListDb";
+import {
+  createOrderListDatabase,
+  resetOrderLists,
+  resetOrderListTables,
+} from "@/utils/orderListDb";
 import { createSupplierDatabase } from "@/utils/supplierDb";
 
 import { Stack } from "expo-router";

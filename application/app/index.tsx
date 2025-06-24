@@ -149,7 +149,7 @@ export default function HomeScreen() {
         <Feather name="menu" size={24} color="#212121" />
       </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={[styles.grid, { marginBottom: 20, marginTop: 10 }]}>
+        <View style={[styles.grid, { marginBottom: 20 }]}>
           <TouchableOpacity
             onPress={() => {
               router.push("/product");
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 6,
     borderWidth: 1,
     borderColor: "#ccc",
     backgroundColor: "#f5f5f5",

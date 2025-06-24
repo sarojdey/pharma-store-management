@@ -20,15 +20,9 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
-// Import your database actions
-// import { addOrderList } from "@/utils/orderDb";
-// import { addHistory } from "@/utils/historyDb";
 
 const orderSchema = z.object({
-  supplierName: z.string().min(1, "Supplier is required"),
-});
-
-const medicineSchema = z.object({
+  supplierName: z.string().optional(),
   medicineName: z.string().min(1, "Medicine name is required"),
   quantity: z
     .string()
@@ -36,102 +30,75 @@ const medicineSchema = z.object({
     .regex(/^\d+$/, "Quantity must be a number"),
 });
 
-interface OrderItem {
-  id: string;
-  medicineName: string;
-  quantity: string;
-}
-
 interface AddOrderListProps {
   supplierName?: string;
 }
 
 export default function AddOrderList({ supplierName }: AddOrderListProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const navigation = useNavigation();
 
-  // Main form for supplier selection
   const {
-    control: orderControl,
-    handleSubmit: handleOrderSubmit,
-    reset: resetOrder,
-    formState: { errors: orderErrors },
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(orderSchema),
     defaultValues: {
       supplierName: supplierName || "",
-    },
-  });
-
-  // Sub-form for adding medicines
-  const {
-    control: medicineControl,
-    handleSubmit: handleMedicineSubmit,
-    reset: resetMedicine,
-    formState: { errors: medicineErrors },
-  } = useForm({
-    resolver: zodResolver(medicineSchema),
-    defaultValues: {
       medicineName: "",
       quantity: "",
     },
   });
 
-  const onAddMedicine = (data: z.infer<typeof medicineSchema>) => {
-    const newItem: OrderItem = {
-      id: Date.now().toString(),
-      medicineName: data.medicineName,
-      quantity: data.quantity,
-    };
-
-    setOrderItems((prev) => [...prev, newItem]);
-    resetMedicine();
-  };
-
-  const onRemoveItem = (id: string) => {
-    setOrderItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const onSaveOrderList = async (orderData: z.infer<typeof orderSchema>) => {
-    if (orderItems.length === 0) {
-      Alert.alert(
-        "Error",
-        "Please add at least one medicine to the order list"
-      );
-      return;
-    }
-
+  const onSaveOrderList = async (data: z.infer<typeof orderSchema>) => {
     setIsSubmitting(true);
 
     try {
       const orderListData = {
-        supplierName: orderData.supplierName,
-        items: orderItems,
-        createdAt: new Date().toISOString(),
+        supplierName: data.supplierName || undefined,
+        medicineName: data.medicineName,
+        quantity: parseInt(data.quantity),
       };
 
       const result = await addOrderList(orderListData);
+
       if (result.success) {
+        const supplierText = data.supplierName
+          ? `for ${data.supplierName}`
+          : "without supplier";
+
         await addHistory({
-          operation: `Created order list for: ${orderData.supplierName}`,
+          operation: `Added order: ${data.medicineName} (${data.quantity}) ${supplierText}`,
         });
 
-        Alert.alert("Success", "Order list created successfully!", [
+        Alert.alert("Success", "Order list entry created successfully!", [
           {
-            text: "OK",
+            text: "Add Another",
             onPress: () => {
-              resetOrder();
-              setOrderItems([]);
+              // Keep supplier name but reset medicine fields
+              reset({
+                supplierName: data.supplierName,
+                medicineName: "",
+                quantity: "",
+              });
             },
+          },
+          {
+            text: "Done",
+            onPress: () => {
+              navigation.goBack();
+            },
+            style: "default",
           },
         ]);
       } else {
-        Alert.alert("Error", "Failed to create order list");
+        Alert.alert("Failed to create order list entry");
       }
     } catch (error) {
       console.error("Error creating order list:", error);
-      Alert.alert("Error", "An error occurred while creating order list");
+      Alert.alert("Error", "An error occurred while creating order list entry");
     } finally {
       setIsSubmitting(false);
     }
@@ -157,21 +124,6 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
     </View>
   );
 
-  const OrderItemCard = ({ item }: { item: OrderItem }) => (
-    <View style={styles.itemCard}>
-      <View style={styles.itemInfo}>
-        <Text style={styles.itemName}>{item.medicineName}</Text>
-        <Text style={styles.itemQuantity}>Qty: {item.quantity}</Text>
-      </View>
-      <TouchableOpacity
-        onPress={() => onRemoveItem(item.id)}
-        style={styles.removeButton}
-      >
-        <MaterialIcons name="delete" size={20} color="#aaa" />
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <View style={styles.wrapper}>
       <View style={styles.topbar}>
@@ -188,9 +140,10 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
             paddingRight: 40,
           }}
         >
-          Create Order List
+          Add Order Entry
         </Text>
       </View>
+
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -203,49 +156,44 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.container}>
-              {/* Supplier Selection */}
               <View style={styles.formCard}>
+                <Text style={styles.sectionTitle}>Order Details</Text>
+
                 <FormField
                   label="Supplier Name"
-                  required
-                  error={orderErrors.supplierName?.message}
+                  error={errors.supplierName?.message}
                 >
                   <Controller
-                    control={orderControl}
+                    control={control}
                     name="supplierName"
                     render={({ field }) => (
                       <TextInput
                         style={[
                           styles.input,
-                          orderErrors.supplierName && styles.inputError,
+                          errors.supplierName && styles.inputError,
                         ]}
                         onChangeText={field.onChange}
                         value={field.value}
-                        placeholder="e.g., ABC Pharmaceuticals"
+                        placeholder="e.g., ABC Pharmaceuticals (Optional)"
                         placeholderTextColor="#9ca3af"
                       />
                     )}
                   />
                 </FormField>
-              </View>
-
-              {/* Medicine Addition Form */}
-              <View style={styles.formCard}>
-                <Text style={styles.sectionTitle}>Add Medicine</Text>
 
                 <FormField
                   label="Medicine Name"
                   required
-                  error={medicineErrors.medicineName?.message}
+                  error={errors.medicineName?.message}
                 >
                   <Controller
-                    control={medicineControl}
+                    control={control}
                     name="medicineName"
                     render={({ field }) => (
                       <TextInput
                         style={[
                           styles.input,
-                          medicineErrors.medicineName && styles.inputError,
+                          errors.medicineName && styles.inputError,
                         ]}
                         onChangeText={field.onChange}
                         value={field.value}
@@ -259,16 +207,16 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
                 <FormField
                   label="Quantity"
                   required
-                  error={medicineErrors.quantity?.message}
+                  error={errors.quantity?.message}
                 >
                   <Controller
-                    control={medicineControl}
+                    control={control}
                     name="quantity"
                     render={({ field }) => (
                       <TextInput
                         style={[
                           styles.input,
-                          medicineErrors.quantity && styles.inputError,
+                          errors.quantity && styles.inputError,
                         ]}
                         onChangeText={field.onChange}
                         value={field.value}
@@ -281,47 +229,24 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
                 </FormField>
 
                 <TouchableOpacity
-                  style={styles.addButton}
-                  onPress={handleMedicineSubmit(onAddMedicine)}
-                  activeOpacity={0.8}
-                >
-                  <MaterialIcons
-                    name="add"
-                    size={20}
-                    color="rgb(57, 104, 139)"
-                  />
-                  <Text style={styles.addButtonText}>Add Medicine</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Order Items List */}
-              {orderItems.length > 0 && (
-                <View style={styles.formCard}>
-                  <Text style={styles.sectionTitle}>
-                    Order Items ({orderItems.length})
-                  </Text>
-                  {orderItems.map((item) => (
-                    <OrderItemCard key={item.id} item={item} />
-                  ))}
-                </View>
-              )}
-
-              {/* Save Order List Button */}
-              {orderItems.length > 0 && (
-                <TouchableOpacity
                   style={[
                     styles.submitButton,
                     isSubmitting && styles.submitButtonDisabled,
                   ]}
-                  onPress={handleOrderSubmit(onSaveOrderList)}
+                  onPress={handleSubmit(onSaveOrderList)}
                   activeOpacity={0.8}
                   disabled={isSubmitting}
                 >
+                  <MaterialIcons
+                    name="save"
+                    size={20}
+                    color="rgb(57, 104, 139)"
+                  />
                   <Text style={styles.submitButtonText}>
-                    {isSubmitting ? "Saving..." : "Save Order List"}
+                    {isSubmitting ? "Saving..." : "Save Order Entry"}
                   </Text>
                 </TouchableOpacity>
-              )}
+              </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -401,50 +326,6 @@ const styles = StyleSheet.create({
     color: "#212121",
     marginBottom: 16,
   },
-  addButton: {
-    backgroundColor: "rgba(223, 241, 255, 0.49)",
-    borderWidth: 1,
-    borderColor: "rgb(152, 175, 192)",
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  addButtonText: {
-    color: "rgb(57, 104, 139)",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  itemCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  itemName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#212121",
-    marginBottom: 2,
-  },
-  itemQuantity: {
-    fontSize: 14,
-    color: "#6b7280",
-  },
-  removeButton: {
-    padding: 4,
-  },
   submitButton: {
     backgroundColor: "rgba(223, 241, 255, 0.49)",
     borderWidth: 1,
@@ -452,8 +333,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 20,
-    justifyContent: "center",
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 10,
   },
   submitButtonText: {
     color: "rgb(57, 104, 139)",
@@ -468,5 +352,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 6,
     fontWeight: "500",
+  },
+
+  infoText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#6b7280",
+    lineHeight: 20,
   },
 });
