@@ -277,7 +277,7 @@ export default function HistoryPage() {
               </Text>
             </View>
           ) : (
-            <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
+            <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 110 }}>
               {history.map((historyItem) => (
                 <HistoryCard key={historyItem.id} history={historyItem} />
               ))}

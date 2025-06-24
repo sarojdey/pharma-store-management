@@ -27,3 +27,16 @@ export interface History {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface OrderItem {
+  id: string;
+  medicineName: string;
+  quantity: string;
+}
+
+export interface OrderList {
+  id: string;
+  supplierName: string;
+  items: OrderItem[];
+  createdAt: string;
+}

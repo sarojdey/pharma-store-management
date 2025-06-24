@@ -1,3 +1,5 @@
+import { addHistory } from "@/utils/historyDb";
+import { addOrderList } from "@/utils/orderListDb";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -109,16 +111,11 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
         createdAt: new Date().toISOString(),
       };
 
-      // Replace with your actual database function
-      // const result = await addOrderList(orderListData);
-
-      // Mock success for now
-      const result = { success: true };
-
+      const result = await addOrderList(orderListData);
       if (result.success) {
-        // await addHistory({
-        //   operation: `Created order list for: ${orderData.supplierName}`,
-        // });
+        await addHistory({
+          operation: `Created order list for: ${orderData.supplierName}`,
+        });
 
         Alert.alert("Success", "Order list created successfully!", [
           {
