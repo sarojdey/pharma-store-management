@@ -21,7 +21,6 @@ export const createHistoryDatabase = (): void => {
   }
 };
 
-// Updated getAllHistory with sorting and filtering options
 export const getAllHistory = async (
   sortOrder: SortOrder = "desc",
   startDate?: string,
@@ -31,7 +30,6 @@ export const getAllHistory = async (
     let query = "SELECT * FROM history";
     const params: string[] = [];
 
-    // Add date filtering if provided
     if (startDate && endDate) {
       query += " WHERE DATE(createdAt) BETWEEN DATE(?) AND DATE(?)";
       params.push(startDate, endDate);
@@ -43,7 +41,6 @@ export const getAllHistory = async (
       params.push(endDate);
     }
 
-    // Add sorting
     query += ` ORDER BY createdAt ${sortOrder.toUpperCase()}`;
 
     const result = await db.getAllAsync(query, params);
@@ -54,7 +51,6 @@ export const getAllHistory = async (
   }
 };
 
-// New function specifically for filtered history
 export const getFilteredHistory = async (
   startDate: string,
   endDate: string,
@@ -75,7 +71,6 @@ export const getFilteredHistory = async (
   }
 };
 
-// New function specifically for sorted history
 export const getSortedHistory = async (
   sortOrder: SortOrder = "desc"
 ): Promise<History[]> => {
@@ -89,7 +84,6 @@ export const getSortedHistory = async (
   }
 };
 
-// Get history by date range
 export const getHistoryByDateRange = async (
   startDate: string,
   endDate: string
@@ -106,7 +100,6 @@ export const getHistoryByDateRange = async (
   }
 };
 
-// Get history for a specific date
 export const getHistoryByDate = async (date: string): Promise<History[]> => {
   try {
     const result = await db.getAllAsync(
@@ -232,7 +225,6 @@ export const getHistoryCount = async (): Promise<number> => {
   }
 };
 
-// Get history count by date range
 export const getHistoryCountByDateRange = async (
   startDate: string,
   endDate: string

@@ -3,7 +3,6 @@ import { database as db } from "../db/index";
 
 export const createOrderListDatabase = (): void => {
   try {
-    // Create order_lists table - now each entry is one supplier + one medicine
     db.execSync(`
       CREATE TABLE IF NOT EXISTS order_lists (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -15,7 +14,6 @@ export const createOrderListDatabase = (): void => {
       );
     `);
 
-    // Drop the old order_items table since we no longer need it
     db.execSync(`DROP TABLE IF EXISTS order_items;`);
 
     console.log("Order list table created or already exist.");
@@ -118,7 +116,6 @@ export const updateOrderList = async (
       return { success: false, error: "No fields to update" };
     }
 
-    // Always update the updatedAt timestamp
     updateFields.push("updatedAt = datetime('now')");
     values.push(id);
 
@@ -216,7 +213,7 @@ export const resetOrderLists = async () => {
 export const resetOrderListTables = (): void => {
   try {
     db.execSync("DROP TABLE IF EXISTS order_lists");
-    db.execSync("DROP TABLE IF EXISTS order_items"); // Clean up old table if exists
+    db.execSync("DROP TABLE IF EXISTS order_items");
     createOrderListDatabase();
     console.log("Order list table reset successfully.");
   } catch (error) {
