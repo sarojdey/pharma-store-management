@@ -1,7 +1,8 @@
 import DrugCard from "@/components/DrugCard";
 import Loader from "@/components/Loader";
 import { Drug } from "@/types";
-import { dynamicSearchDrugs } from "@/utils/dbActions";
+import { searchDrugs } from "@/utils/stocksDb";
+
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -110,9 +111,9 @@ export default function HomeScreen() {
         page: "inventory",
       });
 
-      const data = await dynamicSearchDrugs({
+      const data = await searchDrugs({
         ...finalParams,
-        page: "inventory",
+        mode: "inventory",
       });
 
       setDrugs(data as Drug[]);

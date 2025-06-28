@@ -1,7 +1,7 @@
 import { OrderList } from "@/types";
 import { database as db } from "../db/index";
 
-export const createOrderListDatabase = (): void => {
+export const createOrderListDb = (): void => {
   try {
     db.execSync(`
       CREATE TABLE IF NOT EXISTS order_lists (
@@ -147,150 +147,14 @@ export const deleteOrderList = async (id: number) => {
   }
 };
 
-export const searchOrderLists = async (
-  searchTerm: string
-): Promise<OrderList[]> => {
-  try {
-    const searchPattern = `%${searchTerm}%`;
-    const orderLists = await db.getAllAsync(
-      `SELECT * FROM order_lists
-       WHERE supplierName LIKE ? OR medicineName LIKE ?
-       ORDER BY createdAt DESC`,
-      [searchPattern, searchPattern]
-    );
-
-    return orderLists as OrderList[];
-  } catch (error) {
-    console.error("Error searching order lists:", error);
-    return [];
-  }
-};
-
-export const getOrderListsBySupplier = async (
-  supplierName: string
-): Promise<OrderList[]> => {
-  try {
-    const orderLists = await db.getAllAsync(
-      "SELECT * FROM order_lists WHERE supplierName = ? ORDER BY createdAt DESC",
-      [supplierName]
-    );
-
-    return orderLists as OrderList[];
-  } catch (error) {
-    console.error("Error fetching order lists by supplier:", error);
-    return [];
-  }
-};
-
-export const getOrderListsByMedicine = async (
-  medicineName: string
-): Promise<OrderList[]> => {
-  try {
-    const orderLists = await db.getAllAsync(
-      "SELECT * FROM order_lists WHERE medicineName = ? ORDER BY createdAt DESC",
-      [medicineName]
-    );
-
-    return orderLists as OrderList[];
-  } catch (error) {
-    console.error("Error fetching order lists by medicine:", error);
-    return [];
-  }
-};
-
-export const resetOrderLists = async () => {
-  try {
-    const result = await db.runAsync("DELETE FROM order_lists");
-
-    console.log("Reset completed. All order lists removed.");
-    return { success: true, changes: result.changes };
-  } catch (error) {
-    console.error("Error resetting order lists:", error);
-    return { success: false, error };
-  }
-};
-
-export const resetOrderListTables = (): void => {
+export const resetOrderListDb = (): void => {
   try {
     db.execSync("DROP TABLE IF EXISTS order_lists");
     db.execSync("DROP TABLE IF EXISTS order_items");
-    createOrderListDatabase();
+    createOrderListDb();
     console.log("Order list table reset successfully.");
   } catch (error) {
     console.error("Error resetting order list table:", error);
     throw error;
-  }
-};
-
-export const getOrderListsCount = async (): Promise<number> => {
-  try {
-    const result = await db.getFirstAsync(
-      "SELECT COUNT(*) as count FROM order_lists"
-    );
-    return (result as { count: number }).count;
-  } catch (error) {
-    console.error("Error getting order lists count:", error);
-    return 0;
-  }
-};
-
-export const getMedicineUsageStats = async (): Promise<
-  { medicineName: string; totalQuantity: number; orderCount: number }[]
-> => {
-  try {
-    const result = await db.getAllAsync(
-      `SELECT 
-        medicineName,
-        SUM(quantity) as totalQuantity,
-        COUNT(*) as orderCount
-       FROM order_lists 
-       GROUP BY medicineName 
-       ORDER BY totalQuantity DESC`
-    );
-    return result as {
-      medicineName: string;
-      totalQuantity: number;
-      orderCount: number;
-    }[];
-  } catch (error) {
-    console.error("Error getting medicine usage stats:", error);
-    return [];
-  }
-};
-
-export const getSupplierStats = async (): Promise<
-  { supplierName: string | null; totalQuantity: number; orderCount: number }[]
-> => {
-  try {
-    const result = await db.getAllAsync(
-      `SELECT 
-        supplierName,
-        SUM(quantity) as totalQuantity,
-        COUNT(*) as orderCount
-       FROM order_lists 
-       GROUP BY supplierName 
-       ORDER BY totalQuantity DESC`
-    );
-    return result as {
-      supplierName: string | null;
-      totalQuantity: number;
-      orderCount: number;
-    }[];
-  } catch (error) {
-    console.error("Error getting supplier stats:", error);
-    return [];
-  }
-};
-
-export const getOrderListsWithoutSupplier = async (): Promise<OrderList[]> => {
-  try {
-    const orderLists = await db.getAllAsync(
-      "SELECT * FROM order_lists WHERE supplierName IS NULL ORDER BY createdAt DESC"
-    );
-
-    return orderLists as OrderList[];
-  } catch (error) {
-    console.error("Error fetching order lists without supplier:", error);
-    return [];
   }
 };

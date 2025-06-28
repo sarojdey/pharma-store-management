@@ -1,7 +1,7 @@
 import { Supplier } from "@/types";
 import { database as db } from "../db/index";
 
-export const createSupplierDatabase = (): void => {
+export const createSupplierDb = (): void => {
   try {
     db.execSync(`
       CREATE TABLE IF NOT EXISTS suppliers (
@@ -146,21 +146,10 @@ export const searchSuppliers = async (
   }
 };
 
-export const resetSuppliers = async () => {
-  try {
-    const result = await db.runAsync("DELETE FROM suppliers");
-    console.log("Reset completed. All suppliers removed.");
-    return { success: true, changes: result.changes };
-  } catch (error) {
-    console.error("Error resetting suppliers table:", error);
-    return { success: false, error };
-  }
-};
-
-export const resetSuppliersTable = (): void => {
+export const resetSuppliersDb = (): void => {
   try {
     db.execSync("DROP TABLE IF EXISTS suppliers");
-    createSupplierDatabase();
+    createSupplierDb();
     console.log("Suppliers table reset successfully.");
   } catch (error) {
     console.error("Error resetting suppliers table:", error);

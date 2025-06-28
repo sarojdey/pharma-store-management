@@ -1,10 +1,11 @@
 export interface Drug {
   id: number;
-  idCode: string;
   medicineName: string;
-  quantity: number;
+  batchId: string;
   price: number;
   mrp: number;
+  quantity: number;
+  unitPerPackage: number;
   expiryDate: string;
   medicineType: string;
   batchNo?: string | null;
@@ -35,4 +36,34 @@ export interface OrderList {
   quantity: number;
   createdAt: string;
   updatedAt: string;
+}
+
+// db types
+
+export interface AddDrug {
+  medicineName: string;
+  batchId: string;
+  price: number;
+  mrp: number;
+  quantity: number;
+  unitPerPackage: number;
+  expiryDate: string;
+  medicineType: string;
+  batchNo?: string | null;
+  distributorName?: string | null;
+  purchaseInvoiceNumber?: string | null;
+}
+
+export interface UpdateDrug {
+  medicineName?: string;
+  batchId?: string;
+  price?: number;
+  mrp?: number;
+  quantity?: number;
+  unitPerPackage?: number;
+  expiryDate?: string;
+  medicineType?: string;
+  batchNo?: string;
+  distributorName?: string;
+  purchaseInvoiceNumber?: string;
 }

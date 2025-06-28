@@ -3,7 +3,7 @@ import { database as db } from "../db/index";
 
 export type SortOrder = "asc" | "desc";
 
-export const createHistoryDatabase = (): void => {
+export const createHistoryDb = (): void => {
   try {
     db.execSync(`
       CREATE TABLE IF NOT EXISTS history (
@@ -113,19 +113,6 @@ export const getHistoryByDate = async (date: string): Promise<History[]> => {
   }
 };
 
-export const getHistoryById = async (id: number): Promise<History | null> => {
-  try {
-    const result = await db.getFirstAsync(
-      "SELECT * FROM history WHERE id = ?",
-      [id]
-    );
-    return result as History | null;
-  } catch (error) {
-    console.error("Error fetching history by ID:", error);
-    return null;
-  }
-};
-
 export const addHistory = async (
   history: Omit<History, "id" | "createdAt" | "updatedAt">
 ) => {
@@ -144,41 +131,6 @@ export const addHistory = async (
   }
 };
 
-export const updateHistory = async (
-  id: number,
-  history: Partial<Omit<History, "id" | "createdAt" | "updatedAt">>
-) => {
-  try {
-    const fields: string[] = [];
-    const values: any[] = [];
-
-    Object.entries(history).forEach(([key, value]) => {
-      if (value !== undefined) {
-        fields.push(`${key} = ?`);
-        values.push(value);
-      }
-    });
-
-    if (fields.length === 0) {
-      return { success: false, error: "No fields to update" };
-    }
-
-    fields.push("updatedAt = datetime('now')");
-    values.push(id);
-
-    const result = await db.runAsync(
-      `UPDATE history SET ${fields.join(", ")} WHERE id = ?`,
-      values
-    );
-
-    console.log("History updated successfully");
-    return { success: true, changes: result.changes };
-  } catch (error) {
-    console.error("Error updating history:", error);
-    return { success: false, error };
-  }
-};
-
 export const deleteHistory = async (id: number) => {
   try {
     const result = await db.runAsync("DELETE FROM history WHERE id = ?", [id]);
@@ -191,52 +143,13 @@ export const deleteHistory = async (id: number) => {
   }
 };
 
-export const resetHistory = async () => {
-  try {
-    const result = await db.runAsync("DELETE FROM history");
-    console.log("Reset completed. All history removed.");
-    return { success: true, changes: result.changes };
-  } catch (error) {
-    console.error("Error resetting history table:", error);
-    return { success: false, error };
-  }
-};
-
-export const resetHistoryTable = (): void => {
+export const resetHistoryDb = (): void => {
   try {
     db.execSync("DROP TABLE IF EXISTS history");
-    createHistoryDatabase();
+    createHistoryDb();
     console.log("History table reset successfully.");
   } catch (error) {
     console.error("Error resetting history table:", error);
     throw error;
-  }
-};
-
-export const getHistoryCount = async (): Promise<number> => {
-  try {
-    const result = await db.getFirstAsync(
-      "SELECT COUNT(*) as count FROM history"
-    );
-    return (result as { count: number }).count;
-  } catch (error) {
-    console.error("Error getting history count:", error);
-    return 0;
-  }
-};
-
-export const getHistoryCountByDateRange = async (
-  startDate: string,
-  endDate: string
-): Promise<number> => {
-  try {
-    const result = await db.getFirstAsync(
-      "SELECT COUNT(*) as count FROM history WHERE DATE(createdAt) BETWEEN DATE(?) AND DATE(?)",
-      [startDate, endDate]
-    );
-    return (result as { count: number }).count;
-  } catch (error) {
-    console.error("Error getting history count by date range:", error);
-    return 0;
   }
 };

@@ -1,15 +1,17 @@
+import { AddDrug, UpdateDrug } from "@/types";
 import { database as db } from "../db/index";
 
-export const createDatabase = (): void => {
+export const createStocksDb = (): void => {
   try {
     db.execSync(`
-      CREATE TABLE IF NOT EXISTS drugs (
+        CREATE TABLE IF NOT EXISTS drugs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         medicineName TEXT NOT NULL,
-        idCode TEXT NOT NULL,
+        batchId TEXT NOT NULL,
         price REAL NOT NULL,
         mrp REAL NOT NULL,
         quantity INTEGER NOT NULL,
+        unitPerPackage INTEGER NOT NULL DEFAULT 1,
         expiryDate TEXT NOT NULL,
         medicineType TEXT NOT NULL,
         batchNo TEXT,
@@ -18,11 +20,10 @@ export const createDatabase = (): void => {
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
         updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
       );
-    `);
-
+        `);
     console.log("Table created or already exists.");
   } catch (error) {
-    console.error("Error creating database:", error);
+    console.error("Error initializing database:", error);
     throw error;
   }
 };
@@ -51,26 +52,16 @@ export const getDrugById = async (id: number) => {
   }
 };
 
-export const addDrug = async (drugData: {
-  medicineName: string;
-  idCode: string;
-  price: number;
-  mrp: number;
-  quantity: number;
-  expiryDate: string;
-  medicineType: string;
-  batchNo?: string | null;
-  distributorName?: string | null;
-  purchaseInvoiceNumber?: string | null;
-}) => {
+export const addDrug = async (drugData: AddDrug) => {
   try {
     const result = await db.runAsync(
       `INSERT INTO drugs (
         medicineName,
-        idCode,
+        batchId,
         price,
         mrp,
         quantity,
+        unitPerPackage,
         expiryDate,
         medicineType,
         batchNo,
@@ -78,13 +69,14 @@ export const addDrug = async (drugData: {
         purchaseInvoiceNumber,
         createdAt,
         updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
       [
         drugData.medicineName,
-        drugData.idCode,
+        drugData.batchId,
         drugData.price,
         drugData.mrp,
         drugData.quantity,
+        drugData.unitPerPackage,
         drugData.expiryDate,
         drugData.medicineType,
         drugData.batchNo ?? null,
@@ -92,7 +84,6 @@ export const addDrug = async (drugData: {
         drugData.purchaseInvoiceNumber ?? null,
       ]
     );
-
     console.log("Drug added successfully with ID:", result.lastInsertRowId);
     return { success: true, id: result.lastInsertRowId };
   } catch (error) {
@@ -101,21 +92,7 @@ export const addDrug = async (drugData: {
   }
 };
 
-export const updateDrug = async (
-  id: number,
-  drugData: {
-    medicineName?: string;
-    idCode?: string;
-    price?: number;
-    mrp?: number;
-    quantity?: number;
-    expiryDate?: string;
-    medicineType?: string;
-    batchNo?: string;
-    distributorName?: string;
-    purchaseInvoiceNumber?: string;
-  }
-) => {
+export const updateDrug = async (id: number, drugData: UpdateDrug) => {
   try {
     const fields: string[] = [];
     const values: any[] = [];
@@ -130,7 +107,6 @@ export const updateDrug = async (
     if (fields.length === 0) {
       return { success: false, error: "No fields to update" };
     }
-
     fields.push("updatedAt = datetime('now')");
     values.push(id);
 
@@ -138,7 +114,6 @@ export const updateDrug = async (
       `UPDATE drugs SET ${fields.join(", ")} WHERE id = ?`,
       values
     );
-
     console.log("Drug updated successfully");
     return { success: true, changes: result.changes };
   } catch (error) {
@@ -159,62 +134,20 @@ export const deleteDrug = async (id: number) => {
   }
 };
 
-export const getDrugByIdCode = async (idCode: string) => {
-  try {
-    const result = await db.getFirstAsync(
-      "SELECT * FROM drugs WHERE idCode = ?",
-      [idCode]
-    );
-    return result;
-  } catch (error) {
-    console.error("Error fetching drug by ID code:", error);
-    return null;
-  }
-};
-
-export const resetDatabase = (): void => {
-  try {
-    db.execSync(`DROP TABLE IF EXISTS drugs;`);
-
-    db.execSync(`
-      CREATE TABLE drugs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        medicineName TEXT NOT NULL,
-        idCode TEXT NOT NULL,
-        price REAL NOT NULL,
-        mrp REAL NOT NULL,
-        quantity INTEGER NOT NULL,
-        expiryDate TEXT NOT NULL,
-        medicineType TEXT NOT NULL,
-        batchNo TEXT,
-        distributorName TEXT,
-        purchaseInvoiceNumber TEXT,
-        createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    console.log("Database reset successfully with new structure.");
-  } catch (error) {
-    console.error("Error resetting database:", error);
-    throw error;
-  }
-};
-
-export const dynamicSearchDrugs = async ({
+export const searchDrugs = async ({
   searchTerm = "",
-  page = "inventory",
+  mode = "inventory",
   filterBy,
   filterValue,
   sortBy,
 }: {
   searchTerm?: string;
-  page?:
+  mode?:
     | "inventory"
-    | "nostockalert"
-    | "lowstockalert"
-    | "expiringalert"
-    | "expiredalert";
+    | "noStockAlert"
+    | "lowStockAlert"
+    | "expiringAlert"
+    | "expiredAlert";
   filterBy?: "expiryDate" | "quantity";
   filterValue?: string | number | [string | number, string | number];
   sortBy?: string;
@@ -229,18 +162,18 @@ export const dynamicSearchDrugs = async ({
       .toISOString()
       .split("T")[0];
 
-    switch (page) {
-      case "nostockalert":
+    switch (mode) {
+      case "noStockAlert":
         conditions.push("quantity = 0");
         break;
-      case "lowstockalert":
+      case "lowStockAlert":
         conditions.push("quantity > 0 AND quantity <= 30");
         break;
-      case "expiredalert":
-        conditions.push("expiryDate <= ?");
+      case "expiredAlert":
+        conditions.push("expiryDate < ?");
         values.push(todayStr);
         break;
-      case "expiringalert":
+      case "expiringAlert":
         conditions.push("expiryDate BETWEEN ? AND ?");
         values.push(todayStr, futureDateStr);
         break;
@@ -286,7 +219,18 @@ export const dynamicSearchDrugs = async ({
 
     return result;
   } catch (error) {
-    console.error("Error in dynamic drug search:", error);
+    console.error("Error in drug search:", error);
     return [];
+  }
+};
+
+export const resetStocksDb = (): void => {
+  try {
+    db.execSync("DROP TABLE IF EXISTS drugs");
+    createStocksDb();
+    console.log("Drugs table reset successfully.");
+  } catch (error) {
+    console.error("Error resetting drugs table:", error);
+    throw error;
   }
 };

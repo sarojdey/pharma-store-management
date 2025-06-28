@@ -20,12 +20,12 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
-import { addDrug } from "../utils/dbActions";
+import { addDrug } from "../utils/stocksDb";
 
 const schema = z
   .object({
     medicineName: z.string().min(1, "Medicine name is required"),
-    idCode: z.string().min(1, "ID Code is required"),
+    batchId: z.string().min(1, "ID Code is required"),
     price: z.coerce
       .number()
       .min(0.01, "Buy price is required and must be greater than 0"),
@@ -75,12 +75,12 @@ export default function AddInventoryItem() {
     resolver: zodResolver(schema),
     defaultValues: {
       medicineName: "",
-      idCode: "",
+      batchId: "",
       price: undefined,
       mrp: undefined,
       quantity: undefined,
       expiryDate: new Date(),
-      medicineType: "Pills",
+      medicineType: "Tablets",
       otherMedicineType: "",
       batchNo: "",
       distributorName: "",
@@ -95,10 +95,11 @@ export default function AddInventoryItem() {
     try {
       const drugData = {
         medicineName: data.medicineName,
-        idCode: data.idCode,
+        batchId: data.batchId,
         price: data.price,
         mrp: data.mrp,
         quantity: data.quantity,
+        unitPerPackage: 1,
         expiryDate: data.expiryDate.toISOString().split("T")[0],
         medicineType: (data.medicineType === "Other"
           ? data.otherMedicineType
@@ -167,357 +168,361 @@ export default function AddInventoryItem() {
           Add Medicine
         </Text>
       </View>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={16}
+          bounces={true}
+          onScrollBeginDrag={() => Keyboard.dismiss()}
         >
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <View style={styles.container}>
-              <View style={styles.formCard}>
-                <FormField
-                  label="Medicine Name"
-                  required
-                  error={errors.medicineName?.message}
-                >
-                  <Controller
-                    control={control}
-                    name="medicineName"
-                    render={({ field }) => (
-                      <TextInput
+          <View style={styles.container}>
+            <View style={styles.formCard}>
+              <FormField
+                label="Medicine Name"
+                required
+                error={errors.medicineName?.message}
+              >
+                <Controller
+                  control={control}
+                  name="medicineName"
+                  render={({ field }) => (
+                    <TextInput
+                      style={[
+                        styles.input,
+                        errors.medicineName && styles.inputError,
+                      ]}
+                      onChangeText={field.onChange}
+                      value={field.value}
+                      placeholder="e.g., Remorinax Plus 600mg"
+                      placeholderTextColor="#9ca3af"
+                    />
+                  )}
+                />
+              </FormField>
+
+              <FormField
+                label="Batch ID"
+                required
+                error={errors.batchId?.message}
+              >
+                <Controller
+                  control={control}
+                  name="batchId"
+                  render={({ field }) => (
+                    <TextInput
+                      style={[
+                        styles.input,
+                        errors.batchId && styles.inputError,
+                      ]}
+                      onChangeText={field.onChange}
+                      value={field.value}
+                      placeholder="e.g., 5260"
+                      placeholderTextColor="#9ca3af"
+                    />
+                  )}
+                />
+              </FormField>
+
+              <FormField
+                label="Expiry Date"
+                required
+                error={errors.expiryDate?.message}
+              >
+                <Controller
+                  control={control}
+                  name="expiryDate"
+                  render={({ field }) => (
+                    <>
+                      <TouchableOpacity
                         style={[
                           styles.input,
-                          errors.medicineName && styles.inputError,
+                          styles.dateInput,
+                          errors.expiryDate && styles.inputError,
                         ]}
-                        onChangeText={field.onChange}
-                        value={field.value}
-                        placeholder="e.g., Remorinax Plus 600mg"
-                        placeholderTextColor="#9ca3af"
-                      />
-                    )}
-                  />
-                </FormField>
-
-                <FormField
-                  label="Medicine ID"
-                  required
-                  error={errors.idCode?.message}
-                >
-                  <Controller
-                    control={control}
-                    name="idCode"
-                    render={({ field }) => (
-                      <TextInput
-                        style={[
-                          styles.input,
-                          errors.idCode && styles.inputError,
-                        ]}
-                        onChangeText={field.onChange}
-                        value={field.value}
-                        placeholder="e.g., 5260"
-                        placeholderTextColor="#9ca3af"
-                      />
-                    )}
-                  />
-                </FormField>
-
-                <FormField
-                  label="Expiry Date"
-                  required
-                  error={errors.expiryDate?.message}
-                >
-                  <Controller
-                    control={control}
-                    name="expiryDate"
-                    render={({ field }) => (
-                      <>
-                        <TouchableOpacity
+                        onPress={() => setShowDatePicker(true)}
+                      >
+                        <Text
                           style={[
-                            styles.input,
-                            styles.dateInput,
-                            errors.expiryDate && styles.inputError,
+                            styles.dateText,
+                            !field.value && styles.placeholderText,
                           ]}
-                          onPress={() => setShowDatePicker(true)}
                         >
-                          <Text
-                            style={[
-                              styles.dateText,
-                              !field.value && styles.placeholderText,
-                            ]}
-                          >
-                            {field.value
-                              ? field.value.toLocaleDateString()
-                              : "Select expiry date"}
-                          </Text>
-                          <MaterialIcons
-                            name="calendar-month"
-                            size={24}
-                            color="#aaa"
-                          />
-                        </TouchableOpacity>
-                        {showDatePicker && (
-                          <DateTimePicker
-                            value={field.value || new Date()}
-                            mode="date"
-                            display="default"
-                            onChange={(_, selectedDate) => {
-                              setShowDatePicker(false);
-                              if (selectedDate) {
-                                field.onChange(selectedDate);
-                              }
-                            }}
-                          />
-                        )}
-                      </>
-                    )}
-                  />
-                </FormField>
+                          {field.value
+                            ? field.value.toLocaleDateString()
+                            : "Select expiry date"}
+                        </Text>
+                        <MaterialIcons
+                          name="calendar-month"
+                          size={24}
+                          color="#aaa"
+                        />
+                      </TouchableOpacity>
+                      {showDatePicker && (
+                        <DateTimePicker
+                          value={field.value || new Date()}
+                          mode="date"
+                          display="default"
+                          onChange={(_, selectedDate) => {
+                            setShowDatePicker(false);
+                            if (selectedDate) {
+                              field.onChange(selectedDate);
+                            }
+                          }}
+                        />
+                      )}
+                    </>
+                  )}
+                />
+              </FormField>
+
+              <FormField
+                label="Medicine Type"
+                required
+                error={errors.medicineType?.message}
+              >
+                <Controller
+                  control={control}
+                  name="medicineType"
+                  render={({ field }) => (
+                    <View style={styles.pickerWrapper}>
+                      <Picker
+                        selectedValue={field.value}
+                        onValueChange={field.onChange}
+                        style={styles.picker}
+                      >
+                        <Picker.Item label="Tablet" value="Tablet" />
+                        <Picker.Item label="Syrup" value="Syrup" />
+                        <Picker.Item label="Injectable" value="Injectable" />
+                        <Picker.Item label="Ointment" value="Ointment" />
+                        <Picker.Item label="Inhaler" value="Inhaler" />
+                        <Picker.Item label="Other" value="Other" />
+                      </Picker>
+                    </View>
+                  )}
+                />
+              </FormField>
+
+              {medicineType === "Other" && (
                 <FormField
-                  label="Medicine Type"
+                  label="Specify Other Type"
                   required
-                  error={errors.medicineType?.message}
+                  error={errors.otherMedicineType?.message}
                 >
                   <Controller
                     control={control}
-                    name="medicineType"
+                    name="otherMedicineType"
                     render={({ field }) => (
-                      <View style={styles.pickerWrapper}>
-                        <Picker
-                          selectedValue={field.value}
-                          onValueChange={field.onChange}
-                          style={styles.picker}
-                        >
-                          <Picker.Item label="Pills" value="Pills" />
-                          <Picker.Item label="Syrup" value="Syrup" />
-                          <Picker.Item label="Syringe" value="Syringe" />
-                          <Picker.Item label="Other" value="Other" />
-                        </Picker>
-                      </View>
+                      <TextInput
+                        style={[
+                          styles.input,
+                          errors.otherMedicineType && styles.inputError,
+                        ]}
+                        onChangeText={field.onChange}
+                        value={field.value}
+                        placeholder="e.g., Inhaler"
+                        placeholderTextColor="#9ca3af"
+                      />
                     )}
                   />
                 </FormField>
+              )}
 
-                {medicineType === "Other" && (
+              <View style={styles.row}>
+                <View style={styles.halfWidth}>
                   <FormField
-                    label="Specify Other Type"
+                    label="Cost"
                     required
-                    error={errors.otherMedicineType?.message}
+                    error={errors.price?.message}
                   >
                     <Controller
                       control={control}
-                      name="otherMedicineType"
+                      name="price"
                       render={({ field }) => (
                         <TextInput
                           style={[
                             styles.input,
-                            errors.otherMedicineType && styles.inputError,
+                            errors.price && styles.inputError,
                           ]}
-                          onChangeText={field.onChange}
-                          value={field.value}
-                          placeholder="e.g., Inhaler"
+                          keyboardType="decimal-pad"
+                          onChangeText={(text) => {
+                            if (text.trim() === "") {
+                              field.onChange(undefined);
+                            } else {
+                              const numValue = parseFloat(text);
+                              if (!isNaN(numValue)) {
+                                field.onChange(numValue);
+                              }
+                            }
+                          }}
+                          value={
+                            field.value !== undefined
+                              ? field.value.toString()
+                              : ""
+                          }
+                          placeholder="e.g., 30"
                           placeholderTextColor="#9ca3af"
                         />
                       )}
                     />
                   </FormField>
-                )}
-
-                <View style={styles.row}>
-                  <View style={styles.halfWidth}>
-                    <FormField
-                      label="Cost"
-                      required
-                      error={errors.price?.message}
-                    >
-                      <Controller
-                        control={control}
-                        name="price"
-                        render={({ field }) => (
-                          <TextInput
-                            style={[
-                              styles.input,
-                              errors.price && styles.inputError,
-                            ]}
-                            keyboardType="decimal-pad"
-                            onChangeText={(text) => {
-                              if (text.trim() === "") {
-                                field.onChange(undefined);
-                              } else {
-                                const numValue = parseFloat(text);
-                                if (!isNaN(numValue)) {
-                                  field.onChange(numValue);
-                                }
-                              }
-                            }}
-                            value={
-                              field.value !== undefined
-                                ? field.value.toString()
-                                : ""
-                            }
-                            placeholder="e.g., 30"
-                            placeholderTextColor="#9ca3af"
-                          />
-                        )}
-                      />
-                    </FormField>
-                  </View>
-
-                  <View style={styles.halfWidth}>
-                    <FormField label="MRP" required error={errors.mrp?.message}>
-                      <Controller
-                        control={control}
-                        name="mrp"
-                        render={({ field }) => (
-                          <TextInput
-                            style={[
-                              styles.input,
-                              errors.mrp && styles.inputError,
-                            ]}
-                            keyboardType="decimal-pad"
-                            onChangeText={(text) => {
-                              if (text.trim() === "") {
-                                field.onChange(undefined);
-                              } else {
-                                const numValue = parseFloat(text);
-                                if (!isNaN(numValue)) {
-                                  field.onChange(numValue);
-                                }
-                              }
-                            }}
-                            value={
-                              field.value !== undefined
-                                ? field.value.toString()
-                                : ""
-                            }
-                            placeholder="e.g., 50"
-                            placeholderTextColor="#9ca3af"
-                          />
-                        )}
-                      />
-                    </FormField>
-                  </View>
                 </View>
 
-                <FormField
-                  label="Quantity"
-                  required
-                  error={errors.quantity?.message}
-                >
-                  <Controller
-                    control={control}
-                    name="quantity"
-                    render={({ field }) => (
-                      <TextInput
-                        style={[
-                          styles.input,
-                          errors.quantity && styles.inputError,
-                        ]}
-                        keyboardType="number-pad"
-                        onChangeText={(text) => {
-                          if (text.trim() === "") {
-                            field.onChange(undefined);
-                          } else {
-                            const numValue = parseInt(text, 10);
-                            if (!isNaN(numValue)) {
-                              field.onChange(numValue);
+                <View style={styles.halfWidth}>
+                  <FormField label="MRP" required error={errors.mrp?.message}>
+                    <Controller
+                      control={control}
+                      name="mrp"
+                      render={({ field }) => (
+                        <TextInput
+                          style={[
+                            styles.input,
+                            errors.mrp && styles.inputError,
+                          ]}
+                          keyboardType="decimal-pad"
+                          onChangeText={(text) => {
+                            if (text.trim() === "") {
+                              field.onChange(undefined);
+                            } else {
+                              const numValue = parseFloat(text);
+                              if (!isNaN(numValue)) {
+                                field.onChange(numValue);
+                              }
                             }
+                          }}
+                          value={
+                            field.value !== undefined
+                              ? field.value.toString()
+                              : ""
                           }
-                        }}
-                        value={
-                          field.value !== undefined
-                            ? field.value.toString()
-                            : ""
-                        }
-                        placeholder="e.g., 100"
-                        placeholderTextColor="#9ca3af"
-                      />
-                    )}
-                  />
-                </FormField>
-                <FormField label="Batch No." error={errors.batchNo?.message}>
-                  <Controller
-                    control={control}
-                    name="batchNo"
-                    render={({ field }) => (
-                      <TextInput
-                        style={[
-                          styles.input,
-                          errors.batchNo && styles.inputError,
-                        ]}
-                        onChangeText={field.onChange}
-                        value={field.value}
-                        placeholder="e.g., B123456"
-                        placeholderTextColor="#9ca3af"
-                      />
-                    )}
-                  />
-                </FormField>
-
-                <FormField
-                  label="Distributor Name"
-                  error={errors.distributorName?.message}
-                >
-                  <Controller
-                    control={control}
-                    name="distributorName"
-                    render={({ field }) => (
-                      <TextInput
-                        style={[
-                          styles.input,
-                          errors.distributorName && styles.inputError,
-                        ]}
-                        onChangeText={field.onChange}
-                        value={field.value}
-                        placeholder="e.g., ABC Pharma Pvt Ltd"
-                        placeholderTextColor="#9ca3af"
-                      />
-                    )}
-                  />
-                </FormField>
-
-                <FormField
-                  label="Purchase Invoice No."
-                  error={errors.purchaseInvoiceNumber?.message}
-                >
-                  <Controller
-                    control={control}
-                    name="purchaseInvoiceNumber"
-                    render={({ field }) => (
-                      <TextInput
-                        style={[
-                          styles.input,
-                          errors.purchaseInvoiceNumber && styles.inputError,
-                        ]}
-                        onChangeText={field.onChange}
-                        value={field.value}
-                        placeholder="e.g., INV-7890"
-                        placeholderTextColor="#9ca3af"
-                      />
-                    )}
-                  />
-                </FormField>
+                          placeholder="e.g., 50"
+                          placeholderTextColor="#9ca3af"
+                        />
+                      )}
+                    />
+                  </FormField>
+                </View>
               </View>
 
-              <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  isSubmitting && styles.submitButtonDisabled,
-                ]}
-                onPress={handleSubmit(onSubmit)}
-                activeOpacity={0.8}
-                disabled={isSubmitting}
+              <FormField
+                label="Quantity"
+                required
+                error={errors.quantity?.message}
               >
-                <Text style={styles.submitButtonText}>Add to Inventory</Text>
-              </TouchableOpacity>
+                <Controller
+                  control={control}
+                  name="quantity"
+                  render={({ field }) => (
+                    <TextInput
+                      style={[
+                        styles.input,
+                        errors.quantity && styles.inputError,
+                      ]}
+                      keyboardType="number-pad"
+                      onChangeText={(text) => {
+                        if (text.trim() === "") {
+                          field.onChange(undefined);
+                        } else {
+                          const numValue = parseInt(text, 10);
+                          if (!isNaN(numValue)) {
+                            field.onChange(numValue);
+                          }
+                        }
+                      }}
+                      value={
+                        field.value !== undefined ? field.value.toString() : ""
+                      }
+                      placeholder="e.g., 100"
+                      placeholderTextColor="#9ca3af"
+                    />
+                  )}
+                />
+              </FormField>
+
+              <FormField label="Batch No." error={errors.batchNo?.message}>
+                <Controller
+                  control={control}
+                  name="batchNo"
+                  render={({ field }) => (
+                    <TextInput
+                      style={[
+                        styles.input,
+                        errors.batchNo && styles.inputError,
+                      ]}
+                      onChangeText={field.onChange}
+                      value={field.value}
+                      placeholder="e.g., B123456"
+                      placeholderTextColor="#9ca3af"
+                    />
+                  )}
+                />
+              </FormField>
+
+              <FormField
+                label="Distributor Name"
+                error={errors.distributorName?.message}
+              >
+                <Controller
+                  control={control}
+                  name="distributorName"
+                  render={({ field }) => (
+                    <TextInput
+                      style={[
+                        styles.input,
+                        errors.distributorName && styles.inputError,
+                      ]}
+                      onChangeText={field.onChange}
+                      value={field.value}
+                      placeholder="e.g., ABC Pharma Pvt Ltd"
+                      placeholderTextColor="#9ca3af"
+                    />
+                  )}
+                />
+              </FormField>
+
+              <FormField
+                label="Purchase Invoice No."
+                error={errors.purchaseInvoiceNumber?.message}
+              >
+                <Controller
+                  control={control}
+                  name="purchaseInvoiceNumber"
+                  render={({ field }) => (
+                    <TextInput
+                      style={[
+                        styles.input,
+                        errors.purchaseInvoiceNumber && styles.inputError,
+                      ]}
+                      onChangeText={field.onChange}
+                      value={field.value}
+                      placeholder="e.g., INV-7890"
+                      placeholderTextColor="#9ca3af"
+                    />
+                  )}
+                />
+              </FormField>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
+
+            <TouchableOpacity
+              style={[
+                styles.submitButton,
+                isSubmitting && styles.submitButtonDisabled,
+              ]}
+              onPress={handleSubmit(onSubmit)}
+              activeOpacity={0.8}
+              disabled={isSubmitting}
+            >
+              <Text style={styles.submitButtonText}>Add to Inventory</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

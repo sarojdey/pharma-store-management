@@ -1,12 +1,7 @@
-import { createDatabase } from "@/utils/dbActions";
-import { createHistoryDatabase } from "@/utils/historyDb";
-import {
-  createOrderListDatabase,
-  resetOrderLists,
-  resetOrderListTables,
-} from "@/utils/orderListDb";
-import { createSupplierDatabase } from "@/utils/supplierDb";
-
+import { createHistoryDb, resetHistoryDb } from "@/utils/historyDb";
+import { createOrderListDb, resetOrderListDb } from "@/utils/orderListDb";
+import { createStocksDb, resetStocksDb } from "@/utils/stocksDb";
+import { createSupplierDb, resetSuppliersDb } from "@/utils/supplierDb";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -14,10 +9,14 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   useEffect(() => {
-    createOrderListDatabase();
-    createHistoryDatabase();
-    createSupplierDatabase();
-    createDatabase();
+    resetStocksDb();
+    resetHistoryDb();
+    resetOrderListDb();
+    resetSuppliersDb();
+    createHistoryDb();
+    createOrderListDb();
+    createSupplierDb();
+    createStocksDb();
   }, []);
   return (
     <SafeAreaProvider>

@@ -1,7 +1,7 @@
 import DrugCard from "@/components/DrugCard";
 import Loader from "@/components/Loader";
 import { Drug } from "@/types";
-import { dynamicSearchDrugs } from "@/utils/dbActions";
+
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -22,6 +22,7 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
+import { searchDrugs } from "@/utils/stocksDb";
 
 const SORT_OPTIONS: Record<string, string> = {
   medicineName: "Name",
@@ -111,9 +112,9 @@ export default function Expiry() {
         page: tabExpired ? "expiredalert" : "expiringalert",
       });
 
-      const data = await dynamicSearchDrugs({
+      const data = await searchDrugs({
         ...finalParams,
-        page: tabExpired ? "expiredalert" : "expiringalert",
+        mode: tabExpired ? "expiredAlert" : "expiringAlert",
       });
 
       setDrugs(data as Drug[]);
@@ -192,6 +193,11 @@ export default function Expiry() {
       today.toISOString().split("T")[0],
       futureDate.toISOString().split("T")[0],
     ];
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    fetchDrugs({ searchTerm: "" });
   };
 
   const applyFilter = () => {
@@ -296,8 +302,6 @@ export default function Expiry() {
     });
   };
 
-  if (isLoading) return <Loader />;
-
   return (
     <View style={styles.wrapper}>
       <View style={styles.topbar}>
@@ -320,6 +324,14 @@ export default function Expiry() {
               color="rgb(70, 125, 168)"
             />
           </TouchableOpacity>
+          {searchTerm.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={handleClearSearch}
+            >
+              <Ionicons name="close" size={20} color="#666" />
+            </TouchableOpacity>
+          )}
         </View>
 
         <TouchableOpacity onPress={openFilter}>
@@ -367,11 +379,31 @@ export default function Expiry() {
           </Text>
         </TouchableOpacity>
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {drugs.map((d) => (
-          <DrugCard key={d.id} drug={d} />
-        ))}
-      </ScrollView>
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {drugs.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <FontAwesome5 name="box-open" size={70} color="#ccc" />
+              <Text style={styles.emptyText}>Nothing here</Text>
+              <Text style={styles.emptySubText}>
+                {searchTerm
+                  ? "Try adjusting your search terms"
+                  : `No stocks are currently ${
+                      tabExpired ? "expired" : "expiring soon"
+                    }`}
+              </Text>
+            </View>
+          ) : (
+            <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
+              {drugs.map((d) => (
+                <DrugCard key={d.id} drug={d} />
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      )}
 
       {isFilterVisible && (
         <Pressable
@@ -604,6 +636,27 @@ export default function Expiry() {
 const styles = StyleSheet.create({
   wrapper: { flex: 1, position: "relative" },
 
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 100,
+    paddingHorizontal: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 2,
+    textAlign: "center",
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+
   topbar: {
     position: "absolute",
     top: 0,
@@ -648,13 +701,16 @@ const styles = StyleSheet.create({
     borderLeftWidth: 1,
     borderLeftColor: "#ccc",
   },
+  clearButton: {
+    position: "absolute",
+    right: 55,
+    padding: 5,
+  },
 
   scrollContainer: {
     minHeight: "100%",
     alignItems: "center",
-    paddingTop: 90,
     padding: 18,
-    gap: 14,
   },
 
   overlay: {
@@ -863,6 +919,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "rgb(57, 104, 139)",
   },
+
   grid: {
     width: "100%",
     flexDirection: "row",

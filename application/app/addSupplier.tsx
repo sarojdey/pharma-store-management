@@ -20,7 +20,7 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
-import { addDrug } from "../utils/dbActions";
+import { addDrug } from "../utils/stocksDb";
 import { addSupplier } from "@/utils/supplierDb";
 import { addHistory } from "@/utils/historyDb";
 

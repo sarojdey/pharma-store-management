@@ -1,5 +1,6 @@
 import DrugBanner from "@/components/DrugBanner";
-import { getDrugById } from "@/utils/dbActions";
+import { Drug } from "@/types";
+import { getDrugById } from "@/utils/stocksDb";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useNavigation } from "expo-router";
@@ -12,22 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-interface Drug {
-  id: number;
-  medicineName: string;
-  idCode: string;
-  price: number;
-  mrp: number;
-  quantity: number;
-  expiryDate: string;
-  medicineType: string;
-  batchNo?: string | null;
-  distributorName?: string | null;
-  purchaseInvoiceNumber?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 const MedicineDetails = () => {
   const { id } = useLocalSearchParams();
@@ -97,7 +82,7 @@ const MedicineDetails = () => {
     { label: "Medicine Name", value: drug.medicineName },
     { label: "Medicine Type", value: drug.medicineType },
     { label: "ID", value: drug.id.toString() },
-    { label: "ID Code", value: drug.idCode },
+    { label: "Batch ID", value: drug.batchNo },
     { label: "Price", value: formatPrice(drug.price) },
     { label: "MRP", value: formatPrice(drug.mrp) },
     { label: "Quantity", value: drug.quantity.toString() },
