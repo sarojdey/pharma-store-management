@@ -16,26 +16,34 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { z } from "zod";
 import { addDrug } from "../utils/stocksDb";
-
 const schema = z
   .object({
     medicineName: z.string().min(1, "Medicine name is required"),
     batchId: z.string().min(1, "ID Code is required"),
-    price: z.coerce
-      .number()
-      .min(0.01, "Buy price is required and must be greater than 0"),
-    mrp: z.coerce
-      .number()
-      .min(0.01, "MRP is required and must be greater than 0"),
-    quantity: z.coerce
-      .number()
-      .int()
-      .min(1, "Quantity is required and must be at least 1"),
+    price: z.preprocess((val) => {
+      if (val === "" || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    }, z.number().min(0.01, "Cost is required and must be greater than 0")),
+    mrp: z.preprocess((val) => {
+      if (val === "" || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    }, z.number().min(0.01, "MRP is required and must be greater than 0")),
+    numberOfPackages: z.preprocess((val) => {
+      if (val === "" || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    }, z.number().int().min(1, "Number of packages is required and must be at least 1")),
+    unitPerPackage: z.preprocess((val) => {
+      if (val === "" || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    }, z.number().int().min(1, "Unit per package is required and must be at least 1").optional()),
     expiryDate: z.date({ required_error: "Expiry Date is required" }),
     medicineType: z.string().min(1, "Medicine type is required"),
     otherMedicineType: z.string().optional(),
@@ -60,6 +68,18 @@ const schema = z
       message: "Please specify the other medicine type",
       path: ["otherMedicineType"],
     }
+  )
+  .refine(
+    (data) => {
+      if (data.medicineType === "Tablet" || data.medicineType === "Other") {
+        return data.unitPerPackage !== undefined && data.unitPerPackage >= 1;
+      }
+      return true;
+    },
+    {
+      message: "Unit per package is required.",
+      path: ["unitPerPackage"],
+    }
   );
 
 export default function AddInventoryItem() {
@@ -70,6 +90,7 @@ export default function AddInventoryItem() {
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -78,28 +99,59 @@ export default function AddInventoryItem() {
       batchId: "",
       price: undefined,
       mrp: undefined,
-      quantity: undefined,
+      numberOfPackages: undefined,
+      unitPerPackage: undefined,
       expiryDate: new Date(),
-      medicineType: "Tablets",
+      medicineType: "Tablet",
       otherMedicineType: "",
       batchNo: "",
       distributorName: "",
       purchaseInvoiceNumber: "",
     },
   });
-  const medicineType = useWatch({ control, name: "medicineType" });
+
+  const medicineType = watch("medicineType");
+
+  const getPackageLabel = () => {
+    switch (medicineType) {
+      case "Tablet":
+        return "No. of Strips";
+      case "Syrup":
+        return "No. of Bottles";
+      case "Injectable":
+        return "No. of Vials";
+      case "Ointment":
+        return "No. of Tubes";
+      case "Inhaler":
+        return "No. of Inhalers";
+      case "Other":
+        return "No. of Packages";
+      default:
+        return "No. of Packages";
+    }
+  };
+
+  const shouldShowUnitPerPackage = () => {
+    return medicineType === "Tablet" || medicineType === "Other";
+  };
 
   const onSubmit = async (data: z.infer<typeof schema>) => {
     setIsSubmitting(true);
 
     try {
+      const finalUnitPerPackage = shouldShowUnitPerPackage()
+        ? data.unitPerPackage || 1
+        : 1;
+
+      const totalQuantity = data.numberOfPackages * finalUnitPerPackage;
+
       const drugData = {
         medicineName: data.medicineName,
         batchId: data.batchId,
         price: data.price,
         mrp: data.mrp,
-        quantity: data.quantity,
-        unitPerPackage: 1,
+        quantity: totalQuantity,
+        unitPerPackage: finalUnitPerPackage,
         expiryDate: data.expiryDate.toISOString().split("T")[0],
         medicineType: (data.medicineType === "Other"
           ? data.otherMedicineType
@@ -180,7 +232,6 @@ export default function AddInventoryItem() {
           keyboardShouldPersistTaps="handled"
           scrollEventThrottle={16}
           bounces={true}
-          onScrollBeginDrag={() => Keyboard.dismiss()}
         >
           <View style={styles.container}>
             <View style={styles.formCard}>
@@ -351,21 +402,9 @@ export default function AddInventoryItem() {
                             errors.price && styles.inputError,
                           ]}
                           keyboardType="decimal-pad"
-                          onChangeText={(text) => {
-                            if (text.trim() === "") {
-                              field.onChange(undefined);
-                            } else {
-                              const numValue = parseFloat(text);
-                              if (!isNaN(numValue)) {
-                                field.onChange(numValue);
-                              }
-                            }
-                          }}
-                          value={
-                            field.value !== undefined
-                              ? field.value.toString()
-                              : ""
-                          }
+                          onChangeText={field.onChange}
+                          onBlur={field.onBlur}
+                          value={field.value ? String(field.value) : ""}
                           placeholder="e.g., 30"
                           placeholderTextColor="#9ca3af"
                         />
@@ -386,21 +425,9 @@ export default function AddInventoryItem() {
                             errors.mrp && styles.inputError,
                           ]}
                           keyboardType="decimal-pad"
-                          onChangeText={(text) => {
-                            if (text.trim() === "") {
-                              field.onChange(undefined);
-                            } else {
-                              const numValue = parseFloat(text);
-                              if (!isNaN(numValue)) {
-                                field.onChange(numValue);
-                              }
-                            }
-                          }}
-                          value={
-                            field.value !== undefined
-                              ? field.value.toString()
-                              : ""
-                          }
+                          onChangeText={field.onChange}
+                          onBlur={field.onBlur}
+                          value={field.value ? String(field.value) : ""}
                           placeholder="e.g., 50"
                           placeholderTextColor="#9ca3af"
                         />
@@ -410,40 +437,89 @@ export default function AddInventoryItem() {
                 </View>
               </View>
 
-              <FormField
-                label="Quantity"
-                required
-                error={errors.quantity?.message}
-              >
-                <Controller
-                  control={control}
-                  name="quantity"
-                  render={({ field }) => (
-                    <TextInput
-                      style={[
-                        styles.input,
-                        errors.quantity && styles.inputError,
-                      ]}
-                      keyboardType="number-pad"
-                      onChangeText={(text) => {
-                        if (text.trim() === "") {
-                          field.onChange(undefined);
-                        } else {
-                          const numValue = parseInt(text, 10);
-                          if (!isNaN(numValue)) {
-                            field.onChange(numValue);
-                          }
-                        }
-                      }}
-                      value={
-                        field.value !== undefined ? field.value.toString() : ""
-                      }
-                      placeholder="e.g., 100"
-                      placeholderTextColor="#9ca3af"
-                    />
-                  )}
-                />
-              </FormField>
+              {/* Package-based quantity fields */}
+              {shouldShowUnitPerPackage() ? (
+                <View style={styles.row}>
+                  <View style={styles.halfWidth}>
+                    <FormField
+                      label={getPackageLabel()}
+                      required
+                      error={errors.numberOfPackages?.message}
+                    >
+                      <Controller
+                        control={control}
+                        name="numberOfPackages"
+                        render={({ field }) => (
+                          <TextInput
+                            style={[
+                              styles.input,
+                              errors.numberOfPackages && styles.inputError,
+                            ]}
+                            keyboardType="number-pad"
+                            onChangeText={field.onChange}
+                            onBlur={field.onBlur}
+                            value={field.value ? String(field.value) : ""}
+                            placeholder="e.g., 10"
+                            placeholderTextColor="#9ca3af"
+                          />
+                        )}
+                      />
+                    </FormField>
+                  </View>
+
+                  <View style={styles.halfWidth}>
+                    <FormField
+                      label="Unit per Package"
+                      required
+                      error={errors.unitPerPackage?.message}
+                    >
+                      <Controller
+                        control={control}
+                        name="unitPerPackage"
+                        render={({ field }) => (
+                          <TextInput
+                            style={[
+                              styles.input,
+                              errors.unitPerPackage && styles.inputError,
+                            ]}
+                            keyboardType="number-pad"
+                            onChangeText={field.onChange}
+                            onBlur={field.onBlur}
+                            value={field.value ? String(field.value) : ""}
+                            placeholder="e.g., 100"
+                            placeholderTextColor="#9ca3af"
+                          />
+                        )}
+                      />
+                    </FormField>
+                  </View>
+                </View>
+              ) : (
+                <FormField
+                  label={getPackageLabel()}
+                  required
+                  error={errors.numberOfPackages?.message}
+                >
+                  <Controller
+                    control={control}
+                    name="numberOfPackages"
+                    render={({ field }) => (
+                      <TextInput
+                        style={[
+                          styles.input,
+                          errors.numberOfPackages && styles.inputError,
+                        ]}
+                        keyboardType="number-pad"
+                        onChangeText={field.onChange}
+                        onBlur={field.onBlur}
+                        value={field.value ? String(field.value) : ""}
+                        placeholder="e.g., 100"
+                        placeholderTextColor="#9ca3af"
+                      />
+                    )}
+                  />
+                </FormField>
+              )}
 
               <FormField label="Batch No." error={errors.batchNo?.message}>
                 <Controller
@@ -526,7 +602,6 @@ export default function AddInventoryItem() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   wrapper: { flex: 1, position: "relative" },
 
