@@ -1,5 +1,6 @@
 import { createHistoryDb, resetHistoryDb } from "@/utils/historyDb";
 import { createOrderListDb, resetOrderListDb } from "@/utils/orderListDb";
+import { createSalesDb } from "@/utils/salesDb";
 import { createStocksDb, resetStocksDb } from "@/utils/stocksDb";
 import { createSupplierDb, resetSuppliersDb } from "@/utils/supplierDb";
 import { Stack } from "expo-router";
@@ -17,6 +18,7 @@ export default function RootLayout() {
     createOrderListDb();
     createSupplierDb();
     createStocksDb();
+    createSalesDb();
   }, []);
   return (
     <SafeAreaProvider>

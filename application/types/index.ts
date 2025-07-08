@@ -13,33 +13,6 @@ export interface Drug {
   purchaseInvoiceNumber?: string | null;
 }
 
-export interface Supplier {
-  id?: number;
-  supplierName: string;
-  location: string;
-  phone: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface History {
-  id: number;
-  operation: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface OrderList {
-  id: number;
-  supplierName?: string;
-  medicineName: string;
-  quantity: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// db types
-
 export interface AddDrug {
   medicineName: string;
   batchId: string;
@@ -66,4 +39,53 @@ export interface UpdateDrug {
   batchNo?: string;
   distributorName?: string;
   purchaseInvoiceNumber?: string;
+}
+
+export interface Supplier {
+  id?: number;
+  supplierName: string;
+  location: string;
+  phone: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface History {
+  id: number;
+  operation: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderList {
+  id: number;
+  supplierName?: string;
+  medicineName: string;
+  quantity: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Sale {
+  id: number;
+  medicineId: number;
+  medicineName: string;
+  quantity: number;
+  unitPerPackage: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AddSale {
+  medicineId: number;
+  medicineName: string;
+  quantity: number;
+  unitPerPackage: number;
+}
+
+export interface UpdateSale {
+  medicineId?: number;
+  medicineName?: string;
+  quantity?: number;
+  unitPerPackage?: number;
 }

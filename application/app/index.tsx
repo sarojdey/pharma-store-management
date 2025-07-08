@@ -152,7 +152,7 @@ export default function HomeScreen() {
         <View style={[styles.grid, { marginBottom: 20 }]}>
           <TouchableOpacity
             onPress={() => {
-              router.push("/product");
+              router.push("/addSales");
             }}
             style={styles.chartButton}
             activeOpacity={0.7}
