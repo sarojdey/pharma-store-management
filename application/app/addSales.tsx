@@ -27,6 +27,70 @@ const textColorMap: Record<string, string> = {
   consumable: "#444",
 };
 
+const FormField = ({
+  label,
+  children,
+  error,
+  required = false,
+}: {
+  label: string;
+  children: React.ReactNode;
+  error?: string;
+  required?: boolean;
+}) => (
+  <View style={styles.fieldContainer}>
+    <Text style={styles.label}>
+      {label} {required && <Text style={styles.required}>*</Text>}
+    </Text>
+    {children}
+    {error && <Text style={styles.error}>{error}</Text>}
+  </View>
+);
+
+type MedicineDropdownItemProps = {
+  item: Drug;
+  onSelect: (medicine: Drug) => void;
+  textColorMap: Record<string, string>;
+  expiryStatus: (expiryDate: string) => "expired" | "expiring" | "consumable";
+  formatDate: (dateString: string) => string;
+};
+
+const MedicineDropdownItem: React.FC<MedicineDropdownItemProps> = ({
+  item,
+  onSelect,
+  textColorMap,
+  expiryStatus,
+  formatDate,
+}) => (
+  <TouchableOpacity style={styles.dropdownItem} onPress={() => onSelect(item)}>
+    <View style={styles.dropdownItemContent}>
+      <Text style={styles.dropdownItemName}>{item.medicineName}</Text>
+      <Text style={styles.dropdownItemType}>{item.medicineType}</Text>
+      {item.batchNo && (
+        <Text style={styles.dropdownItemBatch}>Batch: {item.batchNo}</Text>
+      )}
+      <View style={styles.dropdownItemDetails}>
+        <Text style={styles.dropdownItemStock}>
+          Stock: {item.quantity}{" "}
+          {item.medicineType === "Tablet" ? "tablets" : "units"}
+        </Text>
+        <Text
+          style={[
+            styles.dropdownItemExpiry,
+            {
+              fontWeight: "600",
+              color: textColorMap[expiryStatus(item.expiryDate)],
+            },
+          ]}
+        >
+          Exp: {formatDate(item.expiryDate)}
+        </Text>
+      </View>
+      <Text style={styles.dropdownItemPrice}>MRP: ₹{item.mrp}</Text>
+    </View>
+  </TouchableOpacity>
+);
+
 export default function AddSale() {
   const [showMedicineDropdown, setShowMedicineDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -133,10 +197,7 @@ export default function AddSale() {
   const handleQuantityChange = useCallback(
     (text: string) => {
       setSaleQuantity(text);
-
-      if (quantityError) {
-        setQuantityError("");
-      }
+      setQuantityError("");
 
       if (text.trim() === "") {
         return;
@@ -157,12 +218,11 @@ export default function AddSale() {
         return;
       }
     },
-    [quantityError, selectedMedicine]
+    [selectedMedicine]
   );
   const validateForm = () => {
     let isValid = true;
 
-    // Clear previous errors
     setMedicineError("");
     setQuantityError("");
 
@@ -306,59 +366,6 @@ export default function AddSale() {
         : "consumable";
     return status;
   };
-
-  const FormField = ({
-    label,
-    children,
-    error,
-    required = false,
-  }: {
-    label: string;
-    children: React.ReactNode;
-    error?: string;
-    required?: boolean;
-  }) => (
-    <View style={styles.fieldContainer}>
-      <Text style={styles.label}>
-        {label} {required && <Text style={styles.required}>*</Text>}
-      </Text>
-      {children}
-      {error && <Text style={styles.error}>{error}</Text>}
-    </View>
-  );
-
-  const MedicineDropdownItem = ({ item }: { item: Drug }) => (
-    <TouchableOpacity
-      style={styles.dropdownItem}
-      onPress={() => selectMedicine(item)}
-    >
-      <View style={styles.dropdownItemContent}>
-        <Text style={styles.dropdownItemName}>{item.medicineName}</Text>
-        <Text style={styles.dropdownItemType}>{item.medicineType}</Text>
-        {item.batchNo && (
-          <Text style={styles.dropdownItemBatch}>Batch: {item.batchNo}</Text>
-        )}
-        <View style={styles.dropdownItemDetails}>
-          <Text style={styles.dropdownItemStock}>
-            Stock: {item.quantity}{" "}
-            {item.medicineType === "Tablet" ? "tablets" : "units"}
-          </Text>
-          <Text
-            style={[
-              styles.dropdownItemExpiry,
-              {
-                fontWeight: "600",
-                color: textColorMap[expiryStatus(item.expiryDate)],
-              },
-            ]}
-          >
-            Exp: {formatDate(item.expiryDate)}
-          </Text>
-        </View>
-        <Text style={styles.dropdownItemPrice}>MRP: ₹{item.mrp}</Text>
-      </View>
-    </TouchableOpacity>
-  );
 
   const isFormValid =
     selectedMedicine && saleQuantity && !quantityError && !medicineError;
@@ -570,7 +577,15 @@ export default function AddSale() {
             <FlatList
               data={filteredMedicines}
               keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => <MedicineDropdownItem item={item} />}
+              renderItem={({ item }) => (
+                <MedicineDropdownItem
+                  onSelect={selectMedicine}
+                  textColorMap={textColorMap}
+                  expiryStatus={expiryStatus}
+                  formatDate={formatDate}
+                  item={item}
+                />
+              )}
               style={styles.medicineList}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
