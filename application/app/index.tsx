@@ -150,23 +150,11 @@ export default function HomeScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={[styles.grid, { marginBottom: 20 }]}>
-          <TouchableOpacity
-            onPress={() => {
-              router.push("/addSales");
-            }}
-            style={styles.chartButton}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.chartButton} activeOpacity={0.7}>
             <AntDesign name="linechart" size={24} style={styles.chartIcon} />
             <Text style={styles.chartLabel}>Sales Report</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              router.push("/tempAdd");
-            }}
-            style={styles.chartButton}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.chartButton} activeOpacity={0.7}>
             <AntDesign name="profile" size={24} style={styles.chartIcon} />
             <Text style={styles.chartLabel}>Stock Report</Text>
           </TouchableOpacity>

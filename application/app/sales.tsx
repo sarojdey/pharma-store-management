@@ -22,6 +22,7 @@ import {
 import { z } from "zod";
 import { Sale } from "@/types";
 import SaleCard from "@/components/SaleCard";
+import { router } from "expo-router";
 
 const SORT_OPTIONS: Record<string, string> = {
   medicineName: "Medicine Name",
@@ -312,7 +313,13 @@ export default function SalesScreen() {
         </ScrollView>
       )}
 
-      {/* Filter Modal */}
+      <TouchableOpacity
+        style={styles.add}
+        onPress={() => router.push("/addSales")}
+      >
+        <MaterialIcons name="add" size={35} color="rgb(70, 125, 168)" />
+      </TouchableOpacity>
+
       {isFilterVisible && (
         <Pressable
           style={styles.overlay}
@@ -432,7 +439,6 @@ export default function SalesScreen() {
         </Pressable>
       )}
 
-      {/* Sort Modal */}
       {isSortVisible && (
         <Pressable
           style={styles.overlay}
@@ -526,6 +532,21 @@ export default function SalesScreen() {
 
 const styles = StyleSheet.create({
   wrapper: { flex: 1, position: "relative" },
+  add: {
+    display: "flex",
+    position: "absolute",
+    right: 30,
+    bottom: 30,
+    backgroundColor: "rgb(230, 244, 255)",
+    borderRadius: 500,
+    padding: 12,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "rgba(70, 126, 168, 0.39)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
 
   emptyContainer: {
     flex: 1,

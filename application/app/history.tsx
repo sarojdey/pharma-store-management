@@ -18,7 +18,7 @@ import {
 
 import Loader from "@/components/Loader";
 import { History } from "@/types";
-import { getAllHistory, resetHistory } from "@/utils/historyDb";
+import { getAllHistory, resetHistoryDb } from "@/utils/historyDb";
 
 type SortOrder = "asc" | "desc";
 
@@ -80,19 +80,8 @@ export default function HistoryPage() {
         {
           text: "Clear",
           style: "destructive",
-          onPress: async () => {
-            try {
-              const result = await resetHistory();
-              if (result.success) {
-                setHistory([]);
-                Alert.alert("Success", "History cleared successfully");
-              } else {
-                Alert.alert("Error", "Failed to clear history");
-              }
-            } catch (error) {
-              console.error("Error clearing history:", error);
-              Alert.alert("Error", "Failed to clear history");
-            }
+          onPress: () => {
+            resetHistoryDb();
           },
         },
       ]
