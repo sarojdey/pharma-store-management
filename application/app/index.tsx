@@ -160,7 +160,13 @@ export default function HomeScreen() {
             <AntDesign name="linechart" size={24} style={styles.chartIcon} />
             <Text style={styles.chartLabel}>Sales Report</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.chartButton} activeOpacity={0.7}>
+          <TouchableOpacity
+            onPress={() => {
+              router.push("/tempAdd");
+            }}
+            style={styles.chartButton}
+            activeOpacity={0.7}
+          >
             <AntDesign name="profile" size={24} style={styles.chartIcon} />
             <Text style={styles.chartLabel}>Stock Report</Text>
           </TouchableOpacity>
