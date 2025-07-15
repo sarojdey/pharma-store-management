@@ -23,6 +23,7 @@ import {
 } from "react-native";
 import { z } from "zod";
 import { searchDrugs } from "@/utils/stocksDb";
+import DrugCardWithRestock from "@/components/DrugCardWithRestock";
 
 const SORT_OPTIONS: Record<string, string> = {
   medicineName: "Name",
@@ -398,7 +399,7 @@ export default function Expiry() {
           ) : (
             <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
               {drugs.map((d) => (
-                <DrugCard key={d.id} drug={d} />
+                <DrugCardWithRestock key={d.id} drug={d} />
               ))}
             </View>
           )}

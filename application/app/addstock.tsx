@@ -3,8 +3,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-import { useNavigation } from "expo-router";
-import React, { useState } from "react";
+import { useNavigation, useLocalSearchParams } from "expo-router";
+import React, { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
@@ -19,6 +19,8 @@ import {
 } from "react-native";
 import { z } from "zod";
 import { addDrug } from "../utils/stocksDb";
+import { Drug } from "@/types";
+
 const schema = z
   .object({
     medicineName: z.string().min(1, "Medicine name is required"),
@@ -84,12 +86,16 @@ const schema = z
 export default function AddInventoryItem() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRestockMode, setIsRestockMode] = useState(false);
   const navigation = useNavigation();
+  const params = useLocalSearchParams();
+
   const {
     control,
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -108,6 +114,30 @@ export default function AddInventoryItem() {
       purchaseInvoiceNumber: "",
     },
   });
+
+  useEffect(() => {
+    if (params.drugDetails) {
+      try {
+        const drugData: Drug = JSON.parse(params.drugDetails as string);
+        setIsRestockMode(true);
+
+        setValue("medicineName", drugData.medicineName);
+        setValue("batchId", drugData.batchId);
+        setValue("price", drugData.price);
+        setValue("mrp", drugData.mrp);
+        setValue("medicineType", drugData.medicineType);
+
+        if (drugData.batchNo) setValue("batchNo", drugData.batchNo);
+        if (drugData.distributorName)
+          setValue("distributorName", drugData.distributorName);
+        if (drugData.purchaseInvoiceNumber)
+          setValue("purchaseInvoiceNumber", drugData.purchaseInvoiceNumber);
+      } catch (error) {
+        console.error("Error parsing drug details:", error);
+        Alert.alert("Error", "Failed to load drug details");
+      }
+    }
+  }, [params.drugDetails, setValue]);
 
   const medicineType = watch("medicineType");
 
@@ -163,18 +193,34 @@ export default function AddInventoryItem() {
       const result = await addDrug(drugData);
 
       if (result.success) {
-        Alert.alert("Success", "Medicine added to inventory successfully!", [
+        const message = isRestockMode
+          ? "Medicine restocked successfully!"
+          : "Medicine added to inventory successfully!";
+
+        Alert.alert("Success", message, [
           {
             text: "OK",
-            onPress: () => reset(),
+            onPress: () => {
+              if (isRestockMode) {
+                navigation.goBack();
+              } else {
+                reset();
+              }
+            },
           },
         ]);
       } else {
-        Alert.alert("Error", "Failed to add medicine to inventory");
+        const errorMessage = isRestockMode
+          ? "Failed to restock medicine"
+          : "Failed to add medicine to inventory";
+        Alert.alert("Error", errorMessage);
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      Alert.alert("Error", "An error occurred while adding the medicine");
+      const errorMessage = isRestockMode
+        ? "An error occurred while restocking the medicine"
+        : "An error occurred while adding the medicine";
+      Alert.alert("Error", errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -216,7 +262,7 @@ export default function AddInventoryItem() {
             paddingRight: 40,
           }}
         >
-          Add Medicine
+          {isRestockMode ? "Restock Medicine" : "Add Medicine"}
         </Text>
       </View>
 
@@ -593,7 +639,9 @@ export default function AddInventoryItem() {
               activeOpacity={0.8}
               disabled={isSubmitting}
             >
-              <Text style={styles.submitButtonText}>Add to Inventory</Text>
+              <Text style={styles.submitButtonText}>
+                {isRestockMode ? "Add to Stock" : "Add to Inventory"}
+              </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -601,6 +649,7 @@ export default function AddInventoryItem() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   wrapper: { flex: 1, position: "relative" },
 
