@@ -10,10 +10,10 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 
 export default function RootLayout() {
   useEffect(() => {
-    resetStocksDb();
-    resetHistoryDb();
-    resetOrderListDb();
-    resetSuppliersDb();
+    // resetStocksDb();
+    // resetHistoryDb();
+    // resetOrderListDb();
+    // resetSuppliersDb();
     createHistoryDb();
     createOrderListDb();
     createSupplierDb();
@@ -29,6 +29,7 @@ export default function RootLayout() {
           <Stack.Screen name="product" options={{ headerShown: false }} />
           <Stack.Screen name="addstock" options={{ headerShown: false }} />
           <Stack.Screen name="sales" options={{ headerShown: false }} />
+          <Stack.Screen name="addSales" options={{ headerShown: false }} />
           <Stack.Screen name="createorder" options={{ headerShown: false }} />
           <Stack.Screen name="orderlist" options={{ headerShown: false }} />
           <Stack.Screen name="expiry" options={{ headerShown: false }} />

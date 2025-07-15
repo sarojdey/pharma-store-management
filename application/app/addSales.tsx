@@ -1,46 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  View,
+  Alert,
+  Animated,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  FlatList,
-  Modal,
-  StyleSheet,
+  View,
+  Keyboard,
 } from "react-native";
 
-import { Controller, useForm } from "react-hook-form";
-import { z } from "zod";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { getAllDrugs, updateDrug } from "@/utils/stocksDb";
-import { addSale } from "@/utils/salesDb";
-import { useNavigation } from "expo-router";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Drug } from "@/types";
+import { addSale } from "@/utils/salesDb";
+import { getAllDrugs, updateDrug } from "@/utils/stocksDb";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
 
-const salesSchema = z.object({
-  selectedMedicine: z.object({
-    id: z.number(),
-    medicineName: z.string(),
-    batchId: z.string(),
-    price: z.number(),
-    mrp: z.number(),
-    quantity: z.number(),
-    unitPerPackage: z.number(),
-    expiryDate: z.string(),
-    medicineType: z.string(),
-    batchNo: z.string().nullable().optional(),
-    distributorName: z.string().nullable().optional(),
-    purchaseInvoiceNumber: z.string().nullable().optional(),
-  }),
-  saleQuantity: z.number(),
-});
-
-type FormData = z.infer<typeof salesSchema>;
+const textColorMap: Record<string, string> = {
+  expired: "rgb(212, 0, 0)",
+  expiring: "rgb(228, 125, 0)",
+  consumable: "#444",
+};
 
 export default function AddSale() {
   const [showMedicineDropdown, setShowMedicineDropdown] = useState(false);
@@ -48,24 +33,25 @@ export default function AddSale() {
   const [medicines, setMedicines] = useState<Drug[]>([]);
   const [filteredMedicines, setFilteredMedicines] = useState<Drug[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedMedicine, setSelectedMedicine] = useState<Drug | null>(null);
+  const [saleQuantity, setSaleQuantity] = useState("");
+  const [quantityError, setQuantityError] = useState("");
+  const [medicineError, setMedicineError] = useState("");
+
   const navigation = useNavigation();
+  const slideAnim = useRef(new Animated.Value(300)).current;
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(salesSchema),
-    defaultValues: {
-      selectedMedicine: undefined as unknown as FormData["selectedMedicine"],
-      saleQuantity: undefined as unknown as number,
-    },
-  });
-
-  const selectedMedicine = watch("selectedMedicine");
+  useEffect(() => {
+    if (showMedicineDropdown) {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      slideAnim.setValue(300);
+    }
+  }, [showMedicineDropdown, slideAnim]);
 
   useEffect(() => {
     loadMedicines();
@@ -131,31 +117,94 @@ export default function AddSale() {
     }
   };
 
-  const validateQuantity = (
-    quantity: number,
-    medicine: FormData["selectedMedicine"]
-  ) => {
+  const validateQuantity = (quantity: number, medicine: Drug) => {
     if (quantity > medicine.quantity) {
       return false;
     }
     return true;
   };
 
-  const calculatePackagesNeeded = (
-    quantity: number,
-    medicine: FormData["selectedMedicine"]
-  ) => {
+  const calculatePackagesNeeded = (quantity: number, medicine: Drug) => {
     if (medicine.medicineType === "Tablet") {
       return Math.ceil(quantity / medicine.unitPerPackage);
     }
     return quantity;
   };
+  const handleQuantityChange = useCallback(
+    (text: string) => {
+      setSaleQuantity(text);
 
-  const onSubmit = async (data: FormData) => {
+      if (quantityError) {
+        setQuantityError("");
+      }
+
+      if (text.trim() === "") {
+        return;
+      }
+
+      const quantity = Number(text);
+      if (isNaN(quantity) || quantity <= 0) {
+        setQuantityError("Please enter a valid quantity");
+        return;
+      }
+
+      if (selectedMedicine && quantity > selectedMedicine.quantity) {
+        setQuantityError(
+          `Only ${
+            selectedMedicine.quantity
+          } ${selectedMedicine.medicineType.toLowerCase()}(s) available in stock`
+        );
+        return;
+      }
+    },
+    [quantityError, selectedMedicine]
+  );
+  const validateForm = () => {
+    let isValid = true;
+
+    // Clear previous errors
+    setMedicineError("");
+    setQuantityError("");
+
+    if (!selectedMedicine) {
+      setMedicineError("Please select a medicine");
+      isValid = false;
+    }
+
+    if (
+      !saleQuantity ||
+      isNaN(Number(saleQuantity)) ||
+      Number(saleQuantity) <= 0
+    ) {
+      setQuantityError("Please enter a valid quantity");
+      isValid = false;
+    }
+
+    if (
+      selectedMedicine &&
+      saleQuantity &&
+      Number(saleQuantity) > selectedMedicine.quantity
+    ) {
+      setQuantityError(
+        `Only ${
+          selectedMedicine.quantity
+        } ${selectedMedicine.medicineType.toLowerCase()}(s) available in stock`
+      );
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const { selectedMedicine, saleQuantity } = data;
+      const saleQuantityNum = Number(saleQuantity);
 
       if (!selectedMedicine) {
         Alert.alert("Error", "Please select a medicine");
@@ -163,13 +212,7 @@ export default function AddSale() {
         return;
       }
 
-      if (!saleQuantity) {
-        Alert.alert("Error", "Please enter a valid quantity");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (!validateQuantity(saleQuantity, selectedMedicine)) {
+      if (!validateQuantity(saleQuantityNum, selectedMedicine)) {
         Alert.alert(
           "Insufficient Stock",
           `Only ${
@@ -180,41 +223,35 @@ export default function AddSale() {
         return;
       }
 
-      const packagesNeeded = calculatePackagesNeeded(
-        saleQuantity,
-        selectedMedicine
-      );
-
       const saleData = {
         medicineId: selectedMedicine.id,
         medicineName: selectedMedicine.medicineName,
-        quantity: saleQuantity,
+        quantity: saleQuantityNum,
         unitPerPackage: selectedMedicine.unitPerPackage,
       };
 
       const saleResult = await addSale(saleData);
 
       if (saleResult.success) {
-        const newQuantity = selectedMedicine.quantity - saleQuantity;
+        const newQuantity = selectedMedicine.quantity - saleQuantityNum;
         const updateResult = await updateDrug(selectedMedicine.id, {
           quantity: newQuantity,
         });
 
         if (updateResult.success) {
-          const totalAmount = saleQuantity * selectedMedicine.mrp;
+          const totalAmount = saleQuantityNum * selectedMedicine.mrp;
           Alert.alert(
             "Sale Added Successfully",
             `Medicine: ${
               selectedMedicine.medicineName
-            }\nQuantity: ${saleQuantity}\nTotal Amount: ₹${totalAmount.toFixed(
+            }\nQuantity: ${saleQuantityNum}\nTotal Amount: ₹${totalAmount.toFixed(
               2
             )}\nRemaining Stock: ${newQuantity}`,
             [
               {
                 text: "OK",
                 onPress: () => {
-                  reset();
-                  setSearchQuery("");
+                  resetForm();
                   loadMedicines();
                 },
               },
@@ -234,10 +271,21 @@ export default function AddSale() {
     }
   };
 
+  const resetForm = () => {
+    setSelectedMedicine(null);
+    setSaleQuantity("");
+    setQuantityError("");
+    setMedicineError("");
+    setSearchQuery("");
+  };
+
   const selectMedicine = (medicine: Drug) => {
-    setValue("selectedMedicine", medicine);
+    setSelectedMedicine(medicine);
     setShowMedicineDropdown(false);
     setSearchQuery(medicine.medicineName);
+    setMedicineError("");
+    setSaleQuantity("");
+    setQuantityError("");
   };
 
   const formatDate = (dateString: string) => {
@@ -245,12 +293,18 @@ export default function AddSale() {
     return date.toLocaleDateString();
   };
 
-  const isExpiringSoon = (expiryDate: string) => {
+  const expiryStatus = (expiryDate: string) => {
     const today = new Date();
     const expiry = new Date(expiryDate);
     const diffTime = expiry.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 30;
+    const status =
+      expiry.getTime() < today.setHours(0, 0, 0, 0)
+        ? "expired"
+        : diffDays <= 30
+        ? "expiring"
+        : "consumable";
+    return status;
   };
 
   const FormField = ({
@@ -292,7 +346,10 @@ export default function AddSale() {
           <Text
             style={[
               styles.dropdownItemExpiry,
-              isExpiringSoon(item.expiryDate) && styles.expiryWarning,
+              {
+                fontWeight: "600",
+                color: textColorMap[expiryStatus(item.expiryDate)],
+              },
             ]}
           >
             Exp: {formatDate(item.expiryDate)}
@@ -302,6 +359,9 @@ export default function AddSale() {
       </View>
     </TouchableOpacity>
   );
+
+  const isFormValid =
+    selectedMedicine && saleQuantity && !quantityError && !medicineError;
 
   return (
     <View style={styles.wrapper}>
@@ -315,24 +375,22 @@ export default function AddSale() {
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
+        keyboardVerticalOffset={60}
       >
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="interactive"
         >
           <View style={styles.container}>
             <View style={styles.formCard}>
-              <FormField
-                label="Select Medicine"
-                required
-                error={errors.selectedMedicine?.message}
-              >
+              <FormField label="Select Medicine" required error={medicineError}>
                 <TouchableOpacity
                   style={[
                     styles.dropdownButton,
-                    errors.selectedMedicine && styles.inputError,
+                    medicineError && styles.inputError,
                   ]}
                   onPress={() => setShowMedicineDropdown(true)}
                 >
@@ -379,13 +437,16 @@ export default function AddSale() {
                   <Text
                     style={[
                       styles.selectedMedicineDetail,
-                      isExpiringSoon(selectedMedicine.expiryDate) &&
-                        styles.expiryWarning,
+                      {
+                        fontWeight: "600",
+                        color:
+                          textColorMap[
+                            expiryStatus(selectedMedicine.expiryDate)
+                          ],
+                      },
                     ]}
                   >
                     Expiry: {formatDate(selectedMedicine.expiryDate)}
-                    {isExpiringSoon(selectedMedicine.expiryDate) &&
-                      " (Expiring Soon!)"}
                   </Text>
                 </View>
               )}
@@ -394,27 +455,23 @@ export default function AddSale() {
                 <FormField
                   label={getQuantityLabel(selectedMedicine.medicineType)}
                   required
-                  error={errors.saleQuantity?.message}
+                  error={quantityError}
                 >
-                  <Controller
-                    control={control}
-                    name="saleQuantity"
-                    render={({ field }) => (
-                      <TextInput
-                        style={[
-                          styles.input,
-                          errors.saleQuantity && styles.inputError,
-                        ]}
-                        keyboardType="number-pad"
-                        onChangeText={field.onChange}
-                        onBlur={field.onBlur}
-                        value={field.value ? String(field.value) : ""}
-                        placeholder={getQuantityPlaceholder(
-                          selectedMedicine.medicineType
-                        )}
-                        placeholderTextColor="#9ca3af"
-                      />
+                  <TextInput
+                    style={[styles.input, quantityError && styles.inputError]}
+                    keyboardType="number-pad"
+                    value={saleQuantity}
+                    onChangeText={handleQuantityChange}
+                    placeholder={getQuantityPlaceholder(
+                      selectedMedicine.medicineType
                     )}
+                    placeholderTextColor="#9ca3af"
+                    returnKeyType="done"
+                    onSubmitEditing={() => {
+                      if (isFormValid) {
+                        handleSubmit();
+                      }
+                    }}
                   />
                   {selectedMedicine.medicineType === "Tablet" && (
                     <Text style={styles.helperText}>
@@ -429,11 +486,11 @@ export default function AddSale() {
                 </FormField>
               )}
 
-              {selectedMedicine && watch("saleQuantity") && (
+              {selectedMedicine && saleQuantity && !quantityError && (
                 <View style={styles.salesSummary}>
                   <Text style={styles.salesSummaryTitle}>Sale Summary:</Text>
                   <Text style={styles.salesSummaryItem}>
-                    Quantity: {watch("saleQuantity")}{" "}
+                    Quantity: {saleQuantity}{" "}
                     {selectedMedicine.medicineType.toLowerCase()}(s)
                   </Text>
                   <Text style={styles.salesSummaryItem}>
@@ -442,40 +499,47 @@ export default function AddSale() {
                   <Text style={styles.salesSummaryTotal}>
                     Total Amount: ₹
                     {(
-                      (watch("saleQuantity") || 0) * selectedMedicine.mrp
+                      (Number(saleQuantity) || 0) * selectedMedicine.mrp
                     ).toFixed(2)}
                   </Text>
                 </View>
               )}
             </View>
-
-            <TouchableOpacity
-              style={[
-                styles.submitButton,
-                (!selectedMedicine || isSubmitting) &&
-                  styles.submitButtonDisabled,
-              ]}
-              onPress={handleSubmit(onSubmit)}
-              activeOpacity={0.8}
-              disabled={!selectedMedicine || isSubmitting}
-            >
-              <Text style={styles.submitButtonText}>
-                {isSubmitting ? "Processing..." : "Add Sale"}
-              </Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              (!isFormValid || isSubmitting) && styles.submitButtonDisabled,
+            ]}
+            onPress={handleSubmit}
+            activeOpacity={0.8}
+            disabled={!isFormValid || isSubmitting}
+          >
+            <Text style={styles.submitButtonText}>
+              {isSubmitting ? "Processing..." : "Add Sale"}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
 
-      {/* Medicine Selection Modal */}
       <Modal
         visible={showMedicineDropdown}
-        animationType="slide"
+        animationType="none"
         transparent={true}
         onRequestClose={() => setShowMedicineDropdown(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <Animated.View
+            style={[
+              styles.modalContent,
+              {
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Medicine</Text>
               <TouchableOpacity
@@ -509,6 +573,7 @@ export default function AddSale() {
               renderItem={({ item }) => <MedicineDropdownItem item={item} />}
               style={styles.medicineList}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
               ListEmptyComponent={
                 <Text style={styles.emptyText}>
                   {searchQuery
@@ -517,7 +582,7 @@ export default function AddSale() {
                 </Text>
               }
             />
-          </View>
+          </Animated.View>
         </View>
       </Modal>
     </View>
@@ -559,6 +624,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: 100,
   },
   container: {
     flex: 1,
@@ -670,8 +736,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     marginBottom: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: "#0ea5e9",
   },
   selectedMedicineTitle: {
     fontSize: 16,
@@ -684,17 +748,12 @@ const styles = StyleSheet.create({
     color: "#374151",
     marginBottom: 4,
   },
-  expiryWarning: {
-    color: "#dc2626",
-    fontWeight: "600",
-  },
+
   salesSummary: {
     backgroundColor: "#f0fdf4",
     padding: 16,
     borderRadius: 8,
     marginTop: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: "#22c55e",
   },
   salesSummaryTitle: {
     fontSize: 16,
@@ -827,5 +886,8 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     fontSize: 16,
     paddingVertical: 20,
+  },
+  buttonContainer: {
+    padding: 16,
   },
 });
