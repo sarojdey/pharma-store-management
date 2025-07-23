@@ -1,27 +1,33 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  View,
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  FlatList,
-  Modal,
-  StyleSheet,
+  View,
 } from "react-native";
 
+import { addSale } from "@/utils/salesDb";
+import { getAllDrugs, updateDrug } from "@/utils/stocksDb";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigation } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { getAllDrugs, updateDrug } from "@/utils/stocksDb";
-import { addSale } from "@/utils/salesDb";
-import { useNavigation } from "expo-router";
-import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Drug } from "@/types";
+
+const textColorMap: Record<string, string> = {
+  expired: "rgb(212, 0, 0)",
+  expiring: "rgb(228, 125, 0)",
+  consumable: "#444",
+};
 
 type FormFieldProps = {
   label: string;
@@ -49,14 +55,16 @@ type MedicineDropdownItemProps = {
   item: Drug;
   onSelect: (medicine: Drug) => void;
   formatDate: (dateString: string) => string;
-  isExpiringSoon: (expiryDate: string) => boolean;
+  textColorMap: Record<string, string>;
+  expiryStatus: (expiryDate: string) => "expired" | "expiring" | "consumable";
 };
 
 const MedicineDropdownItem: React.FC<MedicineDropdownItemProps> = ({
   item,
   onSelect,
   formatDate,
-  isExpiringSoon,
+  textColorMap,
+  expiryStatus,
 }) => (
   <TouchableOpacity style={styles.dropdownItem} onPress={() => onSelect(item)}>
     <View style={styles.dropdownItemContent}>
@@ -73,7 +81,10 @@ const MedicineDropdownItem: React.FC<MedicineDropdownItemProps> = ({
         <Text
           style={[
             styles.dropdownItemExpiry,
-            isExpiringSoon(item.expiryDate) && styles.expiryWarning,
+            {
+              fontWeight: "600",
+              color: textColorMap[expiryStatus(item.expiryDate)],
+            },
           ]}
         >
           Exp: {formatDate(item.expiryDate)}
@@ -307,12 +318,18 @@ export default function AddSale() {
     return date.toLocaleDateString();
   };
 
-  const isExpiringSoon = (expiryDate: string) => {
+  const expiryStatus = (expiryDate: string) => {
     const today = new Date();
     const expiry = new Date(expiryDate);
     const diffTime = expiry.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 30;
+    const status =
+      expiry.getTime() < today.setHours(0, 0, 0, 0)
+        ? "expired"
+        : diffDays <= 30
+        ? "expiring"
+        : "consumable";
+    return status;
   };
 
   return (
@@ -391,13 +408,16 @@ export default function AddSale() {
                   <Text
                     style={[
                       styles.selectedMedicineDetail,
-                      isExpiringSoon(selectedMedicine.expiryDate) &&
-                        styles.expiryWarning,
+                      {
+                        fontWeight: "600",
+                        color:
+                          textColorMap[
+                            expiryStatus(selectedMedicine.expiryDate)
+                          ],
+                      },
                     ]}
                   >
                     Expiry: {formatDate(selectedMedicine.expiryDate)}
-                    {isExpiringSoon(selectedMedicine.expiryDate) &&
-                      " (Expiring Soon!)"}
                   </Text>
                 </View>
               )}
@@ -527,7 +547,8 @@ export default function AddSale() {
                   item={item}
                   onSelect={selectMedicine}
                   formatDate={formatDate}
-                  isExpiringSoon={isExpiringSoon}
+                  textColorMap={textColorMap}
+                  expiryStatus={expiryStatus}
                 />
               )}
               style={styles.medicineList}
@@ -689,12 +710,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   selectedMedicineInfo: {
-    backgroundColor: "#f0f9ff",
+    backgroundColor: "#f0f9ff71",
     padding: 16,
     borderRadius: 8,
     marginBottom: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: "#0ea5e9",
+    borderWidth: 1,
+    borderColor: "#8fb4c848",
   },
   selectedMedicineTitle: {
     fontSize: 16,
