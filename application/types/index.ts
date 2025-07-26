@@ -89,3 +89,13 @@ export interface UpdateSale {
   quantity?: number;
   unitPerPackage?: number;
 }
+
+export interface Store {
+  id: number;
+  name: string;
+  createdAt: string;
+}
+
+export interface AddStore {
+  name: string;
+}

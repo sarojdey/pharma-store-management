@@ -8,9 +8,11 @@ export const createHistoryDb = (): void => {
     db.execSync(`
       CREATE TABLE IF NOT EXISTS history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        store_id INTEGER NOT NULL,
         operation TEXT NOT NULL,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+        updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
       );
     `);
 
@@ -22,22 +24,23 @@ export const createHistoryDb = (): void => {
 };
 
 export const getAllHistory = async (
+  storeId: number,
   sortOrder: SortOrder = "desc",
   startDate?: string,
   endDate?: string
 ): Promise<History[]> => {
   try {
-    let query = "SELECT * FROM history";
-    const params: string[] = [];
+    let query = "SELECT * FROM history WHERE store_id = ?";
+    const params: any[] = [storeId];
 
     if (startDate && endDate) {
-      query += " WHERE DATE(createdAt) BETWEEN DATE(?) AND DATE(?)";
+      query += " AND DATE(createdAt) BETWEEN DATE(?) AND DATE(?)";
       params.push(startDate, endDate);
     } else if (startDate) {
-      query += " WHERE DATE(createdAt) >= DATE(?)";
+      query += " AND DATE(createdAt) >= DATE(?)";
       params.push(startDate);
     } else if (endDate) {
-      query += " WHERE DATE(createdAt) <= DATE(?)";
+      query += " AND DATE(createdAt) <= DATE(?)";
       params.push(endDate);
     }
 
@@ -52,6 +55,7 @@ export const getAllHistory = async (
 };
 
 export const getFilteredHistory = async (
+  storeId: number,
   startDate: string,
   endDate: string,
   sortOrder: SortOrder = "desc"
@@ -59,11 +63,11 @@ export const getFilteredHistory = async (
   try {
     const query = `
       SELECT * FROM history 
-      WHERE DATE(createdAt) BETWEEN DATE(?) AND DATE(?)
+      WHERE store_id = ? AND DATE(createdAt) BETWEEN DATE(?) AND DATE(?)
       ORDER BY createdAt ${sortOrder.toUpperCase()}
     `;
 
-    const result = await db.getAllAsync(query, [startDate, endDate]);
+    const result = await db.getAllAsync(query, [storeId, startDate, endDate]);
     return result as History[];
   } catch (error) {
     console.error("Error fetching filtered history:", error);
@@ -72,11 +76,12 @@ export const getFilteredHistory = async (
 };
 
 export const getSortedHistory = async (
+  storeId: number,
   sortOrder: SortOrder = "desc"
 ): Promise<History[]> => {
   try {
-    const query = `SELECT * FROM history ORDER BY createdAt ${sortOrder.toUpperCase()}`;
-    const result = await db.getAllAsync(query);
+    const query = `SELECT * FROM history WHERE store_id = ? ORDER BY createdAt ${sortOrder.toUpperCase()}`;
+    const result = await db.getAllAsync(query, [storeId]);
     return result as History[];
   } catch (error) {
     console.error("Error fetching sorted history:", error);
@@ -85,13 +90,14 @@ export const getSortedHistory = async (
 };
 
 export const getHistoryByDateRange = async (
+  storeId: number,
   startDate: string,
   endDate: string
 ): Promise<History[]> => {
   try {
     const result = await db.getAllAsync(
-      "SELECT * FROM history WHERE DATE(createdAt) BETWEEN DATE(?) AND DATE(?) ORDER BY createdAt DESC",
-      [startDate, endDate]
+      "SELECT * FROM history WHERE store_id = ? AND DATE(createdAt) BETWEEN DATE(?) AND DATE(?) ORDER BY createdAt DESC",
+      [storeId, startDate, endDate]
     );
     return result as History[];
   } catch (error) {
@@ -100,11 +106,14 @@ export const getHistoryByDateRange = async (
   }
 };
 
-export const getHistoryByDate = async (date: string): Promise<History[]> => {
+export const getHistoryByDate = async (
+  storeId: number,
+  date: string
+): Promise<History[]> => {
   try {
     const result = await db.getAllAsync(
-      "SELECT * FROM history WHERE DATE(createdAt) = DATE(?) ORDER BY createdAt DESC",
-      [date]
+      "SELECT * FROM history WHERE store_id = ? AND DATE(createdAt) = DATE(?) ORDER BY createdAt DESC",
+      [storeId, date]
     );
     return result as History[];
   } catch (error) {
@@ -114,13 +123,14 @@ export const getHistoryByDate = async (date: string): Promise<History[]> => {
 };
 
 export const addHistory = async (
-  history: Omit<History, "id" | "createdAt" | "updatedAt">
+  history: Omit<History, "id" | "createdAt" | "updatedAt">,
+  storeId: number
 ) => {
   try {
     const result = await db.runAsync(
-      `INSERT INTO history (operation, createdAt, updatedAt) 
-       VALUES (?, datetime('now'), datetime('now'))`,
-      [history.operation]
+      `INSERT INTO history (store_id, operation, createdAt, updatedAt) 
+       VALUES (?, ?, datetime('now'), datetime('now'))`,
+      [storeId, history.operation]
     );
 
     console.log("History added successfully with ID:", result.lastInsertRowId);
@@ -131,9 +141,12 @@ export const addHistory = async (
   }
 };
 
-export const deleteHistory = async (id: number) => {
+export const deleteHistory = async (id: number, storeId: number) => {
   try {
-    const result = await db.runAsync("DELETE FROM history WHERE id = ?", [id]);
+    const result = await db.runAsync(
+      "DELETE FROM history WHERE id = ? AND store_id = ?",
+      [id, storeId]
+    );
 
     console.log("History deleted successfully");
     return { success: true, changes: result.changes };
@@ -151,5 +164,20 @@ export const resetHistoryDb = (): void => {
   } catch (error) {
     console.error("Error resetting history table:", error);
     throw error;
+  }
+};
+
+export const getHistoryCountByStore = async (
+  storeId: number
+): Promise<number> => {
+  try {
+    const result = (await db.getFirstAsync(
+      "SELECT COUNT(*) as count FROM history WHERE store_id = ?",
+      [storeId]
+    )) as { count: number };
+    return result.count;
+  } catch (error) {
+    console.error("Error getting history count:", error);
+    return 0;
   }
 };

@@ -1,18 +1,19 @@
 import AntDesign from "@expo/vector-icons/AntDesign";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
-import { Image, Animated } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
+  Alert,
+  Animated,
+  Dimensions,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Dimensions,
-  Alert,
 } from "react-native";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -265,11 +266,6 @@ export default function HomeScreen() {
             <Text style={styles.storeLocation}>{store.location}</Text>
           )}
         </View>
-        {isCurrentStore && (
-          <View style={styles.activeIndicator}>
-            <AntDesign name="check" size={16} color="#4a90e2" />
-          </View>
-        )}
       </TouchableOpacity>
     );
   };
@@ -356,7 +352,7 @@ export default function HomeScreen() {
             ]}
           >
             <View style={styles.sidebarHeader}>
-              <Text style={styles.sidebarTitle}>Stores ({stores.length})</Text>
+              <Text style={styles.sidebarTitle}>{currentStore?.name}</Text>
               <TouchableOpacity
                 onPress={closeSidebar}
                 style={styles.closeButton}
@@ -366,7 +362,6 @@ export default function HomeScreen() {
             </View>
 
             <ScrollView style={styles.sidebarContent}>
-              <Text style={styles.sectionTitle}>Select Store</Text>
               <View style={styles.userList}>{stores.map(renderStoreItem)}</View>
             </ScrollView>
 
@@ -516,7 +511,7 @@ const styles = StyleSheet.create({
   },
   sidebarContent: {
     flex: 1,
-    paddingHorizontal: 20,
+    padding: 20,
   },
   sectionTitle: {
     fontSize: 14,

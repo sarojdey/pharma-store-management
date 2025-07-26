@@ -4,8 +4,9 @@ import { database as db } from "../db/index";
 export const createStocksDb = (): void => {
   try {
     db.execSync(`
-        CREATE TABLE IF NOT EXISTS drugs (
+      CREATE TABLE IF NOT EXISTS drugs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        store_id INTEGER NOT NULL,
         medicineName TEXT NOT NULL,
         batchId TEXT NOT NULL,
         price REAL NOT NULL,
@@ -18,20 +19,22 @@ export const createStocksDb = (): void => {
         distributorName TEXT,
         purchaseInvoiceNumber TEXT,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+        updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
       );
-        `);
-    console.log("Table created or already exists.");
+    `);
+    console.log("Drugs table created or already exists.");
   } catch (error) {
     console.error("Error initializing database:", error);
     throw error;
   }
 };
 
-export const getAllDrugs = async () => {
+export const getAllDrugs = async (storeId: number) => {
   try {
     const result = await db.getAllAsync(
-      "SELECT * FROM drugs ORDER BY createdAt ASC"
+      "SELECT * FROM drugs WHERE store_id = ? ORDER BY createdAt ASC",
+      [storeId]
     );
     return result;
   } catch (error) {
@@ -40,11 +43,12 @@ export const getAllDrugs = async () => {
   }
 };
 
-export const getDrugById = async (id: number) => {
+export const getDrugById = async (id: number, storeId: number) => {
   try {
-    const result = await db.getFirstAsync("SELECT * FROM drugs WHERE id = ?", [
-      id,
-    ]);
+    const result = await db.getFirstAsync(
+      "SELECT * FROM drugs WHERE id = ? AND store_id = ?",
+      [id, storeId]
+    );
     return result;
   } catch (error) {
     console.error("Error fetching drug:", error);
@@ -52,10 +56,11 @@ export const getDrugById = async (id: number) => {
   }
 };
 
-export const addDrug = async (drugData: AddDrug) => {
+export const addDrug = async (drugData: AddDrug, storeId: number) => {
   try {
     const result = await db.runAsync(
       `INSERT INTO drugs (
+        store_id,
         medicineName,
         batchId,
         price,
@@ -69,8 +74,9 @@ export const addDrug = async (drugData: AddDrug) => {
         purchaseInvoiceNumber,
         createdAt,
         updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
       [
+        storeId,
         drugData.medicineName,
         drugData.batchId,
         drugData.price,
@@ -92,7 +98,11 @@ export const addDrug = async (drugData: AddDrug) => {
   }
 };
 
-export const updateDrug = async (id: number, drugData: UpdateDrug) => {
+export const updateDrug = async (
+  id: number,
+  drugData: UpdateDrug,
+  storeId: number
+) => {
   try {
     const fields: string[] = [];
     const values: any[] = [];
@@ -107,11 +117,12 @@ export const updateDrug = async (id: number, drugData: UpdateDrug) => {
     if (fields.length === 0) {
       return { success: false, error: "No fields to update" };
     }
+
     fields.push("updatedAt = datetime('now')");
-    values.push(id);
+    values.push(id, storeId);
 
     const result = await db.runAsync(
-      `UPDATE drugs SET ${fields.join(", ")} WHERE id = ?`,
+      `UPDATE drugs SET ${fields.join(", ")} WHERE id = ? AND store_id = ?`,
       values
     );
     console.log("Drug updated successfully");
@@ -122,10 +133,12 @@ export const updateDrug = async (id: number, drugData: UpdateDrug) => {
   }
 };
 
-export const deleteDrug = async (id: number) => {
+export const deleteDrug = async (id: number, storeId: number) => {
   try {
-    const result = await db.runAsync("DELETE FROM drugs WHERE id = ?", [id]);
-
+    const result = await db.runAsync(
+      "DELETE FROM drugs WHERE id = ? AND store_id = ?",
+      [id, storeId]
+    );
     console.log("Drug deleted successfully");
     return { success: true, changes: result.changes };
   } catch (error) {
@@ -135,12 +148,14 @@ export const deleteDrug = async (id: number) => {
 };
 
 export const searchDrugs = async ({
+  storeId,
   searchTerm = "",
   mode = "inventory",
   filterBy,
   filterValue,
   sortBy,
 }: {
+  storeId: number;
   searchTerm?: string;
   mode?:
     | "inventory"
@@ -153,8 +168,8 @@ export const searchDrugs = async ({
   sortBy?: string;
 }) => {
   try {
-    const conditions: string[] = [];
-    const values: any[] = [];
+    const conditions: string[] = ["store_id = ?"];
+    const values: any[] = [storeId];
 
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
@@ -199,9 +214,7 @@ export const searchDrugs = async ({
       }
     }
 
-    const whereClause = conditions.length
-      ? `WHERE ${conditions.join(" AND ")}`
-      : "";
+    const whereClause = `WHERE ${conditions.join(" AND ")}`;
 
     const validSortColumns = [
       "id",
@@ -228,9 +241,22 @@ export const resetStocksDb = (): void => {
   try {
     db.execSync("DROP TABLE IF EXISTS drugs");
     createStocksDb();
-    console.log("Drugs table reset successfully.");
+    console.log("Database reset successfully.");
   } catch (error) {
-    console.error("Error resetting drugs table:", error);
+    console.error("Error resetting database:", error);
     throw error;
+  }
+};
+
+export const getDrugCountByStore = async (storeId: number): Promise<number> => {
+  try {
+    const result = (await db.getFirstAsync(
+      "SELECT COUNT(*) as count FROM drugs WHERE store_id = ?",
+      [storeId]
+    )) as { count: number };
+    return result.count;
+  } catch (error) {
+    console.error("Error getting drug count:", error);
+    return 0;
   }
 };

@@ -6,12 +6,14 @@ export const createSalesDb = (): void => {
     db.execSync(`
         CREATE TABLE IF NOT EXISTS sales (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        store_id INTEGER NOT NULL,
         medicineId INTEGER NOT NULL,
         medicineName TEXT NOT NULL,
         quantity INTEGER NOT NULL,
         unitPerPackage INTEGER NOT NULL DEFAULT 1,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
         updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
         FOREIGN KEY (medicineId) REFERENCES drugs(id)
       );
         `);
@@ -22,10 +24,11 @@ export const createSalesDb = (): void => {
   }
 };
 
-export const getAllSales = async () => {
+export const getAllSales = async (storeId: number) => {
   try {
     const result = await db.getAllAsync(
-      "SELECT * FROM sales ORDER BY createdAt DESC"
+      "SELECT * FROM sales WHERE store_id = ? ORDER BY createdAt DESC",
+      [storeId]
     );
     return result;
   } catch (error) {
@@ -34,11 +37,12 @@ export const getAllSales = async () => {
   }
 };
 
-export const getSaleById = async (id: number) => {
+export const getSaleById = async (id: number, storeId: number) => {
   try {
-    const result = await db.getFirstAsync("SELECT * FROM sales WHERE id = ?", [
-      id,
-    ]);
+    const result = await db.getFirstAsync(
+      "SELECT * FROM sales WHERE id = ? AND store_id = ?",
+      [id, storeId]
+    );
     return result;
   } catch (error) {
     console.error("Error fetching sale:", error);
@@ -46,18 +50,20 @@ export const getSaleById = async (id: number) => {
   }
 };
 
-export const addSale = async (saleData: AddSale) => {
+export const addSale = async (saleData: AddSale, storeId: number) => {
   try {
     const result = await db.runAsync(
       `INSERT INTO sales (
+        store_id,
         medicineId,
         medicineName,
         quantity,
         unitPerPackage,
         createdAt,
         updatedAt
-      ) VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
       [
+        storeId,
         saleData.medicineId,
         saleData.medicineName,
         saleData.quantity,
@@ -72,7 +78,11 @@ export const addSale = async (saleData: AddSale) => {
   }
 };
 
-export const updateSale = async (id: number, saleData: UpdateSale) => {
+export const updateSale = async (
+  id: number,
+  saleData: UpdateSale,
+  storeId: number
+) => {
   try {
     const fields: string[] = [];
     const values: any[] = [];
@@ -87,11 +97,12 @@ export const updateSale = async (id: number, saleData: UpdateSale) => {
     if (fields.length === 0) {
       return { success: false, error: "No fields to update" };
     }
+
     fields.push("updatedAt = datetime('now')");
-    values.push(id);
+    values.push(id, storeId);
 
     const result = await db.runAsync(
-      `UPDATE sales SET ${fields.join(", ")} WHERE id = ?`,
+      `UPDATE sales SET ${fields.join(", ")} WHERE id = ? AND store_id = ?`,
       values
     );
     console.log("Sale updated successfully");
@@ -102,9 +113,12 @@ export const updateSale = async (id: number, saleData: UpdateSale) => {
   }
 };
 
-export const deleteSale = async (id: number) => {
+export const deleteSale = async (id: number, storeId: number) => {
   try {
-    const result = await db.runAsync("DELETE FROM sales WHERE id = ?", [id]);
+    const result = await db.runAsync(
+      "DELETE FROM sales WHERE id = ? AND store_id = ?",
+      [id, storeId]
+    );
 
     console.log("Sale deleted successfully");
     return { success: true, changes: result.changes };
@@ -115,11 +129,13 @@ export const deleteSale = async (id: number) => {
 };
 
 export const searchSales = async ({
+  storeId,
   searchTerm = "",
   sortBy = "createdAt",
   sortOrder = "DESC",
   dateRange,
 }: {
+  storeId: number;
   searchTerm?: string;
   sortBy?: "id" | "medicineName" | "quantity" | "createdAt";
   sortOrder?: "ASC" | "DESC";
@@ -129,8 +145,8 @@ export const searchSales = async ({
   };
 }) => {
   try {
-    const conditions: string[] = [];
-    const values: any[] = [];
+    const conditions: string[] = ["store_id = ?"];
+    const values: any[] = [storeId];
 
     if (searchTerm) {
       conditions.push("medicineName LIKE ?");
@@ -142,9 +158,7 @@ export const searchSales = async ({
       values.push(dateRange.startDate, dateRange.endDate);
     }
 
-    const whereClause = conditions.length
-      ? `WHERE ${conditions.join(" AND ")}`
-      : "";
+    const whereClause = `WHERE ${conditions.join(" AND ")}`;
 
     const validSortColumns = ["id", "medicineName", "quantity", "createdAt"];
     const safeSortBy = validSortColumns.includes(sortBy) ? sortBy : "createdAt";
@@ -161,11 +175,14 @@ export const searchSales = async ({
   }
 };
 
-export const getSalesByMedicine = async (medicineId: number) => {
+export const getSalesByMedicine = async (
+  medicineId: number,
+  storeId: number
+) => {
   try {
     const result = await db.getAllAsync(
-      "SELECT * FROM sales WHERE medicineId = ? ORDER BY createdAt DESC",
-      [medicineId]
+      "SELECT * FROM sales WHERE medicineId = ? AND store_id = ? ORDER BY createdAt DESC",
+      [medicineId, storeId]
     );
     return result;
   } catch (error) {
@@ -182,5 +199,20 @@ export const resetSalesDb = (): void => {
   } catch (error) {
     console.error("Error resetting sales table:", error);
     throw error;
+  }
+};
+
+export const getSalesCountByStore = async (
+  storeId: number
+): Promise<number> => {
+  try {
+    const result = (await db.getFirstAsync(
+      "SELECT COUNT(*) as count FROM sales WHERE store_id = ?",
+      [storeId]
+    )) as { count: number };
+    return result.count;
+  } catch (error) {
+    console.error("Error getting sales count:", error);
+    return 0;
   }
 };

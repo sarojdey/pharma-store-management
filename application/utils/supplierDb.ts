@@ -6,11 +6,13 @@ export const createSupplierDb = (): void => {
     db.execSync(`
       CREATE TABLE IF NOT EXISTS suppliers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        store_id INTEGER NOT NULL,
         supplierName TEXT NOT NULL,
         location TEXT NOT NULL,
         phone TEXT NOT NULL CHECK(length(phone) = 10),
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+        updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
       );
     `);
 
@@ -21,10 +23,11 @@ export const createSupplierDb = (): void => {
   }
 };
 
-export const getAllSuppliers = async (): Promise<Supplier[]> => {
+export const getAllSuppliers = async (storeId: number): Promise<Supplier[]> => {
   try {
     const result = await db.getAllAsync(
-      "SELECT * FROM suppliers ORDER BY supplierName ASC"
+      "SELECT * FROM suppliers WHERE store_id = ? ORDER BY supplierName ASC",
+      [storeId]
     );
     return result as Supplier[];
   } catch (error) {
@@ -33,11 +36,14 @@ export const getAllSuppliers = async (): Promise<Supplier[]> => {
   }
 };
 
-export const getSupplierById = async (id: number): Promise<Supplier | null> => {
+export const getSupplierById = async (
+  id: number,
+  storeId: number
+): Promise<Supplier | null> => {
   try {
     const result = await db.getFirstAsync(
-      "SELECT * FROM suppliers WHERE id = ?",
-      [id]
+      "SELECT * FROM suppliers WHERE id = ? AND store_id = ?",
+      [id, storeId]
     );
     return result as Supplier | null;
   } catch (error) {
@@ -47,7 +53,8 @@ export const getSupplierById = async (id: number): Promise<Supplier | null> => {
 };
 
 export const addSupplier = async (
-  supplier: Omit<Supplier, "id" | "createdAt" | "updatedAt">
+  supplier: Omit<Supplier, "id" | "createdAt" | "updatedAt">,
+  storeId: number
 ) => {
   try {
     if (supplier.phone.length !== 10) {
@@ -58,9 +65,9 @@ export const addSupplier = async (
     }
 
     const result = await db.runAsync(
-      `INSERT INTO suppliers (supplierName, location, phone, createdAt, updatedAt) 
-       VALUES (?, ?, ?, datetime('now'), datetime('now'))`,
-      [supplier.supplierName, supplier.location, supplier.phone]
+      `INSERT INTO suppliers (store_id, supplierName, location, phone, createdAt, updatedAt) 
+       VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      [storeId, supplier.supplierName, supplier.location, supplier.phone]
     );
 
     console.log("Supplier added successfully with ID:", result.lastInsertRowId);
@@ -73,7 +80,8 @@ export const addSupplier = async (
 
 export const updateSupplier = async (
   id: number,
-  supplier: Partial<Omit<Supplier, "id" | "createdAt" | "updatedAt">>
+  supplier: Partial<Omit<Supplier, "id" | "createdAt" | "updatedAt">>,
+  storeId: number
 ) => {
   try {
     if (supplier.phone && supplier.phone.length !== 10) {
@@ -98,10 +106,10 @@ export const updateSupplier = async (
     }
 
     fields.push("updatedAt = datetime('now')");
-    values.push(id);
+    values.push(id, storeId);
 
     const result = await db.runAsync(
-      `UPDATE suppliers SET ${fields.join(", ")} WHERE id = ?`,
+      `UPDATE suppliers SET ${fields.join(", ")} WHERE id = ? AND store_id = ?`,
       values
     );
 
@@ -113,11 +121,12 @@ export const updateSupplier = async (
   }
 };
 
-export const deleteSupplier = async (id: number) => {
+export const deleteSupplier = async (id: number, storeId: number) => {
   try {
-    const result = await db.runAsync("DELETE FROM suppliers WHERE id = ?", [
-      id,
-    ]);
+    const result = await db.runAsync(
+      "DELETE FROM suppliers WHERE id = ? AND store_id = ?",
+      [id, storeId]
+    );
 
     console.log("Supplier deleted successfully");
     return { success: true, changes: result.changes };
@@ -128,15 +137,16 @@ export const deleteSupplier = async (id: number) => {
 };
 
 export const searchSuppliers = async (
-  searchTerm: string
+  searchTerm: string,
+  storeId: number
 ): Promise<Supplier[]> => {
   try {
     const searchPattern = `%${searchTerm}%`;
     const result = await db.getAllAsync(
       `SELECT * FROM suppliers 
-       WHERE supplierName LIKE ? OR location LIKE ? OR phone LIKE ?
+       WHERE store_id = ? AND (supplierName LIKE ? OR location LIKE ? OR phone LIKE ?)
        ORDER BY supplierName ASC`,
-      [searchPattern, searchPattern, searchPattern]
+      [storeId, searchPattern, searchPattern, searchPattern]
     );
 
     return result as Supplier[];
@@ -157,12 +167,15 @@ export const resetSuppliersDb = (): void => {
   }
 };
 
-export const getSuppliersCount = async (): Promise<number> => {
+export const getSuppliersCountByStore = async (
+  storeId: number
+): Promise<number> => {
   try {
-    const result = await db.getFirstAsync(
-      "SELECT COUNT(*) as count FROM suppliers"
-    );
-    return (result as { count: number }).count;
+    const result = (await db.getFirstAsync(
+      "SELECT COUNT(*) as count FROM suppliers WHERE store_id = ?",
+      [storeId]
+    )) as { count: number };
+    return result.count;
   } catch (error) {
     console.error("Error getting suppliers count:", error);
     return 0;

@@ -6,11 +6,13 @@ export const createOrderListDb = (): void => {
     db.execSync(`
       CREATE TABLE IF NOT EXISTS order_lists (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        store_id INTEGER NOT NULL,
         supplierName TEXT,
         medicineName TEXT NOT NULL,
         quantity INTEGER NOT NULL,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+        updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
       );
     `);
 
@@ -23,10 +25,13 @@ export const createOrderListDb = (): void => {
   }
 };
 
-export const getAllOrderLists = async (): Promise<OrderList[]> => {
+export const getAllOrderLists = async (
+  storeId: number
+): Promise<OrderList[]> => {
   try {
     const orderLists = await db.getAllAsync(
-      "SELECT * FROM order_lists ORDER BY createdAt ASC"
+      "SELECT * FROM order_lists WHERE store_id = ? ORDER BY createdAt ASC",
+      [storeId]
     );
 
     return orderLists as OrderList[];
@@ -37,12 +42,13 @@ export const getAllOrderLists = async (): Promise<OrderList[]> => {
 };
 
 export const getOrderListById = async (
-  id: number
+  id: number,
+  storeId: number
 ): Promise<OrderList | null> => {
   try {
     const orderList = await db.getFirstAsync(
-      "SELECT * FROM order_lists WHERE id = ?",
-      [id]
+      "SELECT * FROM order_lists WHERE id = ? AND store_id = ?",
+      [id, storeId]
     );
 
     return orderList as OrderList | null;
@@ -52,12 +58,15 @@ export const getOrderListById = async (
   }
 };
 
-export const addOrderList = async (orderListData: {
-  supplierName?: string;
-  medicineName: string;
-  quantity: number;
-  createdAt?: string;
-}) => {
+export const addOrderList = async (
+  orderListData: {
+    supplierName?: string;
+    medicineName: string;
+    quantity: number;
+    createdAt?: string;
+  },
+  storeId: number
+) => {
   try {
     if (!orderListData.medicineName || !orderListData.quantity) {
       return {
@@ -67,9 +76,10 @@ export const addOrderList = async (orderListData: {
     }
 
     const result = await db.runAsync(
-      `INSERT INTO order_lists (supplierName, medicineName, quantity, createdAt, updatedAt) 
-       VALUES (?, ?, ?, datetime('now'), datetime('now'))`,
+      `INSERT INTO order_lists (store_id, supplierName, medicineName, quantity, createdAt, updatedAt) 
+       VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`,
       [
+        storeId,
         orderListData.supplierName || null,
         orderListData.medicineName,
         orderListData.quantity,
@@ -91,7 +101,8 @@ export const updateOrderList = async (
     supplierName?: string;
     medicineName?: string;
     quantity?: number;
-  }
+  },
+  storeId: number
 ) => {
   try {
     const updateFields = [];
@@ -117,11 +128,11 @@ export const updateOrderList = async (
     }
 
     updateFields.push("updatedAt = datetime('now')");
-    values.push(id);
+    values.push(id, storeId);
 
     const query = `UPDATE order_lists SET ${updateFields.join(
       ", "
-    )} WHERE id = ?`;
+    )} WHERE id = ? AND store_id = ?`;
 
     await db.runAsync(query, values);
 
@@ -133,11 +144,12 @@ export const updateOrderList = async (
   }
 };
 
-export const deleteOrderList = async (id: number) => {
+export const deleteOrderList = async (id: number, storeId: number) => {
   try {
-    const result = await db.runAsync("DELETE FROM order_lists WHERE id = ?", [
-      id,
-    ]);
+    const result = await db.runAsync(
+      "DELETE FROM order_lists WHERE id = ? AND store_id = ?",
+      [id, storeId]
+    );
 
     console.log("Order list deleted successfully");
     return { success: true, changes: result.changes };
@@ -156,5 +168,20 @@ export const resetOrderListDb = (): void => {
   } catch (error) {
     console.error("Error resetting order list table:", error);
     throw error;
+  }
+};
+
+export const getOrderListCountByStore = async (
+  storeId: number
+): Promise<number> => {
+  try {
+    const result = (await db.getFirstAsync(
+      "SELECT COUNT(*) as count FROM order_lists WHERE store_id = ?",
+      [storeId]
+    )) as { count: number };
+    return result.count;
+  } catch (error) {
+    console.error("Error getting order list count:", error);
+    return 0;
   }
 };
