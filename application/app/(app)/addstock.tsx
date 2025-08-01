@@ -18,8 +18,9 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
-import { addDrug } from "../utils/stocksDb";
+import { addDrug } from "../../utils/stocksDb";
 import { Drug } from "@/types";
+import { useStore } from "@/contexts/StoreContext";
 
 const schema = z
   .object({
@@ -89,7 +90,7 @@ export default function AddInventoryItem() {
   const [isRestockMode, setIsRestockMode] = useState(false);
   const navigation = useNavigation();
   const params = useLocalSearchParams();
-
+  const { currentStore } = useStore();
   const {
     control,
     handleSubmit,
@@ -190,7 +191,11 @@ export default function AddInventoryItem() {
         purchaseInvoiceNumber: data.purchaseInvoiceNumber || null,
       };
 
-      const result = await addDrug(drugData);
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
+      const result = await addDrug(drugData, currentStore.id);
 
       if (result.success) {
         const message = isRestockMode

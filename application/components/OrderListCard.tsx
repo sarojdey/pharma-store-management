@@ -1,3 +1,4 @@
+import { useStore } from "@/contexts/StoreContext";
 import { OrderList } from "@/types";
 import { deleteOrderList } from "@/utils/orderListDb";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -23,6 +24,7 @@ export default function OrderListCard({
       year: "numeric",
     });
   };
+  const { currentStore } = useStore();
 
   const handleDelete = () => {
     Alert.alert(
@@ -41,8 +43,16 @@ export default function OrderListCard({
           text: "Delete",
           style: "destructive",
           onPress: async () => {
+            if (!currentStore?.id) {
+              Alert.alert("Error", "No store selected.");
+              return;
+            }
+
             try {
-              const result = await deleteOrderList(orderList.id);
+              const result = await deleteOrderList(
+                orderList.id,
+                currentStore?.id
+              );
               if (result.success) {
                 onUpdate();
               } else {

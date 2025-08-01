@@ -3,7 +3,7 @@ import Feather from "@expo/vector-icons/Feather";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Alert,
   Animated,
@@ -14,56 +14,15 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useStore } from "@/contexts/StoreContext";
+import { Store } from "@/types";
+import { getAllStores } from "@/utils/storesDb";
 
 const { width: screenWidth } = Dimensions.get("window");
 const SIDEBAR_WIDTH = screenWidth * 0.8;
-
-interface Store {
-  id: string;
-  name: string;
-  isActive: boolean;
-  location?: string;
-  manager?: string;
-}
-
-const MOCK_STORES: Store[] = [
-  {
-    id: "store_001",
-    name: "Main Store",
-    isActive: true,
-    location: "Downtown",
-    manager: "John Doe",
-  },
-  {
-    id: "store_002",
-    name: "North Branch",
-    isActive: false,
-    location: "North District",
-    manager: "Jane Smith",
-  },
-  {
-    id: "store_003",
-    name: "South Branch",
-    isActive: false,
-    location: "South District",
-    manager: "Mike Johnson",
-  },
-  {
-    id: "store_004",
-    name: "East Branch",
-    isActive: false,
-    location: "East District",
-    manager: "Sarah Wilson",
-  },
-  {
-    id: "store_005",
-    name: "West Branch",
-    isActive: false,
-    location: "West District",
-    manager: "Tom Brown",
-  },
-];
 
 const BUTTONS: {
   key: string;
@@ -161,28 +120,16 @@ export default function HomeScreen() {
   const router = useRouter();
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [slideAnim] = useState(new Animated.Value(SIDEBAR_WIDTH));
-  const [stores, setStores] = useState<Store[]>([]);
-  const [currentStore, setCurrentStore] = useState<Store | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [switchingStore, setSwitchingStore] = useState<number | null>(null);
 
-  useEffect(() => {
-    const fetchStores = async () => {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setStores(MOCK_STORES);
-        const activeStore = MOCK_STORES.find((store) => store.isActive);
-        setCurrentStore(activeStore || MOCK_STORES[0]);
-      } catch (error) {
-        console.error("Error fetching stores:", error);
-        Alert.alert("Error", "Failed to load stores");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStores();
-  }, []);
+  // Get store data from context
+  const {
+    currentStore,
+    allStores,
+    isReady,
+    setCurrentStore,
+    refreshAllStores,
+  } = useStore();
 
   const openSidebar = () => {
     setSidebarVisible(true);
@@ -203,21 +150,42 @@ export default function HomeScreen() {
     });
   };
 
-  const handleStoreSwitch = (selectedStore: Store) => {
+  const handleStoreSwitch = async (selectedStore: Store) => {
     if (selectedStore.id === currentStore?.id) {
       closeSidebar();
       return;
     }
-    const updatedStores = stores.map((store) => ({
-      ...store,
-      isActive: store.id === selectedStore.id,
-    }));
 
-    setStores(updatedStores);
-    setCurrentStore(selectedStore);
-    closeSidebar();
+    try {
+      setSwitchingStore(selectedStore.id!);
 
-    console.log(`Switched to store: ${selectedStore.name}`);
+      // Update AsyncStorage directly since setCurrentStore only takes Store | null
+      await AsyncStorage.setItem("activeStoreId", selectedStore.id!.toString());
+
+      // Update the context
+      setCurrentStore(selectedStore);
+
+      closeSidebar();
+      console.log(`Switched to store: ${selectedStore.name}`);
+
+      // You might want to refresh the app or navigate to ensure everything updates
+      // router.replace("/(app)");
+    } catch (error) {
+      console.error("Error switching store:", error);
+      Alert.alert("Error", "Failed to switch store. Please try again.");
+    } finally {
+      setSwitchingStore(null);
+    }
+  };
+
+  const refreshStores = async () => {
+    try {
+      await refreshAllStores(); // Use context method instead
+      console.log("Refreshed stores from context");
+    } catch (error) {
+      console.error("Error refreshing stores:", error);
+      throw error;
+    }
   };
 
   const handleMoreOptions = () => {
@@ -225,13 +193,26 @@ export default function HomeScreen() {
       {
         text: "Add New Store",
         onPress: () => {
-          console.log("Add new store pressed");
+          closeSidebar();
+          router.push("/(auth)/welcomeScreen");
         },
       },
       {
         text: "Store Settings",
         onPress: () => {
           console.log("Store settings pressed");
+          // You can implement store settings functionality here
+        },
+      },
+      {
+        text: "Refresh Stores",
+        onPress: async () => {
+          try {
+            await refreshStores(); // This now uses context
+            Alert.alert("Success", "Stores refreshed successfully");
+          } catch (error) {
+            Alert.alert("Error", "Failed to refresh stores");
+          }
         },
       },
       {
@@ -243,6 +224,7 @@ export default function HomeScreen() {
 
   const renderStoreItem = (store: Store) => {
     const isCurrentStore = store.id === currentStore?.id;
+    const isSwitching = switchingStore === store.id;
 
     return (
       <TouchableOpacity
@@ -250,6 +232,7 @@ export default function HomeScreen() {
         style={[styles.userItem, isCurrentStore && styles.currentUser]}
         activeOpacity={0.7}
         onPress={() => handleStoreSwitch(store)}
+        disabled={switchingStore !== null}
       >
         <Ionicons
           name={isCurrentStore ? "storefront" : "storefront-outline"}
@@ -262,18 +245,43 @@ export default function HomeScreen() {
           >
             {store.name}
           </Text>
-          {store.location && (
-            <Text style={styles.storeLocation}>{store.location}</Text>
-          )}
+          <Text style={styles.storeDate}>
+            Created {new Date(store.createdAt!).toLocaleDateString()}
+          </Text>
         </View>
+
+        {isSwitching && <ActivityIndicator size="small" color="#4a90e2" />}
+
+        {isCurrentStore && !isSwitching && (
+          <View style={styles.activeIndicator}>
+            <Ionicons name="checkmark-circle" size={20} color="#4a90e2" />
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
 
-  if (isLoading) {
+  // Show loading screen if context is not ready
+  if (!isReady) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading stores...</Text>
+        <ActivityIndicator size="large" color="#4a90e2" />
+        <Text style={styles.loadingText}>Loading stores...</Text>
+      </View>
+    );
+  }
+
+  // This shouldn't happen due to routing logic, but just in case
+  if (!currentStore) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.errorText}>No active store</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => router.replace("/(auth)/welcomeBackScreen")}
+        >
+          <Text style={styles.retryButtonText}>Select Store</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -284,7 +292,7 @@ export default function HomeScreen() {
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={styles.logoContainer}>
             <Image
-              source={require("../assets/images/capsule.png")}
+              source={require("../../assets/images/capsule.png")}
               style={{ height: "100%", width: "100%" }}
               resizeMode="contain"
             />
@@ -300,15 +308,30 @@ export default function HomeScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={[styles.grid, { marginBottom: 20 }]}>
-          <TouchableOpacity style={styles.chartButton} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.chartButton}
+            activeOpacity={0.7}
+            onPress={() => {
+              // Navigate to sales report - implement this route
+              console.log("Sales Report pressed");
+            }}
+          >
             <AntDesign name="linechart" size={24} style={styles.chartIcon} />
             <Text style={styles.chartLabel}>Sales Report</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.chartButton} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.chartButton}
+            activeOpacity={0.7}
+            onPress={() => {
+              // Navigate to stock report - implement this route
+              console.log("Stock Report pressed");
+            }}
+          >
             <AntDesign name="profile" size={24} style={styles.chartIcon} />
             <Text style={styles.chartLabel}>Stock Report</Text>
           </TouchableOpacity>
         </View>
+
         <View style={styles.grid}>
           {BUTTONS.map((btn) => (
             <TouchableOpacity
@@ -352,7 +375,7 @@ export default function HomeScreen() {
             ]}
           >
             <View style={styles.sidebarHeader}>
-              <Text style={styles.sidebarTitle}>{currentStore?.name}</Text>
+              <Text style={styles.sidebarTitle}>Switch Store</Text>
               <TouchableOpacity
                 onPress={closeSidebar}
                 style={styles.closeButton}
@@ -362,7 +385,12 @@ export default function HomeScreen() {
             </View>
 
             <ScrollView style={styles.sidebarContent}>
-              <View style={styles.userList}>{stores.map(renderStoreItem)}</View>
+              <Text style={styles.sectionTitle}>
+                Available Stores ({allStores.length})
+              </Text>
+              <View style={styles.userList}>
+                {allStores.map(renderStoreItem)}
+              </View>
             </ScrollView>
 
             <View style={styles.sidebarFooter}>
@@ -388,6 +416,37 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f5f5f5",
+    paddingHorizontal: 24,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6b7280",
+    fontWeight: "500",
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#ef4444",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  errorSubtext: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: "#4a90e2",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   header: {
     position: "relative",
@@ -415,7 +474,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#212121",
   },
-
+  currentStoreInfo: {
+    backgroundColor: "#ffffff",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  currentStoreTitle: {
+    fontSize: 14,
+    color: "#6b7280",
+    marginBottom: 4,
+  },
+  currentStoreName: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1f2937",
+  },
   chartButton: {
     width: "48%",
     flexDirection: "row",
@@ -466,7 +542,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flexWrap: "wrap",
   },
-
   backdrop: {
     position: "absolute",
     top: 0,
@@ -517,7 +592,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#666",
-    marginTop: 20,
     marginBottom: 15,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -552,9 +626,10 @@ const styles = StyleSheet.create({
     color: "#4a90e2",
     fontWeight: "500",
   },
-  storeLocation: {
+  storeDate: {
     fontSize: 12,
     color: "#888",
+    marginTop: 2,
   },
   activeIndicator: {
     marginLeft: 8,

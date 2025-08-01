@@ -19,6 +19,7 @@ import {
 import Loader from "@/components/Loader";
 import { History } from "@/types";
 import { getAllHistory, resetHistoryDb } from "@/utils/historyDb";
+import { useStore } from "@/contexts/StoreContext";
 
 type SortOrder = "asc" | "desc";
 
@@ -42,22 +43,30 @@ export default function HistoryPage() {
   });
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-
+  const { currentStore } = useStore();
   const filterAnim = useRef(new Animated.Value(300)).current;
 
   const loadHistory = useCallback(async () => {
     try {
       setLoading(true);
       let historyData: History[];
-
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
       if (isFiltered && activeFilters.startDate && activeFilters.endDate) {
         const startDateStr = activeFilters.startDate
           .toISOString()
           .split("T")[0];
         const endDateStr = activeFilters.endDate.toISOString().split("T")[0];
-        historyData = await getAllHistory(sortOrder, startDateStr, endDateStr);
+        historyData = await getAllHistory(
+          currentStore.id,
+          sortOrder,
+          startDateStr,
+          endDateStr
+        );
       } else {
-        historyData = await getAllHistory(sortOrder);
+        historyData = await getAllHistory(currentStore.id, sortOrder);
       }
 
       setHistory(historyData);

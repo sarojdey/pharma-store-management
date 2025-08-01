@@ -1,14 +1,16 @@
 import DrugCard from "@/components/DrugCard";
 import Loader from "@/components/Loader";
+import { useStore } from "@/contexts/StoreContext";
 import { Drug } from "@/types";
 
+import { searchDrugs } from "@/utils/stocksDb";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import Entypo from "@expo/vector-icons/Entypo";
 import {
   Alert,
   Animated,
@@ -22,8 +24,6 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
-import { searchDrugs } from "@/utils/stocksDb";
-import DrugCardWithRestock from "@/components/DrugCardWithRestock";
 
 const SORT_OPTIONS: Record<string, string> = {
   medicineName: "Name",
@@ -32,10 +32,10 @@ const SORT_OPTIONS: Record<string, string> = {
   expiryDate: "Expiry Date",
 };
 
-export default function Expiry() {
+export default function OutOfStock() {
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [tabExpired, setTabExpired] = useState(true);
+  const [tabOutOfStock, setTabOutOfStock] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBy, setFilterBy] = useState<
     "expiryDate" | "quantity" | undefined
@@ -61,7 +61,7 @@ export default function Expiry() {
   });
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-
+  const { currentStore } = useStore();
   const dateRangeSchema = z
     .object({
       startDate: z.date(),
@@ -110,12 +110,17 @@ export default function Expiry() {
 
       console.log({
         ...finalParams,
-        page: tabExpired ? "expiredalert" : "expiringalert",
+        page: tabOutOfStock ? "nostockalert" : "lowstockalert",
       });
 
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
       const data = await searchDrugs({
         ...finalParams,
-        mode: tabExpired ? "expiredAlert" : "expiringAlert",
+        mode: tabOutOfStock ? "noStockAlert" : "lowStockAlert",
+        storeId: currentStore?.id,
       });
 
       setDrugs(data as Drug[]);
@@ -127,7 +132,7 @@ export default function Expiry() {
 
   useEffect(() => {
     fetchDrugs();
-  }, [tabExpired]);
+  }, [tabOutOfStock]);
 
   const showPanel = (animRef: Animated.Value) =>
     Animated.timing(animRef, {
@@ -292,6 +297,7 @@ export default function Expiry() {
       }, 50);
     });
   };
+
   const clearSort = () => {
     setTempSortBy(undefined);
     setSortBy(undefined);
@@ -353,14 +359,15 @@ export default function Expiry() {
           ]}
           activeOpacity={0.7}
           onPress={() => {
-            setTabExpired(true);
+            setTabOutOfStock(true);
           }}
         >
-          <FontAwesome5 name="skull" size={18} color="rgb(189, 63, 63)" />
+          <FontAwesome5 name="box-open" size={18} color="rgb(189, 63, 63)" />
           <Text style={[styles.changeLabel, { color: "rgb(189, 63, 63)" }]}>
-            Expired
+            Out of Stock
           </Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={[
             styles.changeButton,
@@ -371,12 +378,12 @@ export default function Expiry() {
           ]}
           activeOpacity={0.7}
           onPress={() => {
-            setTabExpired(false);
+            setTabOutOfStock(false);
           }}
         >
-          <Entypo name="time-slot" size={18} color="rgb(197, 118, 45)" />
+          <FontAwesome name="warning" size={18} color="rgb(197, 118, 45)" />
           <Text style={[styles.changeLabel, { color: "rgb(197, 118, 45)" }]}>
-            Expiring
+            Low in Stock
           </Text>
         </TouchableOpacity>
       </View>
@@ -391,15 +398,15 @@ export default function Expiry() {
               <Text style={styles.emptySubText}>
                 {searchTerm
                   ? "Try adjusting your search terms"
-                  : `No stocks are currently ${
-                      tabExpired ? "expired" : "expiring soon"
+                  : `No items are currently ${
+                      tabOutOfStock ? "out of stock" : "low in stock"
                     }`}
               </Text>
             </View>
           ) : (
             <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
               {drugs.map((d) => (
-                <DrugCardWithRestock key={d.id} drug={d} />
+                <DrugCard key={d.id} drug={d} />
               ))}
             </View>
           )}
@@ -920,7 +927,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "rgb(57, 104, 139)",
   },
-
   grid: {
     width: "100%",
     flexDirection: "row",

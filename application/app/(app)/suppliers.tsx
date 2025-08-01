@@ -11,11 +11,13 @@ import {
   View,
   Text,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 
 import { Supplier } from "@/types";
 import { getAllSuppliers, searchSuppliers } from "@/utils/supplierDb";
 import Loader from "@/components/Loader";
+import { useStore } from "@/contexts/StoreContext";
 
 export default function Suppliers() {
   const navigation = useNavigation();
@@ -23,11 +25,15 @@ export default function Suppliers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
-
+  const { currentStore } = useStore();
   const loadSuppliers = useCallback(async () => {
     try {
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
       setLoading(true);
-      const suppliersData = await getAllSuppliers();
+      const suppliersData = await getAllSuppliers(currentStore?.id);
       setSuppliers(suppliersData);
     } catch (error) {
       console.error("Error loading suppliers:", error);
@@ -43,10 +49,17 @@ export default function Suppliers() {
         setIsSearching(false);
         return;
       }
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
 
       try {
         setIsSearching(true);
-        const searchResults = await searchSuppliers(term.trim());
+        const searchResults = await searchSuppliers(
+          term.trim(),
+          currentStore?.id
+        );
         setSuppliers(searchResults);
       } catch (error) {
         console.error("Error searching suppliers:", error);

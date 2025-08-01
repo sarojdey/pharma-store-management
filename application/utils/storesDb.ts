@@ -79,6 +79,16 @@ export const deleteStore = async (id: number) => {
     return { success: false, error };
   }
 };
+export const resetStoresDb = (): void => {
+  try {
+    db.execSync("DROP TABLE IF EXISTS stores");
+    createStoresDb();
+    console.log("Store reset successfully.");
+  } catch (error) {
+    console.error("Error resetting store:", error);
+    throw error;
+  }
+};
 
 export const validateStoreExists = async (
   storeId: number

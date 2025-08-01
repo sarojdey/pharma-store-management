@@ -22,6 +22,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Drug } from "@/types";
+import { useStore } from "@/contexts/StoreContext";
 
 const textColorMap: Record<string, string> = {
   expired: "rgb(212, 0, 0)",
@@ -122,7 +123,7 @@ export default function AddSale() {
   const [filteredMedicines, setFilteredMedicines] = useState<Drug[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigation = useNavigation();
-
+  const { currentStore } = useStore();
   const {
     control,
     handleSubmit,
@@ -157,7 +158,11 @@ export default function AddSale() {
 
   const loadMedicines = async () => {
     try {
-      const allDrugs = await getAllDrugs();
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
+      const allDrugs = await getAllDrugs(currentStore?.id);
       const typedDrugs = allDrugs as Drug[];
       const availableDrugs = typedDrugs.filter(
         (drug: Drug) => drug.quantity > 0
@@ -264,14 +269,21 @@ export default function AddSale() {
         quantity: saleQuantity,
         unitPerPackage: selectedMedicine.unitPerPackage,
       };
-
-      const saleResult = await addSale(saleData);
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
+      const saleResult = await addSale(saleData, currentStore.id);
 
       if (saleResult.success) {
         const newQuantity = selectedMedicine.quantity - saleQuantity;
-        const updateResult = await updateDrug(selectedMedicine.id, {
-          quantity: newQuantity,
-        });
+        const updateResult = await updateDrug(
+          selectedMedicine.id,
+          {
+            quantity: newQuantity,
+          },
+          currentStore?.id
+        );
 
         if (updateResult.success) {
           const totalAmount = saleQuantity * selectedMedicine.mrp;

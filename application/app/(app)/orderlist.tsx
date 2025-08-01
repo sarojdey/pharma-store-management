@@ -19,16 +19,21 @@ import { OrderList } from "@/types";
 import Loader from "@/components/Loader";
 import OrderListCard from "@/components/OrderListCard";
 import { getAllOrderLists } from "@/utils/orderListDb";
+import { useStore } from "@/contexts/StoreContext";
 
 export default function OrderLists() {
   const navigation = useNavigation();
   const [orderLists, setOrderLists] = useState<OrderList[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const { currentStore } = useStore();
   const loadOrderLists = useCallback(async () => {
+    if (!currentStore?.id) {
+      Alert.alert("Error", "No store selected.");
+      return;
+    }
     try {
       setLoading(true);
-      const orderListsData = await getAllOrderLists();
+      const orderListsData = await getAllOrderLists(currentStore?.id);
       setOrderLists(orderListsData);
     } catch (error) {
       console.error("Error loading order lists:", error);

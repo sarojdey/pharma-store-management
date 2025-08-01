@@ -1,4 +1,5 @@
 import DrugBanner from "@/components/DrugBanner";
+import { useStore } from "@/contexts/StoreContext";
 import { Drug } from "@/types";
 import { getDrugById } from "@/utils/stocksDb";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -7,6 +8,7 @@ import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,7 +21,7 @@ const MedicineDetails = () => {
   const [drug, setDrug] = useState<Drug | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const { currentStore } = useStore();
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -29,9 +31,13 @@ const MedicineDetails = () => {
         setLoading(false);
         return;
       }
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
 
       try {
-        const drugData = await getDrugById(Number(id));
+        const drugData = await getDrugById(Number(id), currentStore?.id);
         if (drugData) {
           setDrug(drugData as Drug);
         } else {

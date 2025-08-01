@@ -1,9 +1,9 @@
 import DrugCard from "@/components/DrugCard";
 import Loader from "@/components/Loader";
+import { useStore } from "@/contexts/StoreContext";
 import { Drug } from "@/types";
-
 import { searchDrugs } from "@/utils/stocksDb";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -31,10 +31,10 @@ const SORT_OPTIONS: Record<string, string> = {
   expiryDate: "Expiry Date",
 };
 
-export default function OutOfStock() {
+export default function HomeScreen() {
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [tabOutOfStock, setTabOutOfStock] = useState(true);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBy, setFilterBy] = useState<
     "expiryDate" | "quantity" | undefined
@@ -60,7 +60,7 @@ export default function OutOfStock() {
   });
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-
+  const { currentStore } = useStore();
   const dateRangeSchema = z
     .object({
       startDate: z.date(),
@@ -109,12 +109,16 @@ export default function OutOfStock() {
 
       console.log({
         ...finalParams,
-        page: tabOutOfStock ? "nostockalert" : "lowstockalert",
+        page: "inventory",
       });
-
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
       const data = await searchDrugs({
         ...finalParams,
-        mode: tabOutOfStock ? "noStockAlert" : "lowStockAlert",
+        mode: "inventory",
+        storeId: currentStore?.id,
       });
 
       setDrugs(data as Drug[]);
@@ -126,7 +130,7 @@ export default function OutOfStock() {
 
   useEffect(() => {
     fetchDrugs();
-  }, [tabOutOfStock]);
+  }, []);
 
   const showPanel = (animRef: Animated.Value) =>
     Animated.timing(animRef, {
@@ -194,7 +198,6 @@ export default function OutOfStock() {
       futureDate.toISOString().split("T")[0],
     ];
   };
-
   const handleClearSearch = () => {
     setSearchTerm("");
     fetchDrugs({ searchTerm: "" });
@@ -291,7 +294,6 @@ export default function OutOfStock() {
       }, 50);
     });
   };
-
   const clearSort = () => {
     setTempSortBy(undefined);
     setSortBy(undefined);
@@ -342,45 +344,6 @@ export default function OutOfStock() {
           <Ionicons name="swap-vertical-outline" size={24} color="#333" />
         </TouchableOpacity>
       </View>
-      <View style={[styles.grid, { marginBottom: 20, marginTop: 10 }]}>
-        <TouchableOpacity
-          style={[
-            styles.changeButton,
-            {
-              backgroundColor: "rgb(255, 226, 226)",
-              borderColor: "rgb(196, 147, 147)",
-            },
-          ]}
-          activeOpacity={0.7}
-          onPress={() => {
-            setTabOutOfStock(true);
-          }}
-        >
-          <FontAwesome5 name="box-open" size={18} color="rgb(189, 63, 63)" />
-          <Text style={[styles.changeLabel, { color: "rgb(189, 63, 63)" }]}>
-            Out of Stock
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.changeButton,
-            {
-              backgroundColor: "rgb(255, 239, 226)",
-              borderColor: "rgb(196, 169, 147)",
-            },
-          ]}
-          activeOpacity={0.7}
-          onPress={() => {
-            setTabOutOfStock(false);
-          }}
-        >
-          <FontAwesome name="warning" size={18} color="rgb(197, 118, 45)" />
-          <Text style={[styles.changeLabel, { color: "rgb(197, 118, 45)" }]}>
-            Low in Stock
-          </Text>
-        </TouchableOpacity>
-      </View>
       {isLoading ? (
         <Loader />
       ) : (
@@ -388,13 +351,13 @@ export default function OutOfStock() {
           {drugs.length === 0 ? (
             <View style={styles.emptyContainer}>
               <FontAwesome5 name="box-open" size={70} color="#ccc" />
-              <Text style={styles.emptyText}>Nothing here</Text>
+              <Text style={styles.emptyText}>
+                {searchTerm ? "No stocks found" : "No stocks added yet"}
+              </Text>
               <Text style={styles.emptySubText}>
                 {searchTerm
                   ? "Try adjusting your search terms"
-                  : `No items are currently ${
-                      tabOutOfStock ? "out of stock" : "low in stock"
-                    }`}
+                  : "Add your first stock"}
               </Text>
             </View>
           ) : (
@@ -920,34 +883,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 14,
     color: "rgb(57, 104, 139)",
-  },
-  grid: {
-    width: "100%",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    position: "absolute",
-    bottom: 0,
-    zIndex: 1000,
-    alignSelf: "center",
-    padding: 12,
-  },
-  changeButton: {
-    width: "48%",
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    justifyContent: "center",
-    gap: 8,
-  },
-  changeLabel: {
-    color: "#212121",
-    fontWeight: "600",
-    fontSize: 17,
   },
 });

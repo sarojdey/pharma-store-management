@@ -20,9 +20,10 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
-import { addDrug } from "../utils/stocksDb";
+import { addDrug } from "../../utils/stocksDb";
 import { addSupplier } from "@/utils/supplierDb";
 import { addHistory } from "@/utils/historyDb";
+import { useStore } from "@/contexts/StoreContext";
 
 const schema = z.object({
   supplierName: z.string().min(1, "Supplier name is required"),
@@ -37,6 +38,7 @@ const schema = z.object({
 export default function AddInventoryItem() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigation = useNavigation();
+  const { currentStore } = useStore();
   const {
     control,
     handleSubmit,
@@ -60,13 +62,19 @@ export default function AddInventoryItem() {
         location: data.location,
         phone: data.phone,
       };
-
-      const result = await addSupplier(supplierData);
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
+      const result = await addSupplier(supplierData, currentStore?.id);
 
       if (result.success) {
-        await addHistory({
-          operation: `Added supplier: ${data.supplierName}`,
-        });
+        await addHistory(
+          {
+            operation: `Added supplier: ${data.supplierName}`,
+          },
+          currentStore?.id
+        );
         Alert.alert("Success", "Supplier added successfully!", [
           {
             text: "OK",

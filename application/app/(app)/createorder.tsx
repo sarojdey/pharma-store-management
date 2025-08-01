@@ -1,3 +1,4 @@
+import { useStore } from "@/contexts/StoreContext";
 import { addHistory } from "@/utils/historyDb";
 import { addOrderList } from "@/utils/orderListDb";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -37,6 +38,7 @@ interface AddOrderListProps {
 export default function AddOrderList({ supplierName }: AddOrderListProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigation = useNavigation();
+  const { currentStore } = useStore();
 
   const {
     control,
@@ -61,17 +63,23 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
         medicineName: data.medicineName,
         quantity: parseInt(data.quantity),
       };
-
-      const result = await addOrderList(orderListData);
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
+      const result = await addOrderList(orderListData, currentStore?.id);
 
       if (result.success) {
         const supplierText = data.supplierName
           ? `for ${data.supplierName}`
           : "without supplier";
 
-        await addHistory({
-          operation: `Added order: ${data.medicineName} (${data.quantity}) ${supplierText}`,
-        });
+        await addHistory(
+          {
+            operation: `Added order: ${data.medicineName} (${data.quantity}) ${supplierText}`,
+          },
+          currentStore?.id
+        );
 
         Alert.alert("Success", "Order list entry created successfully!", [
           {

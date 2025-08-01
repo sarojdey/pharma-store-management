@@ -1,14 +1,14 @@
 import DrugCard from "@/components/DrugCard";
 import Loader from "@/components/Loader";
 import { Drug } from "@/types";
-import { searchDrugs } from "@/utils/stocksDb";
 
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import Entypo from "@expo/vector-icons/Entypo";
 import {
   Alert,
   Animated,
@@ -22,6 +22,9 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
+import { searchDrugs } from "@/utils/stocksDb";
+import DrugCardWithRestock from "@/components/DrugCardWithRestock";
+import { useStore } from "@/contexts/StoreContext";
 
 const SORT_OPTIONS: Record<string, string> = {
   medicineName: "Name",
@@ -30,10 +33,10 @@ const SORT_OPTIONS: Record<string, string> = {
   expiryDate: "Expiry Date",
 };
 
-export default function HomeScreen() {
+export default function Expiry() {
   const [drugs, setDrugs] = useState<Drug[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [tabExpired, setTabExpired] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBy, setFilterBy] = useState<
     "expiryDate" | "quantity" | undefined
@@ -59,7 +62,7 @@ export default function HomeScreen() {
   });
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-
+  const { currentStore } = useStore();
   const dateRangeSchema = z
     .object({
       startDate: z.date(),
@@ -108,12 +111,16 @@ export default function HomeScreen() {
 
       console.log({
         ...finalParams,
-        page: "inventory",
+        page: tabExpired ? "expiredalert" : "expiringalert",
       });
-
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
       const data = await searchDrugs({
         ...finalParams,
-        mode: "inventory",
+        mode: tabExpired ? "expiredAlert" : "expiringAlert",
+        storeId: currentStore?.id,
       });
 
       setDrugs(data as Drug[]);
@@ -125,7 +132,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     fetchDrugs();
-  }, []);
+  }, [tabExpired]);
 
   const showPanel = (animRef: Animated.Value) =>
     Animated.timing(animRef, {
@@ -193,6 +200,7 @@ export default function HomeScreen() {
       futureDate.toISOString().split("T")[0],
     ];
   };
+
   const handleClearSearch = () => {
     setSearchTerm("");
     fetchDrugs({ searchTerm: "" });
@@ -339,6 +347,44 @@ export default function HomeScreen() {
           <Ionicons name="swap-vertical-outline" size={24} color="#333" />
         </TouchableOpacity>
       </View>
+      <View style={[styles.grid, { marginBottom: 20, marginTop: 10 }]}>
+        <TouchableOpacity
+          style={[
+            styles.changeButton,
+            {
+              backgroundColor: "rgb(255, 226, 226)",
+              borderColor: "rgb(196, 147, 147)",
+            },
+          ]}
+          activeOpacity={0.7}
+          onPress={() => {
+            setTabExpired(true);
+          }}
+        >
+          <FontAwesome5 name="skull" size={18} color="rgb(189, 63, 63)" />
+          <Text style={[styles.changeLabel, { color: "rgb(189, 63, 63)" }]}>
+            Expired
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.changeButton,
+            {
+              backgroundColor: "rgb(255, 239, 226)",
+              borderColor: "rgb(196, 169, 147)",
+            },
+          ]}
+          activeOpacity={0.7}
+          onPress={() => {
+            setTabExpired(false);
+          }}
+        >
+          <Entypo name="time-slot" size={18} color="rgb(197, 118, 45)" />
+          <Text style={[styles.changeLabel, { color: "rgb(197, 118, 45)" }]}>
+            Expiring
+          </Text>
+        </TouchableOpacity>
+      </View>
       {isLoading ? (
         <Loader />
       ) : (
@@ -346,19 +392,19 @@ export default function HomeScreen() {
           {drugs.length === 0 ? (
             <View style={styles.emptyContainer}>
               <FontAwesome5 name="box-open" size={70} color="#ccc" />
-              <Text style={styles.emptyText}>
-                {searchTerm ? "No stocks found" : "No stocks added yet"}
-              </Text>
+              <Text style={styles.emptyText}>Nothing here</Text>
               <Text style={styles.emptySubText}>
                 {searchTerm
                   ? "Try adjusting your search terms"
-                  : "Add your first stock"}
+                  : `No stocks are currently ${
+                      tabExpired ? "expired" : "expiring soon"
+                    }`}
               </Text>
             </View>
           ) : (
             <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
               {drugs.map((d) => (
-                <DrugCard key={d.id} drug={d} />
+                <DrugCardWithRestock key={d.id} drug={d} />
               ))}
             </View>
           )}
@@ -878,5 +924,35 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 14,
     color: "rgb(57, 104, 139)",
+  },
+
+  grid: {
+    width: "100%",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    position: "absolute",
+    bottom: 0,
+    zIndex: 1000,
+    alignSelf: "center",
+    padding: 12,
+  },
+  changeButton: {
+    width: "48%",
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    justifyContent: "center",
+    gap: 8,
+  },
+  changeLabel: {
+    color: "#212121",
+    fontWeight: "600",
+    fontSize: 17,
   },
 });
