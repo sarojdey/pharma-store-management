@@ -1,11 +1,11 @@
+import { useStore } from "@/contexts/StoreContext";
+import { addHistory } from "@/utils/historyDb";
+import { addSupplier } from "@/utils/supplierDb";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "expo-router";
 import React, { useState } from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
   Keyboard,
@@ -20,10 +20,6 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
-import { addDrug } from "../../utils/stocksDb";
-import { addSupplier } from "@/utils/supplierDb";
-import { addHistory } from "@/utils/historyDb";
-import { useStore } from "@/contexts/StoreContext";
 
 const schema = z.object({
   supplierName: z.string().min(1, "Supplier name is required"),

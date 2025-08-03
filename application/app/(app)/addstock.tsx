@@ -21,6 +21,7 @@ import { z } from "zod";
 import { addDrug } from "../../utils/stocksDb";
 import { Drug } from "@/types";
 import { useStore } from "@/contexts/StoreContext";
+import { addHistory } from "@/utils/historyDb";
 
 const schema = z
   .object({
@@ -198,6 +199,12 @@ export default function AddInventoryItem() {
       const result = await addDrug(drugData, currentStore.id);
 
       if (result.success) {
+        await addHistory(
+          {
+            operation: `Added item to inventory: ${drugData.medicineName}`,
+          },
+          currentStore?.id
+        );
         const message = isRestockMode
           ? "Medicine restocked successfully!"
           : "Medicine added to inventory successfully!";

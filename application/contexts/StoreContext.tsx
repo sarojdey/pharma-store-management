@@ -2,11 +2,11 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { createStoresDb, getAllStores, resetStoresDb } from "@/utils/storesDb";
-import { createStocksDb } from "@/utils/stocksDb";
-import { createSalesDb } from "@/utils/salesDb";
-import { createOrderListDb } from "@/utils/orderListDb";
-import { createSupplierDb } from "@/utils/supplierDb";
-import { createHistoryDb } from "@/utils/historyDb";
+import { createStocksDb, resetStocksDb } from "@/utils/stocksDb";
+import { createSalesDb, resetSalesDb } from "@/utils/salesDb";
+import { createOrderListDb, resetOrderListDb } from "@/utils/orderListDb";
+import { createSupplierDb, resetSuppliersDb } from "@/utils/supplierDb";
+import { createHistoryDb, resetHistoryDb } from "@/utils/historyDb";
 import { Store } from "@/types";
 
 type StoreContextType = {
@@ -54,11 +54,21 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const resetAllDb = () => {
+    resetStoresDb();
+    resetHistoryDb();
+    resetOrderListDb();
+    resetSalesDb();
+    resetStocksDb();
+    resetSuppliersDb();
+  };
+
   useEffect(() => {
     const bootstrap = async () => {
       // Only run once, regardless of remounts
       if (!didInitDatabases) {
         try {
+          resetAllDb();
           createStoresDb();
           createStocksDb();
           createSalesDb();

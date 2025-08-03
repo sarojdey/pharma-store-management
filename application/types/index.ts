@@ -72,6 +72,8 @@ export interface Sale {
   medicineName: string;
   quantity: number;
   unitPerPackage: number;
+  price: number;
+  mrp: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -81,6 +83,8 @@ export interface AddSale {
   medicineName: string;
   quantity: number;
   unitPerPackage: number;
+  price: number;
+  mrp: number;
 }
 
 export interface UpdateSale {
@@ -88,6 +92,8 @@ export interface UpdateSale {
   medicineName?: string;
   quantity?: number;
   unitPerPackage?: number;
+  price?: number;
+  mrp?: number;
 }
 
 export interface Store {

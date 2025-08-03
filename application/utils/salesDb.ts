@@ -11,6 +11,8 @@ export const createSalesDb = (): void => {
         medicineName TEXT NOT NULL,
         quantity INTEGER NOT NULL,
         unitPerPackage INTEGER NOT NULL DEFAULT 1,
+        price REAL NOT NULL,
+        mrp REAL NOT NULL,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
         updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
@@ -59,15 +61,19 @@ export const addSale = async (saleData: AddSale, storeId: number) => {
         medicineName,
         quantity,
         unitPerPackage,
+        price,
+        mrp,
         createdAt,
         updatedAt
-      ) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
       [
         storeId,
         saleData.medicineId,
         saleData.medicineName,
         saleData.quantity,
         saleData.unitPerPackage,
+        saleData.price,
+        saleData.mrp,
       ]
     );
     console.log("Sale added successfully with ID:", result.lastInsertRowId);
