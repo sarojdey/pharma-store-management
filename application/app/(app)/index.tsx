@@ -3,7 +3,7 @@ import Feather from "@expo/vector-icons/Feather";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   Alert,
   Animated,
@@ -119,8 +119,10 @@ const BUTTONS: {
 export default function HomeScreen() {
   const router = useRouter();
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [slideAnim] = useState(new Animated.Value(SIDEBAR_WIDTH));
   const [switchingStore, setSwitchingStore] = useState<number | null>(null);
+
+  // Use useRef instead of useState for animation value to avoid re-renders
+  const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
 
   // Get store data from context
   const {
@@ -131,16 +133,17 @@ export default function HomeScreen() {
     refreshAllStores,
   } = useStore();
 
-  const openSidebar = () => {
+  // Use useCallback to memoize functions and prevent unnecessary re-renders
+  const openSidebar = useCallback(() => {
     setSidebarVisible(true);
     Animated.timing(slideAnim, {
       toValue: 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
-  };
+  }, [slideAnim]);
 
-  const closeSidebar = () => {
+  const closeSidebar = useCallback(() => {
     Animated.timing(slideAnim, {
       toValue: SIDEBAR_WIDTH,
       duration: 300,
@@ -148,37 +151,43 @@ export default function HomeScreen() {
     }).start(() => {
       setSidebarVisible(false);
     });
-  };
+  }, [slideAnim]);
 
-  const handleStoreSwitch = async (selectedStore: Store) => {
-    if (selectedStore.id === currentStore?.id) {
-      closeSidebar();
-      return;
-    }
+  const handleStoreSwitch = useCallback(
+    async (selectedStore: Store) => {
+      if (selectedStore.id === currentStore?.id) {
+        closeSidebar();
+        return;
+      }
 
-    try {
-      setSwitchingStore(selectedStore.id!);
+      try {
+        setSwitchingStore(selectedStore.id!);
 
-      // Update AsyncStorage directly since setCurrentStore only takes Store | null
-      await AsyncStorage.setItem("activeStoreId", selectedStore.id!.toString());
+        // Update AsyncStorage directly since setCurrentStore only takes Store | null
+        await AsyncStorage.setItem(
+          "activeStoreId",
+          selectedStore.id!.toString()
+        );
 
-      // Update the context
-      setCurrentStore(selectedStore);
+        // Update the context
+        setCurrentStore(selectedStore);
 
-      closeSidebar();
-      console.log(`Switched to store: ${selectedStore.name}`);
+        closeSidebar();
+        console.log(`Switched to store: ${selectedStore.name}`);
 
-      // You might want to refresh the app or navigate to ensure everything updates
-      // router.replace("/(app)");
-    } catch (error) {
-      console.error("Error switching store:", error);
-      Alert.alert("Error", "Failed to switch store. Please try again.");
-    } finally {
-      setSwitchingStore(null);
-    }
-  };
+        // You might want to refresh the app or navigate to ensure everything updates
+        // router.replace("/(app)");
+      } catch (error) {
+        console.error("Error switching store:", error);
+        Alert.alert("Error", "Failed to switch store. Please try again.");
+      } finally {
+        setSwitchingStore(null);
+      }
+    },
+    [currentStore?.id, closeSidebar, setCurrentStore]
+  );
 
-  const refreshStores = async () => {
+  const refreshStores = useCallback(async () => {
     try {
       await refreshAllStores(); // Use context method instead
       console.log("Refreshed stores from context");
@@ -186,9 +195,9 @@ export default function HomeScreen() {
       console.error("Error refreshing stores:", error);
       throw error;
     }
-  };
+  }, [refreshAllStores]);
 
-  const handleMoreOptions = () => {
+  const handleMoreOptions = useCallback(() => {
     Alert.alert("Store Options", "Choose an option", [
       {
         text: "Add New Store",
@@ -220,46 +229,52 @@ export default function HomeScreen() {
         style: "cancel",
       },
     ]);
-  };
+  }, [closeSidebar, router, refreshStores]);
 
-  const renderStoreItem = (store: Store) => {
-    const isCurrentStore = store.id === currentStore?.id;
-    const isSwitching = switchingStore === store.id;
+  const renderStoreItem = useCallback(
+    (store: Store) => {
+      const isCurrentStore = store.id === currentStore?.id;
+      const isSwitching = switchingStore === store.id;
 
-    return (
-      <TouchableOpacity
-        key={store.id}
-        style={[styles.userItem, isCurrentStore && styles.currentUser]}
-        activeOpacity={0.7}
-        onPress={() => handleStoreSwitch(store)}
-        disabled={switchingStore !== null}
-      >
-        <Ionicons
-          name={isCurrentStore ? "storefront" : "storefront-outline"}
-          size={30}
-          color={isCurrentStore ? "#4a90e2" : "#666"}
-        />
-        <View style={styles.storeInfo}>
-          <Text
-            style={[styles.userName, isCurrentStore && styles.currentUserName]}
-          >
-            {store.name}
-          </Text>
-          <Text style={styles.storeDate}>
-            Created {new Date(store.createdAt!).toLocaleDateString()}
-          </Text>
-        </View>
-
-        {isSwitching && <ActivityIndicator size="small" color="#4a90e2" />}
-
-        {isCurrentStore && !isSwitching && (
-          <View style={styles.activeIndicator}>
-            <Ionicons name="checkmark-circle" size={20} color="#4a90e2" />
+      return (
+        <TouchableOpacity
+          key={store.id}
+          style={[styles.userItem, isCurrentStore && styles.currentUser]}
+          activeOpacity={0.7}
+          onPress={() => handleStoreSwitch(store)}
+          disabled={switchingStore !== null}
+        >
+          <Ionicons
+            name={isCurrentStore ? "storefront" : "storefront-outline"}
+            size={30}
+            color={isCurrentStore ? "#4a90e2" : "#666"}
+          />
+          <View style={styles.storeInfo}>
+            <Text
+              style={[
+                styles.userName,
+                isCurrentStore && styles.currentUserName,
+              ]}
+            >
+              {store.name}
+            </Text>
+            <Text style={styles.storeDate}>
+              Created {new Date(store.createdAt!).toLocaleDateString()}
+            </Text>
           </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
+
+          {isSwitching && <ActivityIndicator size="small" color="#4a90e2" />}
+
+          {isCurrentStore && !isSwitching && (
+            <View style={styles.activeIndicator}>
+              <Ionicons name="checkmark-circle" size={20} color="#4a90e2" />
+            </View>
+          )}
+        </TouchableOpacity>
+      );
+    },
+    [currentStore?.id, switchingStore, handleStoreSwitch]
+  );
 
   // Show loading screen if context is not ready
   if (!isReady) {
@@ -312,7 +327,7 @@ export default function HomeScreen() {
             style={styles.chartButton}
             activeOpacity={0.7}
             onPress={() => {
-              // Navigate to sales report - implement this route
+              router.push("/(app)/salesreport");
               console.log("Sales Report pressed");
             }}
           >

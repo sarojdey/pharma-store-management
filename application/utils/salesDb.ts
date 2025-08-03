@@ -222,3 +222,26 @@ export const getSalesCountByStore = async (
     return 0;
   }
 };
+
+export const getSalesReport = async (storeId: number) => {
+  try {
+    const result = await db.getAllAsync(
+      `SELECT 
+        medicineName,
+        price,
+        mrp,
+        unitPerPackage,
+        SUM(quantity) as quantitySold,
+        (mrp - price) * SUM(quantity) as totalProfit
+      FROM sales 
+      WHERE store_id = ? 
+      GROUP BY medicineName, price, mrp, unitPerPackage
+      ORDER BY medicineName`,
+      [storeId]
+    );
+    return result;
+  } catch (error) {
+    console.error("Error fetching sales report:", error);
+    return [];
+  }
+};
