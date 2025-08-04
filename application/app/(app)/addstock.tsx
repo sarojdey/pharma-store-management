@@ -26,7 +26,7 @@ import { addHistory } from "@/utils/historyDb";
 const schema = z
   .object({
     medicineName: z.string().min(1, "Medicine name is required"),
-    batchId: z.string().min(1, "ID Code is required"),
+
     price: z.preprocess((val) => {
       if (val === "" || val === null || val === undefined) return undefined;
       const num = Number(val);
@@ -50,6 +50,10 @@ const schema = z
     expiryDate: z.date({ required_error: "Expiry Date is required" }),
     medicineType: z.string().min(1, "Medicine type is required"),
     otherMedicineType: z.string().optional(),
+    rackNo: z
+      .string()
+      .transform((val) => val.trim() || null)
+      .optional(),
     batchNo: z
       .string()
       .transform((val) => val.trim() || null)
@@ -103,7 +107,7 @@ export default function AddInventoryItem() {
     resolver: zodResolver(schema),
     defaultValues: {
       medicineName: "",
-      batchId: "",
+
       price: undefined,
       mrp: undefined,
       numberOfPackages: undefined,
@@ -111,6 +115,7 @@ export default function AddInventoryItem() {
       expiryDate: new Date(),
       medicineType: "Tablet",
       otherMedicineType: "",
+      rackNo: "",
       batchNo: "",
       distributorName: "",
       purchaseInvoiceNumber: "",
@@ -124,11 +129,11 @@ export default function AddInventoryItem() {
         setIsRestockMode(true);
 
         setValue("medicineName", drugData.medicineName);
-        setValue("batchId", drugData.batchId);
+
         setValue("price", drugData.price);
         setValue("mrp", drugData.mrp);
         setValue("medicineType", drugData.medicineType);
-
+        if (drugData.rackNo) setValue("rackNo", drugData.rackNo);
         if (drugData.batchNo) setValue("batchNo", drugData.batchNo);
         if (drugData.distributorName)
           setValue("distributorName", drugData.distributorName);
@@ -178,7 +183,7 @@ export default function AddInventoryItem() {
 
       const drugData = {
         medicineName: data.medicineName,
-        batchId: data.batchId,
+
         price: data.price,
         mrp: data.mrp,
         quantity: totalQuantity,
@@ -187,6 +192,7 @@ export default function AddInventoryItem() {
         medicineType: (data.medicineType === "Other"
           ? data.otherMedicineType
           : data.medicineType) as string,
+        rackNo: data.rackNo || null,
         batchNo: data.batchNo || null,
         distributorName: data.distributorName || null,
         purchaseInvoiceNumber: data.purchaseInvoiceNumber || null,
@@ -309,29 +315,6 @@ export default function AddInventoryItem() {
                       onChangeText={field.onChange}
                       value={field.value}
                       placeholder="e.g., Remorinax Plus 600mg"
-                      placeholderTextColor="#9ca3af"
-                    />
-                  )}
-                />
-              </FormField>
-
-              <FormField
-                label="Batch ID"
-                required
-                error={errors.batchId?.message}
-              >
-                <Controller
-                  control={control}
-                  name="batchId"
-                  render={({ field }) => (
-                    <TextInput
-                      style={[
-                        styles.input,
-                        errors.batchId && styles.inputError,
-                      ]}
-                      onChangeText={field.onChange}
-                      value={field.value}
-                      placeholder="e.g., 5260"
                       placeholderTextColor="#9ca3af"
                     />
                   )}
@@ -577,7 +560,21 @@ export default function AddInventoryItem() {
                   />
                 </FormField>
               )}
-
+              <FormField label="Rack No." error={errors.rackNo?.message}>
+                <Controller
+                  control={control}
+                  name="rackNo"
+                  render={({ field }) => (
+                    <TextInput
+                      style={[styles.input, errors.rackNo && styles.inputError]}
+                      onChangeText={field.onChange}
+                      value={field.value}
+                      placeholder="e.g., R100"
+                      placeholderTextColor="#9ca3af"
+                    />
+                  )}
+                />
+              </FormField>
               <FormField label="Batch No." error={errors.batchNo?.message}>
                 <Controller
                   control={control}

@@ -1,13 +1,13 @@
 export interface Drug {
   id: number;
   medicineName: string;
-  batchId: string;
   price: number;
   mrp: number;
   quantity: number;
   unitPerPackage: number;
   expiryDate: string;
   medicineType: string;
+  rackNo?: string | null;
   batchNo?: string | null;
   distributorName?: string | null;
   purchaseInvoiceNumber?: string | null;
@@ -15,13 +15,13 @@ export interface Drug {
 
 export interface AddDrug {
   medicineName: string;
-  batchId: string;
   price: number;
   mrp: number;
   quantity: number;
   unitPerPackage: number;
   expiryDate: string;
   medicineType: string;
+  rackNo?: string | null;
   batchNo?: string | null;
   distributorName?: string | null;
   purchaseInvoiceNumber?: string | null;
@@ -29,13 +29,13 @@ export interface AddDrug {
 
 export interface UpdateDrug {
   medicineName?: string;
-  batchId?: string;
   price?: number;
   mrp?: number;
   quantity?: number;
   unitPerPackage?: number;
   expiryDate?: string;
   medicineType?: string;
+  rackNo?: string;
   batchNo?: string;
   distributorName?: string;
   purchaseInvoiceNumber?: string;

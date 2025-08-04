@@ -28,7 +28,12 @@ import { addHistory } from "@/utils/historyDb";
 const textColorMap: Record<string, string> = {
   expired: "rgb(212, 0, 0)",
   expiring: "rgb(228, 125, 0)",
-  consumable: "#444",
+  consumable: "rgba(0, 200, 67, 1)",
+};
+const textColorMapStock: Record<string, string> = {
+  "out of stock": "rgb(212, 0, 0)",
+  "low in stock": "rgb(228, 125, 0)",
+  "in stock": "rgba(0, 174, 58, 1)",
 };
 
 type FormFieldProps = {
@@ -59,6 +64,10 @@ type MedicineDropdownItemProps = {
   formatDate: (dateString: string) => string;
   textColorMap: Record<string, string>;
   expiryStatus: (expiryDate: string) => "expired" | "expiring" | "consumable";
+  stockStatus: (
+    quantity: number
+  ) => "out of stock" | "low in stock" | "in stock";
+  isLast: boolean;
 };
 
 const MedicineDropdownItem: React.FC<MedicineDropdownItemProps> = ({
@@ -67,8 +76,16 @@ const MedicineDropdownItem: React.FC<MedicineDropdownItemProps> = ({
   formatDate,
   textColorMap,
   expiryStatus,
+  stockStatus,
+  isLast,
 }) => (
-  <TouchableOpacity style={styles.dropdownItem} onPress={() => onSelect(item)}>
+  <TouchableOpacity
+    style={[
+      styles.dropdownItem,
+      isLast ? { borderBottomWidth: 0 } : { borderBottomWidth: 1 },
+    ]}
+    onPress={() => onSelect(item)}
+  >
     <View style={styles.dropdownItemContent}>
       <Text style={styles.dropdownItemName}>{item.medicineName}</Text>
       <Text style={styles.dropdownItemType}>{item.medicineType}</Text>
@@ -76,9 +93,17 @@ const MedicineDropdownItem: React.FC<MedicineDropdownItemProps> = ({
         <Text style={styles.dropdownItemBatch}>Batch: {item.batchNo}</Text>
       )}
       <View style={styles.dropdownItemDetails}>
-        <Text style={styles.dropdownItemStock}>
+        <Text
+          style={[
+            styles.dropdownItemStock,
+            {
+              fontWeight: "600",
+              color: textColorMapStock[stockStatus(item.quantity)],
+            },
+          ]}
+        >
           Stock: {item.quantity}{" "}
-          {item.medicineType === "Tablet" ? "tablets" : "units"}
+          {item.medicineType === "Tablet" ? "tablet(s)" : "units"}
         </Text>
         <Text
           style={[
@@ -354,6 +379,13 @@ export default function AddSale() {
     if (diffDays <= 30) return "expiring";
     return "consumable";
   };
+  const stockStatus = (quantity: number) => {
+    return quantity === 0
+      ? "out of stock"
+      : quantity <= 30
+      ? "low in stock"
+      : "in stock";
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -422,7 +454,7 @@ export default function AddSale() {
                   <Text style={styles.selectedMedicineDetail}>
                     Available Stock: {selectedMedicine.quantity}{" "}
                     {selectedMedicine.medicineType === "Tablet"
-                      ? "tablets"
+                      ? "tablet(s)"
                       : "units"}
                   </Text>
                   <Text style={styles.selectedMedicineDetail}>
@@ -475,12 +507,7 @@ export default function AddSale() {
                   />
                   {selectedMedicine.medicineType === "Tablet" && (
                     <Text style={styles.helperText}>
-                      Available: {selectedMedicine.quantity} tablets (
-                      {Math.floor(
-                        selectedMedicine.quantity /
-                          selectedMedicine.unitPerPackage
-                      )}{" "}
-                      strips)
+                      Available: {selectedMedicine.quantity} tablet(s)
                     </Text>
                   )}
                 </FormField>
@@ -561,13 +588,15 @@ export default function AddSale() {
             <FlatList
               data={filteredMedicines}
               keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
+              renderItem={({ item, index }) => (
                 <MedicineDropdownItem
                   item={item}
                   onSelect={selectMedicine}
                   formatDate={formatDate}
                   textColorMap={textColorMap}
                   expiryStatus={expiryStatus}
+                  stockStatus={stockStatus}
+                  isLast={index === filteredMedicines.length - 1}
                 />
               )}
               style={styles.medicineList}
@@ -753,12 +782,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   salesSummary: {
-    backgroundColor: "#f0fdf4",
+    backgroundColor: "#d5ffe241",
     padding: 16,
     borderRadius: 8,
     marginTop: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: "#22c55e",
+    borderWidth: 1,
+    borderColor: "#8fc8ac48",
   },
   salesSummaryTitle: {
     fontSize: 16,
@@ -843,7 +872,6 @@ const styles = StyleSheet.create({
     maxHeight: 400,
   },
   dropdownItem: {
-    borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
     paddingVertical: 12,
   },
@@ -854,12 +882,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#374151",
-    marginBottom: 4,
   },
   dropdownItemType: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 4,
+    marginBottom: 10,
   },
   dropdownItemBatch: {
     fontSize: 14,
@@ -874,8 +901,6 @@ const styles = StyleSheet.create({
   },
   dropdownItemStock: {
     fontSize: 14,
-    color: "#059669",
-    fontWeight: "500",
   },
   dropdownItemExpiry: {
     fontSize: 14,

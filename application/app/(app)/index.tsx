@@ -1,10 +1,14 @@
+import { useStore } from "@/contexts/StoreContext";
+import { Store } from "@/types";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Feather from "@expo/vector-icons/Feather";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React, { useState, useRef, useCallback } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
@@ -14,12 +18,7 @@ import {
   Text,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useStore } from "@/contexts/StoreContext";
-import { Store } from "@/types";
-import { getAllStores } from "@/utils/storesDb";
 
 const { width: screenWidth } = Dimensions.get("window");
 const SIDEBAR_WIDTH = screenWidth * 0.8;
@@ -121,10 +120,8 @@ export default function HomeScreen() {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [switchingStore, setSwitchingStore] = useState<number | null>(null);
 
-  // Use useRef instead of useState for animation value to avoid re-renders
   const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
 
-  // Get store data from context
   const {
     currentStore,
     allStores,
@@ -133,7 +130,6 @@ export default function HomeScreen() {
     refreshAllStores,
   } = useStore();
 
-  // Use useCallback to memoize functions and prevent unnecessary re-renders
   const openSidebar = useCallback(() => {
     setSidebarVisible(true);
     Animated.timing(slideAnim, {
@@ -162,21 +158,14 @@ export default function HomeScreen() {
 
       try {
         setSwitchingStore(selectedStore.id!);
-
-        // Update AsyncStorage directly since setCurrentStore only takes Store | null
         await AsyncStorage.setItem(
           "activeStoreId",
           selectedStore.id!.toString()
         );
-
-        // Update the context
         setCurrentStore(selectedStore);
-
         closeSidebar();
-        console.log(`Switched to store: ${selectedStore.name}`);
 
-        // You might want to refresh the app or navigate to ensure everything updates
-        // router.replace("/(app)");
+        console.log(`Switched to store: ${selectedStore.name}`);
       } catch (error) {
         console.error("Error switching store:", error);
         Alert.alert("Error", "Failed to switch store. Please try again.");
@@ -189,7 +178,7 @@ export default function HomeScreen() {
 
   const refreshStores = useCallback(async () => {
     try {
-      await refreshAllStores(); // Use context method instead
+      await refreshAllStores();
       console.log("Refreshed stores from context");
     } catch (error) {
       console.error("Error refreshing stores:", error);
@@ -203,21 +192,22 @@ export default function HomeScreen() {
         text: "Add New Store",
         onPress: () => {
           closeSidebar();
-          router.push("/(auth)/welcomeScreen");
+          setTimeout(() => {
+            router.replace("/(auth)/welcomeScreen");
+          }, 100);
         },
       },
       {
         text: "Store Settings",
         onPress: () => {
           console.log("Store settings pressed");
-          // You can implement store settings functionality here
         },
       },
       {
         text: "Refresh Stores",
         onPress: async () => {
           try {
-            await refreshStores(); // This now uses context
+            await refreshStores();
             Alert.alert("Success", "Stores refreshed successfully");
           } catch (error) {
             Alert.alert("Error", "Failed to refresh stores");
@@ -247,7 +237,7 @@ export default function HomeScreen() {
           <Ionicons
             name={isCurrentStore ? "storefront" : "storefront-outline"}
             size={30}
-            color={isCurrentStore ? "#4a90e2" : "#666"}
+            color={isCurrentStore ? "rgb(70, 125, 168)" : "#666"}
           />
           <View style={styles.storeInfo}>
             <Text
@@ -258,25 +248,15 @@ export default function HomeScreen() {
             >
               {store.name}
             </Text>
-            <Text style={styles.storeDate}>
-              Created {new Date(store.createdAt!).toLocaleDateString()}
-            </Text>
           </View>
 
           {isSwitching && <ActivityIndicator size="small" color="#4a90e2" />}
-
-          {isCurrentStore && !isSwitching && (
-            <View style={styles.activeIndicator}>
-              <Ionicons name="checkmark-circle" size={20} color="#4a90e2" />
-            </View>
-          )}
         </TouchableOpacity>
       );
     },
     [currentStore?.id, switchingStore, handleStoreSwitch]
   );
 
-  // Show loading screen if context is not ready
   if (!isReady) {
     return (
       <View style={styles.loadingContainer}>
@@ -286,7 +266,6 @@ export default function HomeScreen() {
     );
   }
 
-  // This shouldn't happen due to routing logic, but just in case
   if (!currentStore) {
     return (
       <View style={styles.loadingContainer}>
@@ -338,7 +317,6 @@ export default function HomeScreen() {
             style={styles.chartButton}
             activeOpacity={0.7}
             onPress={() => {
-              // Navigate to stock report - implement this route
               console.log("Stock Report pressed");
             }}
           >
@@ -390,7 +368,7 @@ export default function HomeScreen() {
             ]}
           >
             <View style={styles.sidebarHeader}>
-              <Text style={styles.sidebarTitle}>Switch Store</Text>
+              <Text style={styles.sidebarTitle}>{currentStore.name}</Text>
               <TouchableOpacity
                 onPress={closeSidebar}
                 style={styles.closeButton}
@@ -625,27 +603,24 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   currentUser: {
-    backgroundColor: "rgba(74, 144, 226, 0.08)",
-    borderColor: "rgba(74, 144, 226, 0.2)",
+    backgroundColor: "rrgba(201, 231, 255, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(97, 129, 155, 0.30)",
   },
   storeInfo: {
     flex: 1,
     marginLeft: 12,
   },
   userName: {
-    fontSize: 16,
+    fontSize: 17,
     color: "#333",
-    fontWeight: "400",
-  },
-  currentUserName: {
-    color: "#4a90e2",
     fontWeight: "500",
   },
-  storeDate: {
-    fontSize: 12,
-    color: "#888",
-    marginTop: 2,
+  currentUserName: {
+    color: "rgb(70, 125, 168)",
+    fontWeight: "600",
   },
+
   activeIndicator: {
     marginLeft: 8,
   },

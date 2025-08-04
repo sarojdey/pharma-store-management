@@ -3,7 +3,8 @@ import { StyleSheet, Text, View } from "react-native";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString("en-IN", {
+    timeZone: "UTC",
     year: "numeric",
     month: "short",
     day: "numeric",

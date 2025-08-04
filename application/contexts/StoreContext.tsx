@@ -1,21 +1,23 @@
-import { Store } from "@/types";
-import { createHistoryDb, resetHistoryDb } from "@/utils/historyDb";
-import { createOrderListDb, resetOrderListDb } from "@/utils/orderListDb";
-import { createSalesDb, resetSalesDb } from "@/utils/salesDb";
-import { createStocksDb, resetStocksDb } from "@/utils/stocksDb";
-import { createStoresDb, getAllStores, resetStoresDb } from "@/utils/storesDb";
-import { createSupplierDb, resetSuppliersDb } from "@/utils/supplierDb";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 import React, {
   createContext,
-  useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
+  useCallback,
+  useRef,
 } from "react";
-import { InteractionManager } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import { InteractionManager, LogBox } from "react-native";
+import { createStoresDb, getAllStores, resetStoresDb } from "@/utils/storesDb";
+import { createStocksDb, resetStocksDb } from "@/utils/stocksDb";
+import { createSalesDb, resetSalesDb } from "@/utils/salesDb";
+import { createOrderListDb, resetOrderListDb } from "@/utils/orderListDb";
+import { createSupplierDb, resetSuppliersDb } from "@/utils/supplierDb";
+import { createHistoryDb, resetHistoryDb } from "@/utils/historyDb";
+import { Store } from "@/types";
+
+LogBox.ignoreLogs(["Warning: useInsertionEffect must not schedule updates"]);
 
 type StoreContextType = {
   allStores: Store[];
@@ -29,7 +31,6 @@ type StoreContextType = {
 
 const StoreContext = createContext<StoreContextType | null>(null);
 
-// Module-level guard flags
 let didInitDatabases = false;
 let didNavigate = false;
 
@@ -40,16 +41,13 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
   const [hasNavigated, setHasNavigated] = useState(false);
   const router = useRouter();
 
-  // Use refs to prevent concurrent operations
   const isBootstrapping = useRef(false);
   const isRefreshing = useRef(false);
 
-  // Safe wrapper for setCurrentStore that defers state updates
   const setCurrentStore = useCallback((store: Store | null) => {
     InteractionManager.runAfterInteractions(() => {
       setCurrentStoreState(store);
 
-      // Also update AsyncStorage if store has an ID
       if (store?.id) {
         AsyncStorage.setItem("activeStoreId", store.id.toString()).catch(
           (error) => {
@@ -60,11 +58,9 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, []);
 
-  // Add store to context (for newly created stores)
   const addStoreToContext = useCallback((store: Store) => {
     InteractionManager.runAfterInteractions(() => {
       setAllStores((prev) => {
-        // Check if store already exists to avoid duplicates
         const exists = prev.some((s) => s.id === store.id);
         if (exists) return prev;
         return [...prev, store];
@@ -72,14 +68,12 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, []);
 
-  // Refresh all stores from database
   const refreshAllStores = useCallback(async () => {
     if (isRefreshing.current) return;
 
     isRefreshing.current = true;
 
     try {
-      // Defer the database operation
       await new Promise<void>((resolve) => {
         InteractionManager.runAfterInteractions(async () => {
           try {
@@ -89,7 +83,7 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
             resolve();
           } catch (error) {
             console.error("Error refreshing stores:", error);
-            resolve(); // Resolve even on error to prevent hanging
+            resolve();
             throw error;
           }
         });
@@ -110,12 +104,10 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const bootstrap = async () => {
-      // Prevent concurrent bootstrap operations
       if (isBootstrapping.current) return;
 
       isBootstrapping.current = true;
 
-      // Only run database initialization once
       if (!didInitDatabases) {
         try {
           resetAllDb();
@@ -133,7 +125,6 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       try {
-        // Defer all state updates and navigation
         InteractionManager.runAfterInteractions(async () => {
           try {
             const stores = await getAllStores();
@@ -149,7 +140,6 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
               didNavigate,
             });
 
-            // Handle navigation after a small delay to avoid render conflicts
             if (!didNavigate) {
               setTimeout(() => {
                 if (stores.length === 0) {
@@ -167,13 +157,13 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
                 console.log(
                   "✅ Navigation completed, hasNavigated set to true"
                 );
-              }, 100); // Small delay to ensure render cycle completes
+              }, 100);
             }
           } catch (e) {
             console.error("Loading stores failed:", e);
           } finally {
             setIsReady(true);
-            // If we didn't navigate due to an error, still mark as navigated to prevent loops
+
             if (!didNavigate) {
               didNavigate = true;
               setHasNavigated(true);
@@ -194,7 +184,7 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     bootstrap();
-  }, []); // empty deps = only on mount
+  }, []);
 
   return (
     <StoreContext.Provider

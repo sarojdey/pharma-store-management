@@ -86,7 +86,7 @@ export default function DrugCard({ drug }: { drug: Drug }) {
           <Text
             style={[styles.drugId, { color: isLowOrOut ? "#444" : "#888" }]}
           >
-            Batch ID: <Text>{drug.batchId}</Text>
+            ID: <Text>{drug.id}</Text>
           </Text>
           <View style={{ flexDirection: "row", gap: 8, marginBottom: 4 }}>
             {expiryStatus === "expired" && (
