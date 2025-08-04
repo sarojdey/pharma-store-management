@@ -9,6 +9,8 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  ScrollView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
@@ -59,89 +61,177 @@ export default function WelcomeScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      <View style={styles.container}>
-        <Text style={styles.title}>Welcome 👋</Text>
-        <Text style={styles.subtitle}>
-          Let's set up your first store to get rolling.
-        </Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.container}>
+          {/* Header Section with Image */}
+          <View style={styles.headerSection}>
+            <View style={styles.imageContainer}>
+              <Image
+                source={require("../../assets/images/landing.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
 
-        <View style={styles.inputRow}>
-          <Ionicons name="storefront" size={20} color="#4a90e2" />
-          <TextInput
-            style={styles.input}
-            placeholder="Store Name"
-            value={name}
-            onChangeText={setName}
-            editable={!busy}
-            returnKeyType="done"
-            onSubmitEditing={onCreate}
-          />
+            <Text style={styles.title}>
+              Welcome to{"\n"}
+              <Text style={{ color: "rgba(65, 103, 168, 1)" }}>
+                Medicine Stockist
+              </Text>
+            </Text>
+
+            <Text style={styles.subtitle}>
+              Let's set up your first store to get rolling.
+            </Text>
+          </View>
+
+          {/* Form Section */}
+          <View style={styles.formSection}>
+            <View style={styles.inputContainer}>
+              <View style={styles.inputRow}>
+                <View style={styles.iconContainer}>
+                  <Ionicons
+                    name="storefront"
+                    size={22}
+                    color="rgba(78, 122, 198, 1)"
+                  />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your store name"
+                  placeholderTextColor="#9ca3af"
+                  value={name}
+                  onChangeText={setName}
+                  editable={!busy}
+                  returnKeyType="done"
+                  onSubmitEditing={onCreate}
+                  autoCorrect={false}
+                  autoCapitalize="words"
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.button,
+                (busy || !name.trim()) && styles.buttonDisabled,
+              ]}
+              onPress={onCreate}
+              disabled={busy || !name.trim()}
+              activeOpacity={0.8}
+            >
+              {busy ? (
+                <View style={styles.buttonContent}>
+                  <ActivityIndicator color="#fff" size="small" />
+                  <Text style={[styles.buttonText, { marginLeft: 8 }]}>
+                    Creating...
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.buttonContent}>
+                  <Ionicons name="add-circle" size={20} color="#fff" />
+                  <Text style={[styles.buttonText, { marginLeft: 8 }]}>
+                    Create Store
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-
-        <TouchableOpacity
-          style={[
-            styles.button,
-            (busy || !name.trim()) && styles.buttonDisabled,
-          ]}
-          onPress={onCreate}
-          disabled={busy || !name.trim()}
-        >
-          {busy ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Create Store</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: "#f8fafc" },
+  flex: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    minHeight: "100%",
+  },
   container: {
     flex: 1,
     padding: 24,
     justifyContent: "center",
   },
+  headerSection: {
+    alignItems: "center",
+    marginBottom: 40,
+  },
+  imageContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  logoImage: {
+    width: 200,
+    height: 200,
+  },
   title: {
-    fontSize: 32,
-    fontWeight: "700",
+    fontSize: 40,
+    fontWeight: "800",
     textAlign: "center",
-    marginBottom: 8,
+    color: "#374151",
   },
   subtitle: {
     fontSize: 16,
-    color: "#555",
+    color: "#6b7280",
     textAlign: "center",
+    lineHeight: 22,
+    paddingHorizontal: 20,
+  },
+  formSection: {
+    width: "100%",
+  },
+  inputContainer: {
     marginBottom: 24,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 48,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 56,
     borderWidth: 1,
-    borderColor: "#ddd",
-    marginBottom: 16,
+    borderColor: "#e5e7eb4b",
+    elevation: 1,
+  },
+  iconContainer: {
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    marginLeft: 8,
     fontSize: 16,
+    color: "#1f2937",
+    fontWeight: "500",
   },
   button: {
-    backgroundColor: "#4a90e2",
-    paddingVertical: 14,
-    borderRadius: 8,
+    backgroundColor: "rgba(65, 103, 168, 1)",
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: "center",
+    justifyContent: "center",
+    elevation: 1,
   },
   buttonDisabled: {
-    backgroundColor: "#9ca3af",
+    backgroundColor: "#6f88b5ff",
+    shadowOpacity: 0.1,
+  },
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonText: {
     color: "#fff",
