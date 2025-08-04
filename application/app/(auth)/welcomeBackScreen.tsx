@@ -7,8 +7,13 @@ import {
   ActivityIndicator,
   Alert,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
+  ScrollView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useStore } from "@/contexts/StoreContext";
 
@@ -37,93 +42,225 @@ export default function WelcomeBackScreen() {
 
   if (allStores.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No stores available.</Text>
-        <Text style={styles.emptySubtext}>Please create a store first.</Text>
-      </View>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <View style={styles.headerSection}>
+              <View style={styles.imageContainer}>
+                <Image
+                  source={require("../../assets/images/landing.png")}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+              </View>
+
+              <Text style={styles.title}>No Stores Available</Text>
+
+              <Text style={styles.subtitle}>
+                Please create a store first to get started.
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome Back 👋</Text>
-      <Text style={styles.subtitle}>Select a store to continue</Text>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.container}>
+          {/* Header Section with Image */}
+          <View style={styles.headerSection}>
+            <View style={styles.imageContainer}>
+              <Image
+                source={require("../../assets/images/landing.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
 
-      <FlatList
-        data={allStores}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ paddingVertical: 16 }}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.item}
-            onPress={() => onSelect(item.id)}
-            disabled={loadingId !== null}
-          >
-            <Text style={styles.itemText}>{item.name}</Text>
-            {loadingId === item.id ? (
-              <ActivityIndicator />
-            ) : (
-              <Text style={styles.select}>Select</Text>
-            )}
-          </TouchableOpacity>
-        )}
-      />
-    </View>
+            <Text style={styles.title}>
+              Welcome Back to{"\n"}
+              <Text style={{ color: "rgba(65, 103, 168, 1)" }}>
+                Medicine Stockist
+              </Text>
+            </Text>
+
+            <Text style={styles.subtitle}>
+              Select a store to continue with your inventory management.
+            </Text>
+          </View>
+
+          {/* Stores List Section */}
+          <View style={styles.formSection}>
+            <FlatList
+              data={allStores}
+              keyExtractor={(item) => item.id.toString()}
+              showsVerticalScrollIndicator={false}
+              scrollEnabled={false}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.storeItem,
+                    loadingId !== null &&
+                      loadingId !== item.id &&
+                      styles.storeItemDisabled,
+                  ]}
+                  onPress={() => onSelect(item.id)}
+                  disabled={loadingId !== null}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.storeItemContent}>
+                    <View style={styles.storeItemLeft}>
+                      <View style={styles.iconContainer}>
+                        <Ionicons
+                          name="storefront"
+                          size={22}
+                          color="rgba(78, 122, 198, 1)"
+                        />
+                      </View>
+                      <Text style={styles.storeItemText}>{item.name}</Text>
+                    </View>
+
+                    {loadingId === item.id ? (
+                      <View style={styles.buttonContent}>
+                        <ActivityIndicator
+                          color="rgba(65, 103, 168, 1)"
+                          size="small"
+                        />
+                        <Text
+                          style={[
+                            styles.selectText,
+                            { marginLeft: 8, color: "rgba(65, 103, 168, 1)" },
+                          ]}
+                        >
+                          Loading...
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={styles.buttonContent}>
+                        <Ionicons
+                          name="arrow-forward-circle"
+                          size={20}
+                          color="rgba(65, 103, 168, 1)"
+                        />
+                        <Text style={[styles.selectText, { marginLeft: 8 }]}>
+                          Select
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              )}
+              ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  emptyContainer: {
+  flex: {
     flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-    backgroundColor: "#f8fafc",
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 16,
-    color: "#555",
-    textAlign: "center",
+    minHeight: "100%",
   },
   container: {
     flex: 1,
     padding: 24,
-    paddingTop: 64,
-    backgroundColor: "#f8fafc",
+    justifyContent: "center",
+  },
+  headerSection: {
+    alignItems: "center",
+    marginBottom: 40,
+  },
+  imageContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  logoImage: {
+    width: 200,
+    height: 200,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "700",
+    fontSize: 40,
+    fontWeight: "800",
     textAlign: "center",
-    marginBottom: 8,
+    color: "#374151",
   },
   subtitle: {
     fontSize: 16,
-    color: "#555",
+    color: "#6b7280",
     textAlign: "center",
-    marginBottom: 24,
+    lineHeight: 22,
+    paddingHorizontal: 20,
   },
-  item: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  formSection: {
+    width: "100%",
+  },
+  storeItem: {
     backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#e5e7eb4b",
+    elevation: 1,
   },
-  itemText: {
+  storeItemDisabled: {
+    backgroundColor: "#f9fafb",
+    opacity: 0.6,
+  },
+  storeItemContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  storeItemLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  iconContainer: {
+    marginRight: 12,
+  },
+  storeItemText: {
     fontSize: 16,
+    color: "#1f2937",
+    fontWeight: "500",
+    flex: 1,
   },
-  select: {
-    color: "#4a90e2",
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  selectText: {
+    color: "rgba(65, 103, 168, 1)",
+    fontSize: 16,
     fontWeight: "600",
   },
 });

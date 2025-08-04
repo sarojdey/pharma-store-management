@@ -317,6 +317,7 @@ export default function HomeScreen() {
             style={styles.chartButton}
             activeOpacity={0.7}
             onPress={() => {
+              router.push("/(auth)/welcomeBackScreen");
               console.log("Stock Report pressed");
             }}
           >
@@ -591,6 +592,7 @@ const styles = StyleSheet.create({
   },
   userList: {
     flex: 1,
+    paddingBottom: 20,
   },
   userItem: {
     flexDirection: "row",
