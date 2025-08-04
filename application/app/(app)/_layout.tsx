@@ -17,6 +17,8 @@ export default function AppLayout() {
       <Stack.Screen name="history" />
       <Stack.Screen name="suppliers" />
       <Stack.Screen name="addSupplier" />
+      <Stack.Screen name="salesreport" />
+      <Stack.Screen name="stocksreport" />
     </Stack>
   );
 }

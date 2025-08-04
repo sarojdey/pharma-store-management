@@ -1,6 +1,16 @@
 import { AddSale, UpdateSale } from "@/types";
 import { database as db } from "../db/index";
 
+// Add the GroupedSale interface to match your component
+interface GroupedSale {
+  medicineName: string;
+  price: number;
+  mrp: number;
+  unitPerPackage: number;
+  quantitySold: number;
+  totalProfit: number;
+}
+
 export const createSalesDb = (): void => {
   try {
     db.execSync(`
@@ -223,23 +233,44 @@ export const getSalesCountByStore = async (
   }
 };
 
-export const getSalesReport = async (storeId: number) => {
+// Fixed function with proper typing
+export const getSalesReport = async (
+  storeId: number,
+  startDate?: string,
+  endDate?: string
+): Promise<GroupedSale[]> => {
   try {
-    const result = await db.getAllAsync(
-      `SELECT 
-        medicineName,
-        price,
-        mrp,
-        unitPerPackage,
-        SUM(quantity) as quantitySold,
-        (mrp - price) * SUM(quantity) as totalProfit
-      FROM sales 
-      WHERE store_id = ? 
-      GROUP BY medicineName, price, mrp, unitPerPackage
-      ORDER BY medicineName`,
-      [storeId]
-    );
-    return result;
+    let query = `SELECT 
+      medicineName,
+      price,
+      mrp,
+      unitPerPackage,
+      SUM(quantity) as quantitySold,
+      (mrp - price) * SUM(quantity) as totalProfit
+    FROM sales 
+    WHERE store_id = ?`;
+
+    const params: any[] = [storeId];
+
+    // Add date filtering if provided
+    if (startDate && endDate) {
+      query += " AND DATE(createdAt) BETWEEN DATE(?) AND DATE(?)";
+      params.push(startDate, endDate);
+    } else if (startDate) {
+      query += " AND DATE(createdAt) >= DATE(?)";
+      params.push(startDate);
+    } else if (endDate) {
+      query += " AND DATE(createdAt) <= DATE(?)";
+      params.push(endDate);
+    }
+
+    query += ` GROUP BY medicineName, price, mrp, unitPerPackage
+    ORDER BY medicineName`;
+
+    const result = await db.getAllAsync(query, params);
+
+    // Type assertion with runtime validation
+    return result as GroupedSale[];
   } catch (error) {
     console.error("Error fetching sales report:", error);
     return [];

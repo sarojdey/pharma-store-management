@@ -1,6 +1,15 @@
 import { AddDrug, UpdateDrug } from "@/types";
 import { database as db } from "../db/index";
 
+// Add the GroupedStock interface to match your component
+interface GroupedStock {
+  medicineName: string;
+  price: number;
+  mrp: number;
+  unitPerPackage: number;
+  quantity: number;
+}
+
 export const createStocksDb = (): void => {
   try {
     db.execSync(`
@@ -258,5 +267,48 @@ export const getDrugCountByStore = async (storeId: number): Promise<number> => {
   } catch (error) {
     console.error("Error getting drug count:", error);
     return 0;
+  }
+};
+
+// Stock Report function - similar to getSalesReport
+export const getStockReport = async (
+  storeId: number,
+  startDate?: string,
+  endDate?: string
+): Promise<GroupedStock[]> => {
+  try {
+    let query = `SELECT 
+      medicineName,
+      price,
+      mrp,
+      unitPerPackage,
+      SUM(quantity) as quantity
+    FROM drugs 
+    WHERE store_id = ?`;
+
+    const params: any[] = [storeId];
+
+    // Add date filtering if provided (filtering by when drugs were added/updated)
+    if (startDate && endDate) {
+      query += " AND DATE(createdAt) BETWEEN DATE(?) AND DATE(?)";
+      params.push(startDate, endDate);
+    } else if (startDate) {
+      query += " AND DATE(createdAt) >= DATE(?)";
+      params.push(startDate);
+    } else if (endDate) {
+      query += " AND DATE(createdAt) <= DATE(?)";
+      params.push(endDate);
+    }
+
+    query += ` GROUP BY medicineName, price, mrp, unitPerPackage
+    ORDER BY medicineName`;
+
+    const result = await db.getAllAsync(query, params);
+
+    // Type assertion with runtime validation
+    return result as GroupedStock[];
+  } catch (error) {
+    console.error("Error fetching stock report:", error);
+    return [];
   }
 };

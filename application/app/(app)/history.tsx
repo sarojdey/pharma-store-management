@@ -222,7 +222,7 @@ export default function HistoryPage() {
           <TouchableOpacity
             style={[
               styles.filterButton,
-              isFiltered && { backgroundColor: "rgba(70, 125, 168, 0.1)" },
+              isFiltered && { backgroundColor: "rgba(186, 255, 234, 1)" },
             ]}
             onPress={openFilter}
           >
@@ -233,19 +233,6 @@ export default function HistoryPage() {
             />
           </TouchableOpacity>
         </View>
-
-        {/* Show active filter indicator */}
-        {isFiltered && (
-          <View style={styles.filterIndicator}>
-            <Text style={styles.filterIndicatorText}>
-              Filtered: {activeFilters.startDate?.toLocaleDateString()} -{" "}
-              {activeFilters.endDate?.toLocaleDateString()}
-            </Text>
-            <TouchableOpacity onPress={clearFilter}>
-              <MaterialIcons name="close" size={16} color="#666" />
-            </TouchableOpacity>
-          </View>
-        )}
       </View>
 
       {loading ? (
@@ -440,23 +427,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 18,
   },
-  filterIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "rgba(70, 125, 168, 0.1)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginTop: 4,
-    borderRadius: 6,
-    marginHorizontal: 16,
-  },
 
-  filterIndicatorText: {
-    fontSize: 11,
-    color: "rgb(70, 125, 168)",
-    flex: 1,
-  },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",

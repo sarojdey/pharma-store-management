@@ -191,7 +191,7 @@ export default function HomeScreen() {
       {
         text: "Add New Store",
         onPress: () => {
-          closeSidebar();
+          // closeSidebar();
           setTimeout(() => {
             router.replace("/(auth)/welcomeScreen");
           }, 100);
@@ -317,7 +317,7 @@ export default function HomeScreen() {
             style={styles.chartButton}
             activeOpacity={0.7}
             onPress={() => {
-              router.push("/(auth)/welcomeBackScreen");
+              router.push("/(app)/stocksreport");
               console.log("Stock Report pressed");
             }}
           >

@@ -1,5 +1,6 @@
 import { useStore } from "@/contexts/StoreContext";
-import { getSalesReport } from "@/utils/salesDb";
+import { getStockReport } from "@/utils/stocksDb";
+
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -17,17 +18,16 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 
-interface GroupedSale {
+interface GroupedStock {
   medicineName: string;
   price: number;
   mrp: number;
   unitPerPackage: number;
-  quantitySold: number;
-  totalProfit: number;
+  quantity: number;
 }
 
-const SalesReportTable: React.FC = () => {
-  const [groupedSales, setGroupedSales] = useState<GroupedSale[]>([]);
+const StockReportTable: React.FC = () => {
+  const [groupedStocks, setGroupedStocks] = useState<GroupedStock[]>([]);
   const [loading, setLoading] = useState(true);
   const { currentStore } = useStore();
   const navigation = useNavigation();
@@ -47,7 +47,7 @@ const SalesReportTable: React.FC = () => {
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const filterAnim = useRef(new Animated.Value(300)).current;
 
-  const loadSalesData = useCallback(async () => {
+  const loadStockData = useCallback(async () => {
     try {
       setLoading(true);
       if (!currentStore?.id) {
@@ -55,32 +55,32 @@ const SalesReportTable: React.FC = () => {
         return;
       }
 
-      let salesReport: GroupedSale[];
+      let stockReport: GroupedStock[];
       if (isFiltered && activeFilters.startDate && activeFilters.endDate) {
         const startDateStr = activeFilters.startDate
           .toISOString()
           .split("T")[0];
         const endDateStr = activeFilters.endDate.toISOString().split("T")[0];
-        salesReport = await getSalesReport(
+        stockReport = await getStockReport(
           currentStore.id,
           startDateStr,
           endDateStr
         );
       } else {
-        salesReport = await getSalesReport(currentStore.id);
+        stockReport = await getStockReport(currentStore.id);
       }
 
-      setGroupedSales(salesReport as GroupedSale[]);
+      setGroupedStocks(stockReport as GroupedStock[]);
     } catch (error) {
-      console.error("Error loading sales data:", error);
+      console.error("Error loading stock data:", error);
     } finally {
       setLoading(false);
     }
   }, [currentStore, isFiltered, activeFilters]);
 
   useEffect(() => {
-    loadSalesData();
-  }, [loadSalesData]);
+    loadStockData();
+  }, [loadStockData]);
 
   const showPanel = (animRef: Animated.Value) =>
     Animated.timing(animRef, {
@@ -171,7 +171,7 @@ const SalesReportTable: React.FC = () => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back-sharp" size={24} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.title}>Sales Report</Text>
+          <Text style={styles.title}>Stock Report</Text>
           <TouchableOpacity onPress={openFilter}>
             <Ionicons
               name={isFiltered ? "filter" : "filter-outline"}
@@ -181,7 +181,7 @@ const SalesReportTable: React.FC = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.loadingContainer}>
-          <Text>Loading sales report...</Text>
+          <Text>Loading stock report...</Text>
         </View>
       </View>
     );
@@ -193,7 +193,7 @@ const SalesReportTable: React.FC = () => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back-sharp" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.title}>Sales Report</Text>
+        <Text style={styles.title}>Stock Report</Text>
         <TouchableOpacity onPress={openFilter}>
           <Ionicons
             name={isFiltered ? "filter" : "filter-outline"}
@@ -217,18 +217,18 @@ const SalesReportTable: React.FC = () => {
             </TouchableOpacity>
           </View>
         )}
-        {groupedSales.length === 0 ? (
+        {groupedStocks.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <MaterialIcons name="assessment" size={70} color="#ccc" />
+            <MaterialIcons name="inventory" size={70} color="#ccc" />
             <Text style={styles.emptyText}>
               {isFiltered
-                ? "No sales data found for selected date range"
-                : "No sales data available"}
+                ? "No stock data found for selected date range"
+                : "No stock data available"}
             </Text>
             <Text style={styles.emptySubText}>
               {isFiltered
                 ? "Try adjusting your date range"
-                : "Start making sales to see your report here"}
+                : "Add medicines to your inventory to see stock report here"}
             </Text>
           </View>
         ) : (
@@ -255,37 +255,39 @@ const SalesReportTable: React.FC = () => {
                     Medicine Name
                   </Text>
                   <Text
+                    style={[styles.cell, styles.headerCell, styles.quantityCol]}
+                  >
+                    Quantity
+                  </Text>
+                  <Text
+                    style={[styles.cell, styles.headerCell, styles.unitCol]}
+                  >
+                    Unit Per Package
+                  </Text>
+                  <Text
                     style={[styles.cell, styles.headerCell, styles.priceCol]}
                   >
                     Price
-                  </Text>
-                  <Text style={[styles.cell, styles.headerCell, styles.mrpCol]}>
-                    MRP
-                  </Text>
-                  <Text
-                    style={[styles.cell, styles.headerCell, styles.quantityCol]}
-                  >
-                    Quantity Sold
                   </Text>
                   <Text
                     style={[
                       styles.cell,
                       styles.headerCell,
-                      styles.profitCol,
+                      styles.mrpCol,
                       styles.lastCell,
                     ]}
                   >
-                    Total Profit
+                    MRP
                   </Text>
                 </View>
 
                 {/* Data Rows */}
-                {groupedSales.map((item, index) => (
+                {groupedStocks.map((item, index) => (
                   <View
                     key={index}
                     style={[
                       styles.dataRow,
-                      index === groupedSales.length - 1 && styles.lastRow,
+                      index === groupedStocks.length - 1 && styles.lastRow,
                     ]}
                   >
                     <Text
@@ -293,7 +295,8 @@ const SalesReportTable: React.FC = () => {
                         styles.cell,
                         styles.dataCell,
                         styles.serialCol,
-                        index === groupedSales.length - 1 && styles.lastRowCell,
+                        index === groupedStocks.length - 1 &&
+                          styles.lastRowCell,
                       ]}
                     >
                       {index + 1}
@@ -303,7 +306,8 @@ const SalesReportTable: React.FC = () => {
                         styles.cell,
                         styles.dataCell,
                         styles.medicineCol,
-                        index === groupedSales.length - 1 && styles.lastRowCell,
+                        index === groupedStocks.length - 1 &&
+                          styles.lastRowCell,
                       ]}
                     >
                       {item.medicineName}
@@ -312,8 +316,31 @@ const SalesReportTable: React.FC = () => {
                       style={[
                         styles.cell,
                         styles.dataCell,
+                        styles.quantityCol,
+                        index === groupedStocks.length - 1 &&
+                          styles.lastRowCell,
+                      ]}
+                    >
+                      {item.quantity}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.cell,
+                        styles.dataCell,
+                        styles.unitCol,
+                        index === groupedStocks.length - 1 &&
+                          styles.lastRowCell,
+                      ]}
+                    >
+                      {item.unitPerPackage}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.cell,
+                        styles.dataCell,
                         styles.priceCol,
-                        index === groupedSales.length - 1 && styles.lastRowCell,
+                        index === groupedStocks.length - 1 &&
+                          styles.lastRowCell,
                       ]}
                     >
                       ₹{item.price.toFixed(2)}
@@ -323,31 +350,12 @@ const SalesReportTable: React.FC = () => {
                         styles.cell,
                         styles.dataCell,
                         styles.mrpCol,
-                        index === groupedSales.length - 1 && styles.lastRowCell,
+                        styles.lastCell,
+                        index === groupedStocks.length - 1 &&
+                          styles.lastRowCell,
                       ]}
                     >
                       ₹{item.mrp.toFixed(2)}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.quantityCol,
-                        index === groupedSales.length - 1 && styles.lastRowCell,
-                      ]}
-                    >
-                      {item.quantitySold}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.profitCol,
-                        styles.lastCell,
-                        index === groupedSales.length - 1 && styles.lastRowCell,
-                      ]}
-                    >
-                      ₹{item.totalProfit.toFixed(2)}
                     </Text>
                   </View>
                 ))}
@@ -582,17 +590,17 @@ const styles = StyleSheet.create({
     width: 200,
     textAlign: "left",
   },
+  quantityCol: {
+    width: 100,
+  },
+  unitCol: {
+    width: 120,
+  },
   priceCol: {
     width: 100,
   },
   mrpCol: {
     width: 100,
-  },
-  quantityCol: {
-    width: 120,
-  },
-  profitCol: {
-    width: 120,
   },
   // Bottom sheet styles
   overlay: {
@@ -695,4 +703,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SalesReportTable;
+export default StockReportTable;
