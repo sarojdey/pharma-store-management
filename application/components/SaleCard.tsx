@@ -2,9 +2,9 @@ import { Sale } from "@/types";
 import { StyleSheet, Text, View } from "react-native";
 
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-IN", {
-    timeZone: "UTC",
+  const date = new Date(dateString + "Z");
+  return date.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -16,32 +16,47 @@ const formatDate = (dateString: string) => {
 export default function SaleCard({ sale }: { sale: Sale }) {
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <Text style={styles.medicineId}>Sale ID: {sale.id}</Text>
-        <Text style={styles.date}>{formatDate(sale.createdAt)}</Text>
-      </View>
-
-      <Text style={styles.medicineName}>{sale.medicineName}</Text>
-
-      <View style={styles.detailsRow}>
-        <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>Quantity Sold</Text>
-          <Text style={styles.detailValue}>{sale.quantity}</Text>
+      <View style={styles.cardContent}>
+        <View style={styles.header}>
+          <Text style={styles.saleId}>Sale ID: {sale.id}</Text>
+          <Text style={styles.date}>{formatDate(sale.createdAt)}</Text>
         </View>
 
-        <View style={styles.detailItem}>
-          <Text style={styles.detailLabel}>Units per Package</Text>
-          <Text style={styles.detailValue}>{sale.unitPerPackage}</Text>
-        </View>
-      </View>
+        <Text style={styles.medicineName}>{sale.medicineName}</Text>
 
-      <View style={styles.footer}>
-        <Text style={styles.totalUnits}>
-          Total Units:{" "}
-          <Text style={styles.totalValue}>
-            {sale.quantity * sale.unitPerPackage}
-          </Text>
-        </Text>
+        <View style={styles.metricsGrid}>
+          <View style={styles.metricCard}>
+            <View style={styles.metricContent}>
+              <Text style={styles.metricLabel}>Quantity Sold</Text>
+              <Text style={styles.metricValue}>{sale.quantity}</Text>
+            </View>
+          </View>
+
+          <View style={styles.metricCard}>
+            <View style={styles.metricContent}>
+              <Text style={styles.metricLabel}>MRP</Text>
+              <Text style={styles.metricValue}>₹{sale.mrp}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.metricsGrid}>
+          <View style={styles.metricCard}>
+            <View style={styles.metricContent}>
+              <Text style={styles.metricLabel}>Price</Text>
+              <Text style={styles.metricValue}>₹{sale.price}</Text>
+            </View>
+          </View>
+
+          <View style={styles.metricCard}>
+            <View style={styles.metricContent}>
+              <Text style={styles.metricLabel}>Total Profit</Text>
+              <Text style={styles.metricValue}>
+                ₹{(sale.mrp - sale.price) * sale.quantity}
+              </Text>
+            </View>
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -49,73 +64,65 @@ export default function SaleCard({ sale }: { sale: Sale }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 16,
-    marginVertical: 4,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
+    borderColor: "#e0e0e0be",
     borderWidth: 1,
-    borderColor: "#e0e0e0",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+  },
+  cardContent: {
+    padding: 16,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 16,
   },
-  medicineId: {
-    fontSize: 12,
-    color: "#666",
+  saleId: {
+    fontSize: 13,
+    color: "#64748b",
     fontWeight: "500",
   },
   date: {
-    fontSize: 12,
-    color: "#666",
+    fontSize: 13,
+    color: "#64748b",
+    fontWeight: "500",
   },
   medicineName: {
     fontSize: 16,
-    fontWeight: "600",
-    color: "#111",
-    marginBottom: 12,
+    fontWeight: "700",
+    color: "#343434ff",
+    marginBottom: 10,
   },
-  detailsRow: {
+  metricsGrid: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
+    gap: 10,
+    marginBottom: 10,
   },
-  detailItem: {
+  metricCard: {
+    flex: 1,
+    backgroundColor: "#e9eef36a",
+    borderRadius: 10,
+    padding: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#b7c3c941",
+  },
+
+  metricContent: {
     flex: 1,
   },
-  detailLabel: {
-    fontSize: 12,
-    color: "#666",
-    marginBottom: 2,
+  metricValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#343434ff",
   },
-  detailValue: {
-    fontSize: 14,
+  metricLabel: {
+    fontSize: 10,
+    color: "#64748b",
     fontWeight: "500",
-    color: "#333",
-  },
-  footer: {
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-    paddingTop: 8,
-    marginTop: 4,
-  },
-  totalUnits: {
-    fontSize: 13,
-    color: "#666",
-    textAlign: "right",
-  },
-  totalValue: {
-    fontWeight: "600",
-    color: "#111",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });

@@ -6,7 +6,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -24,6 +24,7 @@ import { Sale } from "@/types";
 import SaleCard from "@/components/SaleCard";
 import { router } from "expo-router";
 import { useStore } from "@/contexts/StoreContext";
+import { useFocusEffect } from "@react-navigation/native";
 
 const SORT_OPTIONS: Record<string, string> = {
   medicineName: "Medicine Name",
@@ -113,9 +114,11 @@ export default function SalesScreen() {
     setIsLoading(false);
   };
 
-  useEffect(() => {
-    fetchSales();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchSales();
+    }, [])
+  );
 
   const showPanel = (animRef: Animated.Value) =>
     Animated.timing(animRef, {
