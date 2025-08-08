@@ -78,13 +78,9 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
       const result = await addOrderList(orderListData, currentStore?.id);
 
       if (result.success) {
-        const supplierText = data.supplierName
-          ? `for ${data.supplierName}`
-          : "without supplier";
-
         await addHistory(
           {
-            operation: `Added order: ${data.medicineName} (${data.quantity}) ${supplierText}`,
+            operation: `Order added - Order ID: ${result.id}, Medicine: ${data.medicineName}, Quantity: ${data.quantity}`,
           },
           currentStore?.id
         );

@@ -67,7 +67,7 @@ export default function AddInventoryItem() {
       if (result.success) {
         await addHistory(
           {
-            operation: `Added supplier: ${data.supplierName}`,
+            operation: `Supplier added - Name: ${data.supplierName}`,
           },
           currentStore?.id
         );

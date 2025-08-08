@@ -1,5 +1,6 @@
 import { useStore } from "@/contexts/StoreContext";
 import { OrderList } from "@/types";
+import { addHistory } from "@/utils/historyDb";
 import { deleteOrderList } from "@/utils/orderListDb";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -54,6 +55,12 @@ export default function OrderListCard({
                 currentStore?.id
               );
               if (result.success) {
+                await addHistory(
+                  {
+                    operation: `Order deleted - Order ID: ${result.deletedId}, Medicine: ${orderList.medicineName}, Quantity: ${orderList.quantity}`,
+                  },
+                  currentStore?.id
+                );
                 onUpdate();
               } else {
                 Alert.alert("Error", "Failed to delete order list");

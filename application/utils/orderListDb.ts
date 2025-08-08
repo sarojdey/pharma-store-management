@@ -150,9 +150,19 @@ export const deleteOrderList = async (id: number, storeId: number) => {
       "DELETE FROM order_lists WHERE id = ? AND store_id = ?",
       [id, storeId]
     );
+    if (result.changes === 0) {
+      return {
+        success: false,
+        error: "Order list not found or already deleted",
+      };
+    }
 
     console.log("Order list deleted successfully");
-    return { success: true, changes: result.changes };
+    return {
+      success: true,
+      changes: result.changes,
+      deletedId: id,
+    };
   } catch (error) {
     console.error("Error deleting order list:", error);
     return { success: false, error };
