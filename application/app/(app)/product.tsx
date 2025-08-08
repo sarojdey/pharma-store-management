@@ -139,7 +139,7 @@ const MedicineDetails = () => {
         </Text>
         <TouchableOpacity
           onPress={() => {
-            router.push({
+            router.replace({
               pathname: "/editstock",
               params: { stockId: drug.id },
             });

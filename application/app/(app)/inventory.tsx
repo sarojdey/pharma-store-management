@@ -9,7 +9,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
-import { useEffect, useRef, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -128,9 +129,11 @@ export default function HomeScreen() {
     setIsLoading(false);
   };
 
-  useEffect(() => {
-    fetchDrugs();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchDrugs();
+    }, [])
+  );
 
   const showPanel = (animRef: Animated.Value) =>
     Animated.timing(animRef, {
