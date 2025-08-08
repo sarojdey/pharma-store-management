@@ -8,6 +8,7 @@ export default function AppLayout() {
       <Stack.Screen name="inventory" />
       <Stack.Screen name="product" />
       <Stack.Screen name="addstock" />
+      <Stack.Screen name="editstock" />
       <Stack.Screen name="sales" />
       <Stack.Screen name="addSales" />
       <Stack.Screen name="createorder" />

@@ -4,8 +4,8 @@ import { addOrderList } from "@/utils/orderListDb";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigation } from "expo-router";
-import React, { useState } from "react";
+import { useNavigation, useLocalSearchParams } from "expo-router";
+import React, { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
@@ -39,11 +39,13 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigation = useNavigation();
   const { currentStore } = useStore();
+  const params = useLocalSearchParams();
 
   const {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(orderSchema),
@@ -53,6 +55,12 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
       quantity: "",
     },
   });
+
+  useEffect(() => {
+    if (params.medicineName) {
+      setValue("medicineName", params.medicineName as string);
+    }
+  }, [params.medicineName, setValue]);
 
   const onSaveOrderList = async (data: z.infer<typeof orderSchema>) => {
     setIsSubmitting(true);
@@ -181,7 +189,7 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
                         ]}
                         onChangeText={field.onChange}
                         value={field.value}
-                        placeholder="e.g., ABC Pharmaceuticals (Optional)"
+                        placeholder="e.g., ABC Pharmaceuticals"
                         placeholderTextColor="#9ca3af"
                       />
                     )}

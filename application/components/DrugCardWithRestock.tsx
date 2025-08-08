@@ -68,20 +68,6 @@ export default function DrugCardWithRestock({ drug }: { drug: Drug }) {
       onPress={handleCardPress}
       activeOpacity={0.95}
     >
-      <View
-        style={[
-          styles.mrpContainer,
-          { borderColor: isLowOrOut ? "#555" : "#ccc" },
-        ]}
-      >
-        <Text
-          style={[styles.mrpLabel, { color: isLowOrOut ? "#555" : "#888" }]}
-        >
-          MRP
-        </Text>
-        <Text style={styles.mrpPrice}>{formatPrice(drug.mrp)}</Text>
-      </View>
-
       <View style={styles.detailsContainer}>
         <View style={styles.headerRow}>
           <Text
@@ -112,65 +98,124 @@ export default function DrugCardWithRestock({ drug }: { drug: Drug }) {
         <Text style={styles.title}>{drug.medicineName}</Text>
         <Text style={styles.price}>{formatPrice(drug.price)}</Text>
 
-        <Text style={styles.expiry}>
-          Expiry:{" "}
-          <Text
-            style={{
-              fontWeight: "500",
-              color: textColorMap[expiryStatus],
-            }}
-          >
-            {drug.expiryDate}
-          </Text>
-        </Text>
-
-        <Text style={styles.inStock}>
-          In Stock:{" "}
-          <Text
-            style={{
-              fontWeight: "500",
-              color:
-                textColorMap[
-                  stockStatus === "out of stock"
-                    ? "expired"
-                    : stockStatus === "low in stock"
-                    ? "expiring"
-                    : "consumable"
-                ],
-            }}
-          >
-            {drug.quantity}
-          </Text>
-        </Text>
-
-        {/* Restock Button */}
-        <TouchableOpacity
-          style={styles.restockBtn}
-          onPress={() =>
-            router.push({
-              pathname: "/addstock",
-              params: { drugDetails: JSON.stringify(drug) },
-            })
-          }
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
         >
-          <Text style={styles.restockBtnText}>Restock</Text>
-        </TouchableOpacity>
+          {/* Left wrapper */}
+          <View>
+            <Text style={styles.expiry}>
+              Expiry:{" "}
+              <Text
+                style={{
+                  fontWeight: "500",
+                  color: textColorMap[expiryStatus],
+                }}
+              >
+                {drug.expiryDate}
+              </Text>
+            </Text>
+
+            <Text style={styles.inStock}>
+              In Stock:{" "}
+              <Text
+                style={{
+                  fontWeight: "500",
+                  color:
+                    textColorMap[
+                      stockStatus === "out of stock"
+                        ? "expired"
+                        : stockStatus === "low in stock"
+                        ? "expiring"
+                        : "consumable"
+                    ],
+                }}
+              >
+                {drug.quantity}
+              </Text>
+            </Text>
+          </View>
+
+          {/* Right wrapper */}
+          <View
+            style={[
+              styles.mrpContainer,
+              { borderColor: isLowOrOut ? "#555" : "#ccc" },
+            ]}
+          >
+            <Text
+              style={[styles.mrpLabel, { color: isLowOrOut ? "#555" : "#888" }]}
+            >
+              MRP
+            </Text>
+            <Text style={styles.mrpPrice}>{formatPrice(drug.mrp)}</Text>
+          </View>
+        </View>
+
+        {/* Button Container */}
+        <View style={styles.buttonContainer}>
+          {/* Create Order List Button */}
+          <TouchableOpacity
+            style={styles.orderListBtn}
+            onPress={() =>
+              router.push({
+                pathname: "/(app)/createorder",
+                params: { medicineName: drug.medicineName },
+              })
+            }
+          >
+            <Text style={styles.orderListBtnText}>Create Order List</Text>
+          </TouchableOpacity>
+          {/* Restock Button */}
+          <TouchableOpacity
+            style={styles.restockBtn}
+            onPress={() =>
+              router.push({
+                pathname: "/addstock",
+                params: { drugDetails: JSON.stringify(drug) },
+              })
+            }
+          >
+            <Text style={styles.restockBtnText}>Restock</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  restockBtn: {
+  buttonContainer: {
+    flexDirection: "row",
+    gap: 8,
     marginTop: 10,
-    backgroundColor: "rgb(70, 125, 168)",
-    paddingVertical: 8,
-    paddingHorizontal: 18,
+  },
+  restockBtn: {
+    backgroundColor: "rgba(223, 241, 255, 0.49)",
+    borderWidth: 1,
+    borderColor: "rgb(152, 175, 192)",
+    padding: 12,
     borderRadius: 8,
-    alignSelf: "flex-start",
+    flex: 1,
+    alignItems: "center",
   },
   restockBtnText: {
-    color: "#fff",
+    color: "rgb(57, 104, 139)",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  orderListBtn: {
+    borderWidth: 1,
+    borderColor: "#aaa",
+    padding: 12,
+    borderRadius: 8,
+    flex: 1,
+    alignItems: "center",
+  },
+  orderListBtnText: {
+    color: "#666",
     fontWeight: "600",
     fontSize: 14,
   },
@@ -184,9 +229,6 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   mrpContainer: {
-    position: "absolute",
-    right: 14,
-    bottom: 14,
     borderWidth: 1,
     borderRadius: 8,
     padding: 8,

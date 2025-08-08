@@ -4,8 +4,9 @@ import { StyleSheet, Text, View } from "react-native";
 
 export default function HistoryCard({ history }: { history: History }) {
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
+    const date = new Date(dateString + "Z");
+    return date.toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -13,7 +14,6 @@ export default function HistoryCard({ history }: { history: History }) {
       minute: "2-digit",
     });
   };
-
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>

@@ -4,7 +4,7 @@ import { Drug } from "@/types";
 import { getDrugById } from "@/utils/stocksDb";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -41,7 +41,12 @@ const MedicineDetails = () => {
         if (drugData) {
           setDrug(drugData as Drug);
         } else {
-          setError("Drug not found");
+          Alert.alert(
+            "Medicine Not Found",
+            "This medicine may have been deleted.",
+            [{ text: "OK", onPress: () => router.replace("/(app)/inventory") }]
+          );
+          return;
         }
       } catch (err) {
         setError("Failed to fetch drug details");
@@ -132,7 +137,14 @@ const MedicineDetails = () => {
         >
           {drug.medicineName}
         </Text>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          onPress={() => {
+            router.push({
+              pathname: "/editstock",
+              params: { stockId: drug.id },
+            });
+          }}
+        >
           <AntDesign name="form" size={22} color="#333" />
         </TouchableOpacity>
       </View>

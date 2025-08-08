@@ -3,7 +3,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-import { useNavigation, useLocalSearchParams } from "expo-router";
+import { useNavigation, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -18,7 +18,7 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
-import { addDrug } from "../../utils/stocksDb";
+import { getDrugById, updateDrug, deleteDrug } from "@/utils/stocksDb";
 import { Drug } from "@/types";
 import { useStore } from "@/contexts/StoreContext";
 import { addHistory } from "@/utils/historyDb";
@@ -26,7 +26,6 @@ import { addHistory } from "@/utils/historyDb";
 const schema = z
   .object({
     medicineName: z.string().min(1, "Medicine name is required"),
-
     price: z.preprocess((val) => {
       if (val === "" || val === null || val === undefined) return undefined;
       const num = Number(val);
@@ -89,13 +88,21 @@ const schema = z
     }
   );
 
-export default function AddInventoryItem() {
+export default function EditStock() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRestockMode, setIsRestockMode] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [currentMedicineName, setCurrentMedicineName] = useState("");
   const navigation = useNavigation();
+  const router = useRouter();
   const params = useLocalSearchParams();
   const { currentStore } = useStore();
+
+  const { stockId } = params;
+  const parsedStockId = Array.isArray(stockId)
+    ? Number(stockId[0])
+    : Number(stockId);
+
   const {
     control,
     handleSubmit,
@@ -107,7 +114,6 @@ export default function AddInventoryItem() {
     resolver: zodResolver(schema),
     defaultValues: {
       medicineName: "",
-
       price: undefined,
       mrp: undefined,
       numberOfPackages: undefined,
@@ -123,28 +129,52 @@ export default function AddInventoryItem() {
   });
 
   useEffect(() => {
-    if (params.drugDetails) {
+    const loadStockData = async () => {
       try {
-        const drugData: Drug = JSON.parse(params.drugDetails as string);
-        setIsRestockMode(true);
+        if (!currentStore?.id) {
+          Alert.alert("Error", "No store selected.");
+          return;
+        }
 
-        setValue("medicineName", drugData.medicineName);
+        const stockData = await getDrugById(parsedStockId, currentStore.id);
 
-        setValue("price", drugData.price);
-        setValue("mrp", drugData.mrp);
-        setValue("medicineType", drugData.medicineType);
-        if (drugData.rackNo) setValue("rackNo", drugData.rackNo);
-        if (drugData.batchNo) setValue("batchNo", drugData.batchNo);
-        if (drugData.distributorName)
-          setValue("distributorName", drugData.distributorName);
-        if (drugData.purchaseInvoiceNumber)
-          setValue("purchaseInvoiceNumber", drugData.purchaseInvoiceNumber);
+        if (!stockData) {
+          Alert.alert("Error", "Stock not found.", [
+            { text: "OK", onPress: () => navigation.goBack() },
+          ]);
+          return;
+        }
+
+        const totalQuantity = stockData.quantity;
+        const unitPerPackage = stockData.unitPerPackage || 1;
+        const numberOfPackages = Math.ceil(totalQuantity / unitPerPackage);
+
+        setValue("medicineName", stockData.medicineName);
+        setValue("price", stockData.price);
+        setValue("mrp", stockData.mrp);
+        setValue("numberOfPackages", numberOfPackages);
+        setValue("unitPerPackage", stockData.unitPerPackage);
+        setValue("expiryDate", new Date(stockData.expiryDate));
+        setValue("medicineType", stockData.medicineType);
+        if (stockData.rackNo) setValue("rackNo", stockData.rackNo);
+        if (stockData.batchNo) setValue("batchNo", stockData.batchNo);
+        if (stockData.distributorName)
+          setValue("distributorName", stockData.distributorName);
+        if (stockData.purchaseInvoiceNumber)
+          setValue("purchaseInvoiceNumber", stockData.purchaseInvoiceNumber);
+
+        // Store current medicine name for delete confirmation
+        setCurrentMedicineName(stockData.medicineName);
       } catch (error) {
-        console.error("Error parsing drug details:", error);
-        Alert.alert("Error", "Failed to load drug details");
+        console.error("Error loading stock data:", error);
+        Alert.alert("Error", "Failed to load stock data");
       }
+    };
+
+    if (stockId) {
+      loadStockData();
     }
-  }, [params.drugDetails, setValue]);
+  }, [stockId, setValue, currentStore?.id, parsedStockId, navigation]);
 
   const medicineType = watch("medicineType");
 
@@ -181,9 +211,8 @@ export default function AddInventoryItem() {
 
       const totalQuantity = data.numberOfPackages * finalUnitPerPackage;
 
-      const drugData = {
+      const updateData = {
         medicineName: data.medicineName,
-
         price: data.price,
         mrp: data.mrp,
         quantity: totalQuantity,
@@ -202,45 +231,85 @@ export default function AddInventoryItem() {
         Alert.alert("Error", "No store selected.");
         return;
       }
-      const result = await addDrug(drugData, currentStore.id);
+
+      const result = await updateDrug(
+        parsedStockId,
+        updateData,
+        currentStore.id
+      );
 
       if (result.success) {
         await addHistory(
           {
-            operation: `Stock added - Medicine: ${drugData.medicineName}, ID: ${result.id}`,
+            operation: `Stock updated - Medicine: ${updateData.medicineName}, Stock ID: ${parsedStockId}`,
           },
           currentStore?.id
         );
-        const message = isRestockMode
-          ? "Medicine restocked successfully!"
-          : "Medicine added to inventory successfully!";
 
-        Alert.alert("Success", message, [
+        Alert.alert("Success", "Medicine updated successfully!", [
           {
             text: "OK",
             onPress: () => {
-              if (isRestockMode) {
-                navigation.goBack();
-              } else {
-                reset();
-              }
+              navigation.goBack();
             },
           },
         ]);
       } else {
-        const errorMessage = isRestockMode
-          ? "Failed to restock medicine"
-          : "Failed to add medicine to inventory";
-        Alert.alert("Error", errorMessage);
+        Alert.alert("Error", "Failed to update medicine");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      const errorMessage = isRestockMode
-        ? "An error occurred while restocking the medicine"
-        : "An error occurred while adding the medicine";
-      Alert.alert("Error", errorMessage);
+      Alert.alert("Error", "An error occurred while updating the medicine");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Delete Medicine",
+      `Are you sure you want to delete "${currentMedicineName}"? This action cannot be undone.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: confirmDelete,
+        },
+      ]
+    );
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+
+    try {
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
+
+      const result = await deleteDrug(parsedStockId, currentStore.id);
+
+      if (result.success) {
+        await addHistory(
+          {
+            operation: `Stock deleted - Medicine: ${currentMedicineName}, Stock ID: ${parsedStockId}`,
+          },
+          currentStore?.id
+        );
+        router.replace("/(app)/inventory");
+      } else {
+        Alert.alert("Error", "Failed to delete medicine");
+      }
+    } catch (error) {
+      console.error("Error deleting medicine:", error);
+      Alert.alert("Error", "An error occurred while deleting the medicine");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -280,7 +349,7 @@ export default function AddInventoryItem() {
             paddingRight: 40,
           }}
         >
-          {isRestockMode ? "Restock Medicine" : "Add Medicine"}
+          Edit Medicine
         </Text>
       </View>
 
@@ -560,6 +629,7 @@ export default function AddInventoryItem() {
                   />
                 </FormField>
               )}
+
               <FormField label="Rack No." error={errors.rackNo?.message}>
                 <Controller
                   control={control}
@@ -575,6 +645,7 @@ export default function AddInventoryItem() {
                   )}
                 />
               </FormField>
+
               <FormField label="Batch No." error={errors.batchNo?.message}>
                 <Controller
                   control={control}
@@ -639,19 +710,36 @@ export default function AddInventoryItem() {
               </FormField>
             </View>
 
-            <TouchableOpacity
-              style={[
-                styles.submitButton,
-                isSubmitting && styles.submitButtonDisabled,
-              ]}
-              onPress={handleSubmit(onSubmit)}
-              activeOpacity={0.8}
-              disabled={isSubmitting}
-            >
-              <Text style={styles.submitButtonText}>
-                {isRestockMode ? "Add to Stock" : "Add to Inventory"}
-              </Text>
-            </TouchableOpacity>
+            {/* Button Row */}
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[
+                  styles.deleteButton,
+                  isDeleting && styles.deleteButtonDisabled,
+                ]}
+                onPress={handleDelete}
+                activeOpacity={0.8}
+                disabled={isDeleting || isSubmitting}
+              >
+                <Text style={styles.deleteButtonText}>
+                  {isDeleting ? "Deleting..." : "Delete Medicine"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  isSubmitting && styles.submitButtonDisabled,
+                ]}
+                onPress={handleSubmit(onSubmit)}
+                activeOpacity={0.8}
+                disabled={isSubmitting || isDeleting}
+              >
+                <Text style={styles.submitButtonText}>
+                  {isSubmitting ? "Updating..." : "Update Medicine"}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -745,7 +833,13 @@ const styles = StyleSheet.create({
   halfWidth: {
     flex: 1,
   },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
   submitButton: {
+    flex: 1,
     backgroundColor: "rgba(223, 241, 255, 0.49)",
     borderWidth: 1,
     borderColor: "rgb(152, 175, 192)",
@@ -761,6 +855,25 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  deleteButton: {
+    flex: 1,
+    backgroundColor: "rgba(254, 226, 226, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgb(248, 113, 113)",
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deleteButtonText: {
+    color: "rgb(220, 38, 38)",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  deleteButtonDisabled: {
     opacity: 0.6,
   },
   error: {

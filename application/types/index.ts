@@ -35,10 +35,10 @@ export interface UpdateDrug {
   unitPerPackage?: number;
   expiryDate?: string;
   medicineType?: string;
-  rackNo?: string;
-  batchNo?: string;
-  distributorName?: string;
-  purchaseInvoiceNumber?: string;
+  rackNo?: string | null;
+  batchNo?: string | null;
+  distributorName?: string | null;
+  purchaseInvoiceNumber?: string | null;
 }
 
 export interface Supplier {

@@ -307,17 +307,13 @@ export default function AddSale() {
         );
 
         if (updateResult.success) {
-          const totalAmount = saleQuantity * selectedMedicine.mrp;
           await addHistory(
             {
-              operation: `Sale added. Medicine: ${
-                selectedMedicine.medicineName
-              } Quantity: ${saleQuantity} Total Amount: ₹${totalAmount.toFixed(
-                2
-              )}`,
+              operation: `Sale added - Medicine: ${saleData.medicineName}, Sale ID: ${saleResult.id}, Quantity: ${saleData.quantity}`,
             },
             currentStore?.id
           );
+          const totalAmount = saleQuantity * selectedMedicine.mrp;
 
           Alert.alert(
             "Sale Added Successfully",

@@ -1,4 +1,4 @@
-import { AddDrug, UpdateDrug } from "@/types";
+import { AddDrug, Drug, UpdateDrug } from "@/types";
 import { database as db } from "../db/index";
 
 // Add the GroupedStock interface to match your component
@@ -52,13 +52,16 @@ export const getAllDrugs = async (storeId: number) => {
   }
 };
 
-export const getDrugById = async (id: number, storeId: number) => {
+export const getDrugById = async (
+  id: number,
+  storeId: number
+): Promise<Drug | null> => {
   try {
     const result = await db.getFirstAsync(
       "SELECT * FROM drugs WHERE id = ? AND store_id = ?",
       [id, storeId]
     );
-    return result;
+    return result as Drug;
   } catch (error) {
     console.error("Error fetching drug:", error);
     return null;
