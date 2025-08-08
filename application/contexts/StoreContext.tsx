@@ -110,7 +110,6 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (!didInitDatabases) {
         try {
-          // resetAllDb();
           createStoresDb();
           createStocksDb();
           createSalesDb();

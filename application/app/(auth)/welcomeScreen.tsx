@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { addStore } from "@/utils/storesDb";
 import { useStore } from "@/contexts/StoreContext";
+import { seedDatabase } from "@/utils/stocksDb";
 
 const STORAGE_KEY = "activeStoreId";
 
@@ -48,7 +49,7 @@ export default function WelcomeScreen() {
       // Update both current store and add to allStores
       setCurrentStore(newStore);
       addStoreToContext(newStore);
-
+      seedDatabase(newStore.id);
       router.replace("/"); // jump to home
     } catch (err: any) {
       console.error("Create store error:", err);

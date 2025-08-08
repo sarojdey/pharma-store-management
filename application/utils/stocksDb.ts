@@ -1,7 +1,98 @@
 import { AddDrug, Drug, UpdateDrug } from "@/types";
 import { database as db } from "../db/index";
 
-// Add the GroupedStock interface to match your component
+import mockData from "../assets/mock/stocks.json";
+
+export const bulkInsertMockDrugsWithTransaction = async (storeId: number) => {
+  try {
+    console.log(
+      `Starting transaction-based bulk insert of ${mockData.length} drugs...`
+    );
+
+    await db.withTransactionAsync(async () => {
+      const insertQuery = `
+        INSERT INTO drugs (
+          store_id,
+          medicineName,
+          price,
+          mrp,
+          quantity,
+          unitPerPackage,
+          expiryDate,
+          medicineType,
+          rackNo,
+          batchNo,
+          distributorName,
+          purchaseInvoiceNumber,
+          createdAt,
+          updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+      `;
+
+      for (const drug of mockData) {
+        await db.runAsync(insertQuery, [
+          storeId,
+          drug.medicineName,
+          drug.price,
+          drug.mrp,
+          drug.quantity,
+          drug.unitPerPackage,
+          drug.expiryDate,
+          drug.medicineType,
+          drug.rackNo || null,
+          drug.batchNo || null,
+          drug.distributorName || null,
+          drug.purchaseInvoiceNumber || null,
+        ]);
+      }
+    });
+
+    console.log(
+      `✓ Successfully inserted all ${mockData.length} drugs using transaction`
+    );
+    return {
+      success: true,
+      count: mockData.length,
+      message: `Successfully added all ${mockData.length} drugs`,
+    };
+  } catch (error) {
+    console.error("Transaction failed, rolling back:", error);
+    return {
+      success: false,
+      error: error,
+      message: "Bulk insert failed, transaction rolled back",
+    };
+  }
+};
+
+export const seedDatabase = async (storeId: number) => {
+  try {
+    const drugCount = (await db.getFirstAsync(
+      "SELECT COUNT(*) as count FROM drugs WHERE store_id = ?",
+      [storeId]
+    )) as { count: number };
+
+    if (drugCount.count > 0) {
+      console.log(
+        `Store ${storeId} already has ${drugCount.count} drugs. Skipping seed.`
+      );
+      return {
+        success: false,
+        message: `Store already has ${drugCount.count} drugs`,
+      };
+    }
+    const result = await bulkInsertMockDrugsWithTransaction(storeId);
+    return result;
+  } catch (error) {
+    console.error("Error seeding database:", error);
+    return {
+      success: false,
+      error: error,
+      message: "Database seeding failed",
+    };
+  }
+};
+
 interface GroupedStock {
   medicineName: string;
   price: number;
