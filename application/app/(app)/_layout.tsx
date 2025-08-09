@@ -20,6 +20,7 @@ export default function AppLayout() {
       <Stack.Screen name="addSupplier" />
       <Stack.Screen name="salesreport" />
       <Stack.Screen name="stocksreport" />
+      <Stack.Screen name="exportstore" />
     </Stack>
   );
 }

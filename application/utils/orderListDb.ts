@@ -60,7 +60,7 @@ export const getOrderListById = async (
 
 export const addOrderList = async (
   orderListData: {
-    supplierName?: string;
+    supplierName?: string | null;
     medicineName: string;
     quantity: number;
     createdAt?: string;

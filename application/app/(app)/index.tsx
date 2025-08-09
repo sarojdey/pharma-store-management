@@ -203,15 +203,21 @@ export default function HomeScreen() {
           console.log("Store settings pressed");
         },
       },
+      // {
+      //   text: "Refresh Stores",
+      //   onPress: async () => {
+      //     try {
+      //       await refreshStores();
+      //       Alert.alert("Success", "Stores refreshed successfully");
+      //     } catch (error) {
+      //       Alert.alert("Error", "Failed to refresh stores");
+      //     }
+      //   },
+      // },
       {
-        text: "Refresh Stores",
+        text: "Export Store",
         onPress: async () => {
-          try {
-            await refreshStores();
-            Alert.alert("Success", "Stores refreshed successfully");
-          } catch (error) {
-            Alert.alert("Error", "Failed to refresh stores");
-          }
+          router.push("/(app)/exportstore");
         },
       },
       {
