@@ -48,7 +48,13 @@ const textColorMapInner: Record<string, string> = {
   "in stock": "#64748b",
 };
 
-export default function DrugCard({ drug }: { drug: Drug }) {
+export default function DrugCard({
+  drug,
+  haveActionButton,
+}: {
+  drug: Drug;
+  haveActionButton: boolean;
+}) {
   const currentDate = new Date();
   const expiryDate = new Date(drug.expiryDate);
   const daysLeft =
@@ -82,23 +88,6 @@ export default function DrugCard({ drug }: { drug: Drug }) {
       ]}
       onPress={handleCardPress}
     >
-      <View
-        style={[
-          styles.mrpContainer,
-          {
-            backgroundColor: bgColorMapInner[stockStatus],
-            borderColor: borderColorMapInner[stockStatus],
-          },
-        ]}
-      >
-        <Text
-          style={[styles.mrpLabel, { color: textColorMapInner[stockStatus] }]}
-        >
-          MRP
-        </Text>
-        <Text style={styles.mrpPrice}>{formatPrice(drug.mrp)}</Text>
-      </View>
-
       <View style={styles.detailsContainer}>
         <View style={styles.headerRow}>
           <Text
@@ -123,42 +112,129 @@ export default function DrugCard({ drug }: { drug: Drug }) {
         </View>
 
         <Text style={styles.title}>{drug.medicineName}</Text>
-        <Text style={styles.price}>{formatPrice(drug.price)}</Text>
 
-        <Text style={styles.expiry}>
-          Expiry:{" "}
-          <Text
-            style={{
-              color: textColorMap[expiryStatus],
-            }}
-          >
-            {drug.expiryDate}
-          </Text>
-        </Text>
-
-        <Text style={styles.inStock}>
-          In Stock:{" "}
-          <Text
-            style={{
-              color:
-                textColorMap[
-                  stockStatus === "out of stock"
-                    ? "expired"
-                    : stockStatus === "low in stock"
-                    ? "expiring"
-                    : "consumable"
-                ],
-            }}
-          >
-            {drug.quantity}
-          </Text>
-        </Text>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <View>
+            <Text style={styles.price}>{formatPrice(drug.price)}</Text>
+            <Text style={styles.expiry}>
+              Expiry:{" "}
+              <Text
+                style={{
+                  color: textColorMap[expiryStatus],
+                }}
+              >
+                {drug.expiryDate}
+              </Text>
+            </Text>
+            <Text style={styles.inStock}>
+              In Stock:{" "}
+              <Text
+                style={{
+                  color:
+                    textColorMap[
+                      stockStatus === "out of stock"
+                        ? "expired"
+                        : stockStatus === "low in stock"
+                        ? "expiring"
+                        : "consumable"
+                    ],
+                }}
+              >
+                {drug.quantity}
+              </Text>
+            </Text>
+          </View>
+          <View>
+            <View
+              style={[
+                styles.mrpContainer,
+                {
+                  backgroundColor: bgColorMapInner[stockStatus],
+                  borderColor: borderColorMapInner[stockStatus],
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.mrpLabel,
+                  { color: textColorMapInner[stockStatus] },
+                ]}
+              >
+                MRP
+              </Text>
+              <Text style={styles.mrpPrice}>{formatPrice(drug.mrp)}</Text>
+            </View>
+          </View>
+        </View>
+        {haveActionButton && (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.orderListBtn}
+              onPress={() =>
+                router.push({
+                  pathname: "/(app)/createorder",
+                  params: { medicineName: drug.medicineName },
+                })
+              }
+            >
+              <Text style={styles.orderListBtnText}>Create Order List</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.restockBtn}
+              onPress={() =>
+                router.push({
+                  pathname: "/addstock",
+                  params: { drugDetails: JSON.stringify(drug) },
+                })
+              }
+            >
+              <Text style={styles.restockBtnText}>Restock</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
+  buttonContainer: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 10,
+  },
+  restockBtn: {
+    backgroundColor: "rgba(223, 241, 255, 0.49)",
+    borderWidth: 1,
+    borderColor: "rgb(152, 175, 192)",
+    padding: 12,
+    borderRadius: 8,
+    flex: 1,
+    alignItems: "center",
+  },
+  restockBtnText: {
+    color: "rgb(57, 104, 139)",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  orderListBtn: {
+    borderWidth: 1,
+    borderColor: "#aaa",
+    padding: 12,
+    borderRadius: 8,
+    flex: 1,
+    alignItems: "center",
+  },
+  orderListBtnText: {
+    color: "#666",
+    fontWeight: "600",
+    fontSize: 14,
+  },
   card: {
     flexDirection: "row",
     paddingVertical: 14,
@@ -169,9 +245,6 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   mrpContainer: {
-    position: "absolute",
-    right: 14,
-    bottom: 14,
     borderWidth: 1,
     borderRadius: 8,
     padding: 8,

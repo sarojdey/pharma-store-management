@@ -2,13 +2,15 @@ import DrugCard from "@/components/DrugCard";
 import Loader from "@/components/Loader";
 import { Drug } from "@/types";
 
+import { useStore } from "@/contexts/StoreContext";
+import { searchDrugs } from "@/utils/stocksDb";
+import Entypo from "@expo/vector-icons/Entypo";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import Entypo from "@expo/vector-icons/Entypo";
 import {
   Alert,
   Animated,
@@ -22,9 +24,6 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
-import { searchDrugs } from "@/utils/stocksDb";
-import DrugCardWithRestock from "@/components/DrugCardWithRestock";
-import { useStore } from "@/contexts/StoreContext";
 
 const SORT_OPTIONS: Record<string, string> = {
   medicineName: "Name",
@@ -404,7 +403,7 @@ export default function Expiry() {
           ) : (
             <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
               {drugs.map((d) => (
-                <DrugCardWithRestock key={d.id} drug={d} />
+                <DrugCard haveActionButton={true} key={d.id} drug={d} />
               ))}
             </View>
           )}

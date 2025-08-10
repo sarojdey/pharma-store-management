@@ -366,7 +366,7 @@ export default function HomeScreen() {
           ) : (
             <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
               {drugs.map((d) => (
-                <DrugCard key={d.id} drug={d} />
+                <DrugCard haveActionButton={false} key={d.id} drug={d} />
               ))}
             </View>
           )}
