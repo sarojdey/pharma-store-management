@@ -40,7 +40,7 @@ export default function SaleCard({ sale }: { sale: Sale }) {
           </View>
         </View>
 
-        <View style={styles.metricsGrid}>
+        <View style={[styles.metricsGrid, { marginBottom: 0 }]}>
           <View style={styles.metricCard}>
             <View style={styles.metricContent}>
               <Text style={styles.metricLabel}>Price</Text>
@@ -66,44 +66,44 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#f9f9f9",
     borderRadius: 10,
-    borderColor: "#e0e0e0be",
+    borderColor: "#c3c3c3a6",
     borderWidth: 1,
   },
   cardContent: {
-    padding: 16,
+    padding: 12,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 4,
   },
   saleId: {
-    fontSize: 13,
+    fontSize: 11,
     color: "#64748b",
     fontWeight: "500",
   },
   date: {
-    fontSize: 13,
+    fontSize: 11,
     color: "#64748b",
     fontWeight: "500",
   },
   medicineName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
-    color: "#343434ff",
-    marginBottom: 10,
+    color: "#444547ff",
+    marginBottom: 6,
   },
   metricsGrid: {
     flexDirection: "row",
-    gap: 10,
-    marginBottom: 10,
+    gap: 8,
+    marginBottom: 8,
   },
   metricCard: {
     flex: 1,
-    backgroundColor: "#e9eef36a",
-    borderRadius: 10,
-    padding: 10,
+    backgroundColor: "#e9eef346",
+    borderRadius: 8,
+    padding: 8,
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
@@ -114,15 +114,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   metricValue: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
-    color: "#343434ff",
+    color: "#444547ff",
   },
   metricLabel: {
-    fontSize: 10,
+    fontSize: 11,
     color: "#64748b",
     fontWeight: "500",
     textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
 });

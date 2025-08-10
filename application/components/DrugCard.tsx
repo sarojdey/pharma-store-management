@@ -13,21 +13,39 @@ const EXPIRY_WARNING_DAYS = 30;
 const formatPrice = (value: number) => `₹${Number(value).toFixed(2)}`;
 
 const bgColorMap: Record<string, string> = {
-  "out of stock": "rgba(255, 206, 206, 0.76)",
-  "low in stock": "rgba(255, 235, 211, 0.76)",
-  "in stock": "#f5f5f5",
+  "out of stock": "rgba(255, 220, 220, 0.53)",
+  "low in stock": "rgba(255, 237, 215, 0.56)",
+  "in stock": "#f9f9f9",
 };
 
 const borderColorMap: Record<string, string> = {
-  "out of stock": "rgb(196, 147, 147)",
-  "low in stock": "rgb(201, 181, 153)",
-  "in stock": "#ccc",
+  "out of stock": "rgba(200, 163, 163, 0.49)",
+  "low in stock": "rgba(201, 181, 153, 0.51)",
+  "in stock": "#c3c3c3a6",
 };
 
 const textColorMap: Record<string, string> = {
-  expired: "rgb(212, 0, 0)",
-  expiring: "rgb(228, 125, 0)",
+  expired: "#bd3f3fff",
+  expiring: "#c5762dff",
   consumable: "#444",
+};
+
+const bgColorMapInner: Record<string, string> = {
+  "out of stock": "#ffe7efd0",
+  "low in stock": "#fff8e3a1",
+  "in stock": "#e9eef346",
+};
+
+const borderColorMapInner: Record<string, string> = {
+  "out of stock": "#ad959d54",
+  "low in stock": "#c3ba9f4e",
+  "in stock": "#b7c3c941",
+};
+
+const textColorMapInner: Record<string, string> = {
+  "out of stock": "#7e5462ff",
+  "low in stock": "#8c7635ff",
+  "in stock": "#64748b",
 };
 
 export default function DrugCard({ drug }: { drug: Drug }) {
@@ -50,9 +68,6 @@ export default function DrugCard({ drug }: { drug: Drug }) {
       ? "low in stock"
       : "in stock";
 
-  const isLowOrOut =
-    stockStatus === "low in stock" || stockStatus === "out of stock";
-
   const handleCardPress = () => {
     router.push(`/product?id=${drug.id}`);
   };
@@ -70,11 +85,14 @@ export default function DrugCard({ drug }: { drug: Drug }) {
       <View
         style={[
           styles.mrpContainer,
-          { borderColor: isLowOrOut ? "#555" : "#ccc" },
+          {
+            backgroundColor: bgColorMapInner[stockStatus],
+            borderColor: borderColorMapInner[stockStatus],
+          },
         ]}
       >
         <Text
-          style={[styles.mrpLabel, { color: isLowOrOut ? "#555" : "#888" }]}
+          style={[styles.mrpLabel, { color: textColorMapInner[stockStatus] }]}
         >
           MRP
         </Text>
@@ -84,26 +102,22 @@ export default function DrugCard({ drug }: { drug: Drug }) {
       <View style={styles.detailsContainer}>
         <View style={styles.headerRow}>
           <Text
-            style={[styles.drugId, { color: isLowOrOut ? "#444" : "#888" }]}
+            style={[styles.drugId, { color: textColorMapInner[stockStatus] }]}
           >
             ID: <Text>{drug.id}</Text>
           </Text>
           <View style={{ flexDirection: "row", gap: 8, marginBottom: 4 }}>
             {expiryStatus === "expired" && (
-              <FontAwesome5 name="skull" size={15} color="rgb(189, 63, 63)" />
+              <FontAwesome5 name="skull" size={15} color="#bd3f3fff" />
             )}
             {expiryStatus === "expiring" && (
-              <Entypo name="time-slot" size={15} color="rgb(197, 118, 45)" />
+              <Entypo name="time-slot" size={15} color="#c5762dff" />
             )}
             {stockStatus === "out of stock" && (
-              <FontAwesome5
-                name="box-open"
-                size={15}
-                color="rgb(189, 63, 63)"
-              />
+              <FontAwesome5 name="box-open" size={15} color="#bd3f3fff" />
             )}
             {stockStatus === "low in stock" && (
-              <FontAwesome name="warning" size={15} color="rgb(197, 118, 45)" />
+              <FontAwesome name="warning" size={15} color="#c5762dff" />
             )}
           </View>
         </View>
@@ -115,7 +129,6 @@ export default function DrugCard({ drug }: { drug: Drug }) {
           Expiry:{" "}
           <Text
             style={{
-              fontWeight: "500",
               color: textColorMap[expiryStatus],
             }}
           >
@@ -127,7 +140,6 @@ export default function DrugCard({ drug }: { drug: Drug }) {
           In Stock:{" "}
           <Text
             style={{
-              fontWeight: "500",
               color:
                 textColorMap[
                   stockStatus === "out of stock"
@@ -165,11 +177,14 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   mrpLabel: {
-    fontSize: 8,
+    fontSize: 11,
+    fontWeight: 500,
+    textTransform: "uppercase",
   },
   mrpPrice: {
     fontSize: 15,
-    color: "#444",
+    fontWeight: 700,
+    color: "#444547ff",
     marginVertical: 2,
   },
   detailsContainer: {
@@ -183,24 +198,29 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#111",
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#444547ff",
   },
   price: {
     fontSize: 15,
-    fontWeight: "600",
-    color: "#111",
+    fontWeight: "700",
+    color: "#444547ff",
     marginBottom: 4,
   },
   drugId: {
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: 500,
     marginVertical: 1,
   },
   inStock: {
     fontSize: 13,
+    fontWeight: 600,
+    color: "#444547ff",
   },
   expiry: {
     fontSize: 13,
+    fontWeight: 600,
+    color: "#444547ff",
   },
 });
