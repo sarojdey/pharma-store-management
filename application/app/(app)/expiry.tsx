@@ -350,36 +350,58 @@ export default function Expiry() {
         <TouchableOpacity
           style={[
             styles.changeButton,
-            {
-              backgroundColor: "rgb(255, 226, 226)",
-              borderColor: "rgb(196, 147, 147)",
-            },
+            tabExpired
+              ? {
+                  backgroundColor: "#ffefefff",
+                  borderColor: "#a151513e",
+                }
+              : { backgroundColor: "#eeeeeeff", borderColor: "#b5b5b53e" },
           ]}
           activeOpacity={0.7}
           onPress={() => {
             setTabExpired(true);
           }}
         >
-          <FontAwesome5 name="skull" size={18} color="rgb(189, 63, 63)" />
-          <Text style={[styles.changeLabel, { color: "rgb(189, 63, 63)" }]}>
+          <FontAwesome5
+            name="skull"
+            size={18}
+            color={tabExpired ? "#bd3f3fff" : "#90909085"}
+          />
+          <Text
+            style={[
+              styles.changeLabel,
+              { color: tabExpired ? "#bd3f3fff" : "#90909085" },
+            ]}
+          >
             Expired
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[
             styles.changeButton,
-            {
-              backgroundColor: "rgb(255, 239, 226)",
-              borderColor: "rgb(196, 169, 147)",
-            },
+            !tabExpired
+              ? {
+                  backgroundColor: "#fff6eeff",
+                  borderColor: "#9c765235",
+                }
+              : { backgroundColor: "#eeeeeeff", borderColor: "#b5b5b53e" },
           ]}
           activeOpacity={0.7}
           onPress={() => {
             setTabExpired(false);
           }}
         >
-          <Entypo name="time-slot" size={18} color="rgb(197, 118, 45)" />
-          <Text style={[styles.changeLabel, { color: "rgb(197, 118, 45)" }]}>
+          <Entypo
+            name="time-slot"
+            size={18}
+            color={!tabExpired ? "#c5762dff" : "#90909085"}
+          />
+          <Text
+            style={[
+              styles.changeLabel,
+              { color: !tabExpired ? "#c5762dff" : "#90909085" },
+            ]}
+          >
             Expiring
           </Text>
         </TouchableOpacity>
@@ -403,7 +425,7 @@ export default function Expiry() {
           ) : (
             <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
               {drugs.map((d) => (
-                <DrugCard haveActionButton={true} key={d.id} drug={d} />
+                <DrugCard haveActionButton key={d.id} drug={d} />
               ))}
             </View>
           )}
@@ -950,8 +972,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   changeLabel: {
-    color: "#212121",
-    fontWeight: "600",
+    fontWeight: "700",
     fontSize: 17,
   },
 });

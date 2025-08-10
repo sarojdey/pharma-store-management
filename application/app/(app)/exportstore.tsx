@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
     color: "#6b7280",
   },
   exportButton: {
-    backgroundColor: "rgba(65, 103, 168, 1)",
+    backgroundColor: "#4167a8ff",
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",

@@ -406,7 +406,7 @@ export default function OutOfStock() {
           ) : (
             <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
               {drugs.map((d) => (
-                <DrugCard key={d.id} drug={d} />
+                <DrugCard haveActionButton key={d.id} drug={d} />
               ))}
             </View>
           )}
