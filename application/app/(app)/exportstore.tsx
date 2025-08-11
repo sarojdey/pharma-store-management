@@ -10,6 +10,7 @@ import {
   Switch,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
 import { useStore } from "@/contexts/StoreContext";
 import {
   exportAndShareStoreData,
@@ -37,6 +38,7 @@ export default function ExportStoreComponent({
   showAsModal = false,
 }: ExportStoreComponentProps) {
   const { currentStore } = useStore();
+  const navigation = useNavigation();
   const [preview, setPreview] = useState<ExportPreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingPreview, setLoadingPreview] = useState(true);
@@ -62,6 +64,14 @@ export default function ExportStoreComponent({
       console.error("Error loading export preview:", error);
     } finally {
       setLoadingPreview(false);
+    }
+  };
+
+  const handleBackPress = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      navigation.goBack();
     }
   };
 
@@ -107,7 +117,7 @@ export default function ExportStoreComponent({
         if (result.success) {
           Alert.alert(
             "Export Successful",
-            `Your store data has been saved successfully!\n\nFile saved to: Documents folder`,
+            `Your store data has been saved successfully!\n\nFile saved to: Downloads folder`,
             [{ text: "OK" }]
           );
         } else {
@@ -137,259 +147,276 @@ export default function ExportStoreComponent({
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        {showAsModal && onClose && (
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#374151" />
-          </TouchableOpacity>
-        )}
-        <Text style={styles.title}>Export Store Data</Text>
-        <Text style={styles.subtitle}>
-          Create a backup of "{currentStore.name}"
-        </Text>
+    <View style={styles.container}>
+      {/* TopBar */}
+      <View style={styles.topbar}>
+        <TouchableOpacity onPress={handleBackPress}>
+          <Ionicons name="arrow-back-sharp" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.topbarTitle}>Export Store</Text>
       </View>
 
-      {/* Export Preview */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Export Preview</Text>
+      <ScrollView
+        style={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Export Preview */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Export Preview</Text>
 
-        {loadingPreview ? (
-          <View style={styles.previewLoading}>
-            <ActivityIndicator color="rgba(65, 103, 168, 1)" />
-            <Text style={styles.loadingText}>Loading preview...</Text>
-          </View>
-        ) : preview ? (
-          <View style={styles.previewContainer}>
-            <View style={styles.previewRow}>
-              <Ionicons
-                name="medical"
-                size={20}
-                color="rgba(65, 103, 168, 1)"
-              />
-              <Text style={styles.previewLabel}>Medicines</Text>
-              <Text style={styles.previewValue}>{preview.drugs}</Text>
+          {loadingPreview ? (
+            <View style={styles.previewLoading}>
+              <ActivityIndicator color="rgba(65, 103, 168, 1)" />
+              <Text style={styles.loadingText}>Loading preview...</Text>
             </View>
-
-            <View style={styles.previewRow}>
-              <Ionicons
-                name="receipt"
-                size={20}
-                color="rgba(65, 103, 168, 1)"
-              />
-              <Text style={styles.previewLabel}>Sales</Text>
-              <Text style={styles.previewValue}>{preview.sales}</Text>
-            </View>
-
-            <View style={styles.previewRow}>
-              <Ionicons name="people" size={20} color="rgba(65, 103, 168, 1)" />
-              <Text style={styles.previewLabel}>Suppliers</Text>
-              <Text style={styles.previewValue}>{preview.suppliers}</Text>
-            </View>
-
-            <View style={styles.previewRow}>
-              <Ionicons name="list" size={20} color="rgba(65, 103, 168, 1)" />
-              <Text style={styles.previewLabel}>Order Lists</Text>
-              <Text style={styles.previewValue}>{preview.orderLists}</Text>
-            </View>
-
-            {includeHistory && (
+          ) : preview ? (
+            <View style={styles.previewContainer}>
               <View style={styles.previewRow}>
-                <Ionicons name="time" size={20} color="rgba(65, 103, 168, 1)" />
-                <Text style={styles.previewLabel}>History</Text>
-                <Text style={styles.previewValue}>{preview.history}</Text>
+                <Ionicons
+                  name="medical"
+                  size={20}
+                  color="rgba(65, 103, 168, 1)"
+                />
+                <Text style={styles.previewLabel}>Medicines</Text>
+                <Text style={styles.previewValue}>{preview.drugs}</Text>
               </View>
-            )}
 
-            <View style={[styles.previewRow, styles.totalRow]}>
-              <Ionicons
-                name="document"
-                size={20}
-                color="rgba(65, 103, 168, 1)"
-              />
-              <Text style={styles.totalLabel}>Total Records</Text>
-              <Text style={styles.totalValue}>
-                {includeHistory
-                  ? preview.totalRecords
-                  : preview.totalRecords - preview.history}
-              </Text>
-            </View>
+              <View style={styles.previewRow}>
+                <Ionicons
+                  name="receipt"
+                  size={20}
+                  color="rgba(65, 103, 168, 1)"
+                />
+                <Text style={styles.previewLabel}>Sales</Text>
+                <Text style={styles.previewValue}>{preview.sales}</Text>
+              </View>
 
-            <View style={[styles.previewRow, styles.sizeRow]}>
-              <Text style={styles.sizeLabel}>
-                Estimated file size: {preview.estimatedFileSize}
-              </Text>
-            </View>
-          </View>
-        ) : (
-          <Text style={styles.errorText}>Unable to load preview</Text>
-        )}
-      </View>
+              <View style={styles.previewRow}>
+                <Ionicons
+                  name="people"
+                  size={20}
+                  color="rgba(65, 103, 168, 1)"
+                />
+                <Text style={styles.previewLabel}>Suppliers</Text>
+                <Text style={styles.previewValue}>{preview.suppliers}</Text>
+              </View>
 
-      {/* Export Options */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Export Options</Text>
+              <View style={styles.previewRow}>
+                <Ionicons name="list" size={20} color="rgba(65, 103, 168, 1)" />
+                <Text style={styles.previewLabel}>Order Lists</Text>
+                <Text style={styles.previewValue}>{preview.orderLists}</Text>
+              </View>
 
-        <View style={styles.optionRow}>
-          <View style={styles.optionInfo}>
-            <Text style={styles.optionLabel}>Include History</Text>
-            <Text style={styles.optionDescription}>
-              Include activity logs and transaction history
-            </Text>
-          </View>
-          <Switch
-            value={includeHistory}
-            onValueChange={setIncludeHistory}
-            trackColor={{ false: "#e5e7eb", true: "rgba(65, 103, 168, 0.3)" }}
-            thumbColor={includeHistory ? "rgba(65, 103, 168, 1)" : "#f4f3f4"}
-          />
-        </View>
-      </View>
+              {includeHistory && (
+                <View style={styles.previewRow}>
+                  <Ionicons
+                    name="time"
+                    size={20}
+                    color="rgba(65, 103, 168, 1)"
+                  />
+                  <Text style={styles.previewLabel}>History</Text>
+                  <Text style={styles.previewValue}>{preview.history}</Text>
+                </View>
+              )}
 
-      {/* Export Type Selection */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Export Method</Text>
+              <View style={[styles.previewRow, styles.totalRow]}>
+                <Ionicons
+                  name="document"
+                  size={20}
+                  color="rgba(65, 103, 168, 1)"
+                />
+                <Text style={styles.totalLabel}>Total Records</Text>
+                <Text style={styles.totalValue}>
+                  {includeHistory
+                    ? preview.totalRecords
+                    : preview.totalRecords - preview.history}
+                </Text>
+              </View>
 
-        <TouchableOpacity
-          style={[
-            styles.exportTypeOption,
-            exportType === "share" && styles.exportTypeSelected,
-          ]}
-          onPress={() => setExportType("share")}
-        >
-          <Ionicons
-            name="share"
-            size={24}
-            color={exportType === "share" ? "rgba(65, 103, 168, 1)" : "#6b7280"}
-          />
-          <View style={styles.exportTypeInfo}>
-            <Text
-              style={[
-                styles.exportTypeTitle,
-                exportType === "share" && styles.exportTypeTitleSelected,
-              ]}
-            >
-              Share File
-            </Text>
-            <Text style={styles.exportTypeDescription}>
-              Export and share via email, messaging, or cloud storage
-            </Text>
-          </View>
-          {exportType === "share" && (
-            <Ionicons
-              name="checkmark-circle"
-              size={20}
-              color="rgba(65, 103, 168, 1)"
-            />
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.exportTypeOption,
-            exportType === "save" && styles.exportTypeSelected,
-          ]}
-          onPress={() => setExportType("save")}
-        >
-          <Ionicons
-            name="save"
-            size={24}
-            color={exportType === "save" ? "rgba(65, 103, 168, 1)" : "#6b7280"}
-          />
-          <View style={styles.exportTypeInfo}>
-            <Text
-              style={[
-                styles.exportTypeTitle,
-                exportType === "save" && styles.exportTypeTitleSelected,
-              ]}
-            >
-              Save to Device
-            </Text>
-            <Text style={styles.exportTypeDescription}>
-              Save export file to device's Documents folder
-            </Text>
-          </View>
-          {exportType === "save" && (
-            <Ionicons
-              name="checkmark-circle"
-              size={20}
-              color="rgba(65, 103, 168, 1)"
-            />
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Export Button */}
-      <View style={styles.section}>
-        <TouchableOpacity
-          style={[styles.exportButton, loading && styles.exportButtonDisabled]}
-          onPress={handleExport}
-          disabled={loading}
-          activeOpacity={0.8}
-        >
-          {loading ? (
-            <View style={styles.buttonContent}>
-              <ActivityIndicator color="#fff" size="small" />
-              <Text style={[styles.buttonText, { marginLeft: 8 }]}>
-                Exporting...
-              </Text>
+              <View style={[styles.previewRow, styles.sizeRow]}>
+                <Text style={styles.sizeLabel}>
+                  Estimated file size: {preview.estimatedFileSize}
+                </Text>
+              </View>
             </View>
           ) : (
-            <View style={styles.buttonContent}>
-              <Ionicons name="download" size={20} color="#fff" />
-              <Text style={[styles.buttonText, { marginLeft: 8 }]}>
-                {exportType === "share" ? "Export & Share" : "Export & Save"}
+            <Text style={styles.errorText}>Unable to load preview</Text>
+          )}
+        </View>
+
+        {/* Export Options */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Export Options</Text>
+
+          <View style={styles.optionRow}>
+            <View style={styles.optionInfo}>
+              <Text style={styles.optionLabel}>Include History</Text>
+              <Text style={styles.optionDescription}>
+                Include activity logs and transaction history
               </Text>
             </View>
-          )}
-        </TouchableOpacity>
-      </View>
+            <Switch
+              value={includeHistory}
+              onValueChange={setIncludeHistory}
+              trackColor={{ false: "#e5e7eb", true: "rgba(65, 103, 168, 0.3)" }}
+              thumbColor={includeHistory ? "rgba(65, 103, 168, 1)" : "#f4f3f4"}
+            />
+          </View>
+        </View>
 
-      {/* Info Note */}
-      <View style={styles.infoNote}>
-        <Ionicons
-          name="information-circle"
-          size={20}
-          color="rgba(65, 103, 168, 1)"
-        />
-        <Text style={styles.infoText}>
-          This export includes all your store data in JSON format. You can use
-          this file to import your data into another device or as a backup.
-        </Text>
-      </View>
-    </ScrollView>
+        {/* Export Type Selection */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Export Method</Text>
+
+          <TouchableOpacity
+            style={[
+              styles.exportTypeOption,
+              exportType === "share" && styles.exportTypeSelected,
+            ]}
+            onPress={() => setExportType("share")}
+          >
+            <Ionicons
+              name="share"
+              size={24}
+              color={
+                exportType === "share" ? "rgba(65, 103, 168, 1)" : "#6b7280"
+              }
+            />
+            <View style={styles.exportTypeInfo}>
+              <Text
+                style={[
+                  styles.exportTypeTitle,
+                  exportType === "share" && styles.exportTypeTitleSelected,
+                ]}
+              >
+                Share File
+              </Text>
+              <Text style={styles.exportTypeDescription}>
+                Export and share via email, messaging, or cloud storage
+              </Text>
+            </View>
+            {exportType === "share" && (
+              <Ionicons
+                name="checkmark-circle"
+                size={20}
+                color="rgba(65, 103, 168, 1)"
+              />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.exportTypeOption,
+              exportType === "save" && styles.exportTypeSelected,
+            ]}
+            onPress={() => setExportType("save")}
+          >
+            <Ionicons
+              name="save"
+              size={24}
+              color={
+                exportType === "save" ? "rgba(65, 103, 168, 1)" : "#6b7280"
+              }
+            />
+            <View style={styles.exportTypeInfo}>
+              <Text
+                style={[
+                  styles.exportTypeTitle,
+                  exportType === "save" && styles.exportTypeTitleSelected,
+                ]}
+              >
+                Save to Device
+              </Text>
+              <Text style={styles.exportTypeDescription}>
+                Save export file to device's Downloads folder
+              </Text>
+            </View>
+            {exportType === "save" && (
+              <Ionicons
+                name="checkmark-circle"
+                size={20}
+                color="rgba(65, 103, 168, 1)"
+              />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Export Button */}
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={[
+              styles.exportButton,
+              loading && styles.exportButtonDisabled,
+            ]}
+            onPress={handleExport}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <View style={styles.buttonContent}>
+                <ActivityIndicator color="#fff" size="small" />
+                <Text style={[styles.buttonText, { marginLeft: 8 }]}>
+                  Exporting...
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.buttonContent}>
+                <Ionicons name="download" size={20} color="#fff" />
+                <Text style={[styles.buttonText, { marginLeft: 8 }]}>
+                  {exportType === "share" ? "Export & Share" : "Export & Save"}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Info Note */}
+        <View style={styles.infoNote}>
+          <Ionicons
+            name="information-circle"
+            size={20}
+            color="rgba(65, 103, 168, 1)"
+          />
+          <Text style={styles.infoText}>
+            This export includes all your store data in JSON format. You can use
+            this file to import your data into another device or as a backup.
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9fafb",
   },
-  header: {
-    padding: 24,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-  },
-  closeButton: {
+  topbar: {
     position: "absolute",
-    right: 16,
-    top: 16,
-    zIndex: 1,
-    padding: 8,
+    top: 0,
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderBottomWidth: 1,
+    borderTopWidth: 1,
+    borderBottomColor: "#ccc",
+    borderTopColor: "#ccc",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    zIndex: 1000,
+    gap: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#1f2937",
-    marginBottom: 4,
+  topbarTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    flex: 1,
   },
-  subtitle: {
-    fontSize: 16,
-    color: "#6b7280",
+  scrollContent: {
+    marginTop: 60, // Adjust based on topbar height
   },
+
   section: {
     margin: 16,
     marginBottom: 0,

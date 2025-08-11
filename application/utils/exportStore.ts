@@ -7,7 +7,6 @@ import { getAllHistory } from "@/utils/historyDb";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
 
-// Define the export data structure
 interface StoreExportData {
   store: {
     name: string;
@@ -27,9 +26,6 @@ interface StoreExportData {
   };
 }
 
-/**
- * Export all data for a specific store to JSON format
- */
 export const exportStoreData = async (
   store: Store,
   options: {
@@ -52,7 +48,6 @@ export const exportStoreData = async (
 
     const { includeHistory = true, dateRange } = options;
 
-    // Fetch all data in parallel for better performance
     const [drugs, sales, suppliers, orderLists, history] = await Promise.all([
       getAllDrugs(store.id),
       getAllSales(store.id),
@@ -70,7 +65,6 @@ export const exportStoreData = async (
         : [],
     ]);
 
-    // Clean the data - remove store_id from records since it will be reassigned on import
     const cleanedDrugs = (drugs as any[]).map(({ store_id, ...drug }) => drug);
     const cleanedSales = (sales as any[]).map(({ store_id, ...sale }) => sale);
     const cleanedSuppliers = (suppliers as any[]).map(
@@ -83,13 +77,12 @@ export const exportStoreData = async (
       ({ store_id, ...historyItem }) => historyItem
     );
 
-    // Create export data structure
     const exportData: StoreExportData = {
       store: {
         name: store.name,
         exportDate: new Date().toISOString(),
-        version: "1.0.0", // Schema version for future compatibility
-        originalStoreId: store.id, // Keep reference to original ID
+        version: "1.0.0",
+        originalStoreId: store.id,
       },
       drugs: cleanedDrugs,
       sales: cleanedSales,
@@ -104,7 +97,7 @@ export const exportStoreData = async (
           cleanedOrderLists.length +
           cleanedHistory.length,
         exportedBy: "Medicine Stockist App",
-        appVersion: "1.0.0", // You can get this from app.json or package.json
+        appVersion: "1.0.0",
       },
     };
 
@@ -130,9 +123,6 @@ export const exportStoreData = async (
   }
 };
 
-/**
- * Export store data and save as JSON file
- */
 export const exportStoreToFile = async (
   store: Store,
   options: {
@@ -145,7 +135,6 @@ export const exportStoreToFile = async (
   } = {}
 ): Promise<{ success: boolean; filePath?: string; error?: any }> => {
   try {
-    // Get export data
     const exportResult = await exportStoreData(store, options);
 
     if (!exportResult.success || !exportResult.data) {
@@ -155,7 +144,6 @@ export const exportStoreToFile = async (
       };
     }
 
-    // Generate filename
     const timestamp = new Date()
       .toISOString()
       .replace(/[:.]/g, "-")
@@ -164,21 +152,33 @@ export const exportStoreToFile = async (
       options.customFileName ||
       `${store.name.replace(/[^a-zA-Z0-9]/g, "_")}_export_${timestamp}.json`;
 
-    // Create file path
-    const filePath = `${FileSystem.documentDirectory}${fileName}`;
+    const permissions =
+      await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
 
-    // Write JSON to file
+    if (!permissions.granted) {
+      return {
+        success: false,
+        error: "Storage permission denied. Cannot save to Downloads folder.",
+      };
+    }
+
+    const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
+      permissions.directoryUri,
+      fileName,
+      "application/json"
+    );
+
     await FileSystem.writeAsStringAsync(
-      filePath,
+      fileUri,
       JSON.stringify(exportResult.data, null, 2),
       { encoding: FileSystem.EncodingType.UTF8 }
     );
 
-    console.log(`✅ Export file created: ${filePath}`);
+    console.log(`✅ Export file created in Downloads: ${fileName}`);
 
     return {
       success: true,
-      filePath: filePath,
+      filePath: fileUri,
     };
   } catch (error) {
     console.error("❌ Error creating export file:", error);
@@ -189,9 +189,6 @@ export const exportStoreToFile = async (
   }
 };
 
-/**
- * Export store data and share the file
- */
 export const exportAndShareStoreData = async (
   store: Store,
   options: {
@@ -204,7 +201,6 @@ export const exportAndShareStoreData = async (
   } = {}
 ): Promise<{ success: boolean; shared?: boolean; error?: any }> => {
   try {
-    // Export to file
     const fileResult = await exportStoreToFile(store, options);
 
     if (!fileResult.success || !fileResult.filePath) {
@@ -214,7 +210,6 @@ export const exportAndShareStoreData = async (
       };
     }
 
-    // Check if sharing is available
     const isAvailable = await Sharing.isAvailableAsync();
     if (!isAvailable) {
       console.log("⚠️ Sharing not available on this device");
@@ -225,7 +220,6 @@ export const exportAndShareStoreData = async (
       };
     }
 
-    // Share the file
     await Sharing.shareAsync(fileResult.filePath, {
       mimeType: "application/json",
       dialogTitle: `Export: ${store.name}`,
@@ -246,9 +240,6 @@ export const exportAndShareStoreData = async (
   }
 };
 
-/**
- * Get export preview/summary without creating file
- */
 export const getExportPreview = async (
   storeId: number
 ): Promise<{
@@ -265,7 +256,6 @@ export const getExportPreview = async (
   error?: any;
 }> => {
   try {
-    // Get counts from each table
     const [drugs, sales, suppliers, orderLists, history] = await Promise.all([
       getAllDrugs(storeId),
       getAllSales(storeId),
@@ -281,8 +271,7 @@ export const getExportPreview = async (
       orderLists.length +
       history.length;
 
-    // Rough estimate of file size (each record ~1KB JSON)
-    const estimatedSizeKB = Math.ceil(totalRecords * 1.2); // 20% overhead for JSON structure
+    const estimatedSizeKB = Math.ceil(totalRecords * 1.2);
     const estimatedFileSize =
       estimatedSizeKB > 1024
         ? `${(estimatedSizeKB / 1024).toFixed(1)} MB`
