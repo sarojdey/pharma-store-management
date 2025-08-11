@@ -189,20 +189,20 @@ export default function HomeScreen() {
   const handleMoreOptions = useCallback(() => {
     Alert.alert("Store Options", "Choose an option", [
       {
-        text: "Add New Store",
-        onPress: () => {
-          // closeSidebar();
-          setTimeout(() => {
-            router.replace("/(auth)/welcomeScreen");
-          }, 100);
-        },
-      },
-      {
         text: "Store Settings",
         onPress: () => {
           console.log("Store settings pressed");
         },
       },
+      {
+        text: "Add New Store",
+        onPress: () => {
+          setTimeout(() => {
+            router.push("/(app)/createnewstore");
+          }, 100);
+        },
+      },
+
       // {
       //   text: "Refresh Stores",
       //   onPress: async () => {

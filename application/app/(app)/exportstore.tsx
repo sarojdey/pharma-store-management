@@ -150,10 +150,12 @@ export default function ExportStoreComponent({
     <View style={styles.container}>
       {/* TopBar */}
       <View style={styles.topbar}>
-        <TouchableOpacity onPress={handleBackPress}>
-          <Ionicons name="arrow-back-sharp" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.topbarTitle}>Export Store</Text>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleBackPress}>
+            <Ionicons name="arrow-back-sharp" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.topbarTitle}>Export Store</Text>
+        </View>
       </View>
 
       <ScrollView
@@ -395,8 +397,13 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     width: "100%",
+    zIndex: 1000,
+  },
+  header: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: "#f5f5f5",
     borderBottomWidth: 1,
     borderTopWidth: 1,
@@ -404,14 +411,13 @@ const styles = StyleSheet.create({
     borderTopColor: "#ccc",
     paddingHorizontal: 14,
     paddingVertical: 12,
-    zIndex: 1000,
-    gap: 16,
   },
   topbarTitle: {
     fontSize: 18,
     fontWeight: "600",
     color: "#333",
     flex: 1,
+    textAlign: "center",
   },
   scrollContent: {
     marginTop: 60, // Adjust based on topbar height
