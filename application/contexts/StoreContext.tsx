@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { InteractionManager, LogBox } from "react-native";
+import { Alert, InteractionManager, LogBox } from "react-native";
 import { createStoresDb, getAllStores, resetStoresDb } from "@/utils/storesDb";
 import { createStocksDb, resetStocksDb } from "@/utils/stocksDb";
 import { createSalesDb, resetSalesDb } from "@/utils/salesDb";

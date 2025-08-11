@@ -364,7 +364,6 @@ export const getDrugCountByStore = async (storeId: number): Promise<number> => {
   }
 };
 
-// Stock Report function - similar to getSalesReport
 export const getStockReport = async (
   storeId: number,
   startDate?: string,

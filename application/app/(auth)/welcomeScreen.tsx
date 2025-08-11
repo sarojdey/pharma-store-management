@@ -65,21 +65,18 @@ export default function WelcomeScreen() {
       const { success, id } = await addStore({ name: name.trim() });
       if (!success || id == null) throw new Error("Failed to insert store");
 
-      // Create the store object
       const newStore = {
         id,
         name: name.trim(),
         createdAt: new Date().toISOString(),
       };
 
-      // Persist and update context
       await AsyncStorage.setItem(STORAGE_KEY, id.toString());
 
-      // Update both current store and add to allStores
       setCurrentStore(newStore);
       addStoreToContext(newStore);
       seedDatabase(newStore.id);
-      router.replace("/"); // jump to home
+      router.replace("/");
     } catch (err: any) {
       console.error("Create store error:", err);
       Alert.alert("Error", err.message || "Could not create store");
@@ -99,16 +96,14 @@ export default function WelcomeScreen() {
         const file = result.assets[0];
         setImportFileName(file.name);
 
-        // Read file content
         const fileContent = await FileSystem.readAsStringAsync(file.uri);
         setImportFile(fileContent);
 
-        // Preview the import
         const previewResult = await previewImportFile(fileContent);
 
         if (previewResult.success) {
           setImportPreview(previewResult.preview);
-          // Auto-fill store name if not provided
+
           if (!name.trim() && previewResult.preview) {
             setName(previewResult.preview.storeName);
           }
@@ -144,7 +139,6 @@ export default function WelcomeScreen() {
       return Alert.alert("Validation", "Please select an import file");
     }
 
-    // Show confirmation dialog
     Alert.alert(
       "Confirm Import",
       `Import "${
@@ -183,21 +177,17 @@ export default function WelcomeScreen() {
       setShowProgressModal(false);
 
       if (result.success && result.storeId) {
-        // Create the store object
         const newStore = {
           id: result.storeId,
           name: name.trim(),
           createdAt: new Date().toISOString(),
         };
 
-        // Persist and update context
         await AsyncStorage.setItem(STORAGE_KEY, result.storeId.toString());
 
-        // Update both current store and add to allStores
         setCurrentStore(newStore);
         addStoreToContext(newStore);
 
-        // Show success message
         const summary = result.importSummary;
         Alert.alert(
           "Import Successful!",

@@ -113,6 +113,16 @@ const BUTTONS: {
     border: "rgba(125, 134, 139, 0.3)",
     text: "rgb(92, 112, 121)",
   },
+  {
+    key: "logs",
+    label: "Logs",
+    icon: "log",
+    navigateTo: "/(app)/errorlogs",
+    description: "App logs will apear here.",
+    bg: "rgba(201, 194, 192, 0.1)",
+    border: "rgba(139, 129, 125, 0.3)",
+    text: "rgba(121, 101, 92, 1)",
+  },
 ];
 
 export default function HomeScreen() {

@@ -3,6 +3,7 @@ import { Slot } from "expo-router";
 import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { ErrorLogProvider } from "@/contexts/ErrorLogContext";
 
 export default function RootLayout() {
   return (
@@ -10,9 +11,11 @@ export default function RootLayout() {
       <StatusBar style="auto" />
       <SafeAreaProvider>
         <SafeAreaView style={{ flex: 1 }}>
-          <StoreProvider>
-            <Slot />
-          </StoreProvider>
+          <ErrorLogProvider>
+            <StoreProvider>
+              <Slot />
+            </StoreProvider>
+          </ErrorLogProvider>
         </SafeAreaView>
       </SafeAreaProvider>
     </>
