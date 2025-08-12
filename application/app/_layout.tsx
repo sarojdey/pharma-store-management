@@ -8,7 +8,7 @@ import { ErrorLogProvider } from "@/contexts/ErrorLogContext";
 export default function RootLayout() {
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <SafeAreaProvider>
         <SafeAreaView style={{ flex: 1 }}>
           <ErrorLogProvider>
