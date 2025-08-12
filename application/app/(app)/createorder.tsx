@@ -31,11 +31,7 @@ const orderSchema = z.object({
     .regex(/^\d+$/, "Quantity must be a number"),
 });
 
-interface AddOrderListProps {
-  supplierName?: string;
-}
-
-export default function AddOrderList({ supplierName }: AddOrderListProps) {
+export default function AddOrderList() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigation = useNavigation();
   const { currentStore } = useStore();
@@ -50,7 +46,7 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
   } = useForm({
     resolver: zodResolver(orderSchema),
     defaultValues: {
-      supplierName: supplierName || "",
+      supplierName: "",
       medicineName: "",
       quantity: "",
     },
@@ -60,7 +56,10 @@ export default function AddOrderList({ supplierName }: AddOrderListProps) {
     if (params.medicineName) {
       setValue("medicineName", params.medicineName as string);
     }
-  }, [params.medicineName, setValue]);
+    if (params.supplierName) {
+      setValue("supplierName", params.supplierName as string);
+    }
+  }, [params.medicineName, params.supplierName, setValue]);
 
   const onSaveOrderList = async (data: z.infer<typeof orderSchema>) => {
     setIsSubmitting(true);

@@ -4,6 +4,7 @@ import { addHistory } from "@/utils/historyDb";
 import { deleteSupplier } from "@/utils/supplierDb";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { router } from "expo-router";
 import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 
 interface SupplierCardProps {
@@ -63,6 +64,13 @@ export default function SupplierCard({
     );
   };
 
+  const handleCreateOrderList = () => {
+    router.push({
+      pathname: "/(app)/createorder",
+      params: { supplierName: supplier.supplierName },
+    });
+  };
+
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
@@ -103,8 +111,11 @@ export default function SupplierCard({
           </View>
         </View>
         <View>
-          <TouchableOpacity style={styles.orderButton}>
-            <Text>Create Order List</Text>
+          <TouchableOpacity
+            style={styles.orderButton}
+            onPress={handleCreateOrderList}
+          >
+            <Text style={styles.orderButtonText}>Create Order List</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -134,9 +145,16 @@ const styles = StyleSheet.create({
   },
   orderButton: {
     borderWidth: 1,
-    borderRadius: 8,
+    borderColor: "#5a816c35",
+    backgroundColor: "#e7fff23c",
     padding: 12,
-    borderColor: "#ccc",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  orderButtonText: {
+    color: "#26794bff",
+    fontWeight: "700",
+    fontSize: 14,
   },
   supplierName: {
     maxWidth: "85%",
