@@ -113,16 +113,6 @@ const BUTTONS: {
     border: "rgba(125, 134, 139, 0.3)",
     text: "rgb(92, 112, 121)",
   },
-  // {
-  //   key: "logs",
-  //   label: "Logs",
-  //   icon: "error",
-  //   navigateTo: "/(app)/errorlogs",
-  //   description: "App logs will apear here.",
-  //   bg: "#d4a5af42",
-  //   border: "#8f707742",
-  //   text: "#9d4054ff",
-  // },
 ];
 
 export default function HomeScreen() {
@@ -186,59 +176,10 @@ export default function HomeScreen() {
     [currentStore?.id, closeSidebar, setCurrentStore]
   );
 
-  const refreshStores = useCallback(async () => {
-    try {
-      await refreshAllStores();
-      console.log("Refreshed stores from context");
-    } catch (error) {
-      console.error("Error refreshing stores:", error);
-      throw error;
-    }
-  }, [refreshAllStores]);
-
   const handleMoreOptions = useCallback(() => {
-    Alert.alert("Store Options", "Choose an option", [
-      {
-        text: "Store Settings",
-        onPress: () => {
-          closeSidebar();
-          setTimeout(() => {
-            router.push(`/(app)/editstore?storeId=${currentStore?.id}`);
-          }, 100);
-        },
-      },
-      {
-        text: "Add New Store",
-        onPress: () => {
-          setTimeout(() => {
-            router.push("/(app)/createnewstore");
-          }, 100);
-        },
-      },
-
-      // {
-      //   text: "Refresh Stores",
-      //   onPress: async () => {
-      //     try {
-      //       await refreshStores();
-      //       Alert.alert("Success", "Stores refreshed successfully");
-      //     } catch (error) {
-      //       Alert.alert("Error", "Failed to refresh stores");
-      //     }
-      //   },
-      // },
-      {
-        text: "Export Store",
-        onPress: async () => {
-          router.push("/(app)/exportstore");
-        },
-      },
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-    ]);
-  }, [closeSidebar, router, refreshStores, currentStore?.id]);
+    closeSidebar();
+    router.push("/(app)/moreoptions");
+  }, [closeSidebar, router]);
 
   const renderStoreItem = useCallback(
     (store: Store) => {
@@ -624,7 +565,7 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   currentUser: {
-    backgroundColor: "rrgba(201, 231, 255, 0.1)",
+    backgroundColor: "rgba(201, 231, 255, 0.1)",
     borderWidth: 1,
     borderColor: "rgba(97, 129, 155, 0.30)",
   },
@@ -641,7 +582,6 @@ const styles = StyleSheet.create({
     color: "rgb(70, 125, 168)",
     fontWeight: "600",
   },
-
   activeIndicator: {
     marginLeft: 8,
   },

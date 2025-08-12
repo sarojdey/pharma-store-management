@@ -256,20 +256,6 @@ export default function AddNewStoreScreen() {
             </View>
           </View>
           <View style={styles.container}>
-            {/* Header Section with Image */}
-            <View style={styles.headerSection}>
-              <Text style={styles.title}>
-                Add New{" "}
-                <Text style={{ color: "rgba(65, 103, 168, 1)" }}>Store</Text>
-              </Text>
-
-              <Text style={styles.subtitle}>
-                {importMode
-                  ? "Import your existing store data"
-                  : "Create a new store to expand your business."}
-              </Text>
-            </View>
-
             {/* Mode Toggle */}
             <View style={styles.modeToggleSection}>
               <View style={styles.modeToggle}>
@@ -565,26 +551,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    justifyContent: "center",
-  },
-  headerSection: {
-    alignItems: "center",
-    marginBottom: 32,
+    paddingTop: 70,
   },
 
-  title: {
-    fontSize: 36,
-    fontWeight: "800",
-    textAlign: "center",
-    color: "#374151",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#6b7280",
-    textAlign: "center",
-    lineHeight: 22,
-    paddingHorizontal: 20,
-  },
   modeToggleSection: {
     marginBottom: 24,
   },

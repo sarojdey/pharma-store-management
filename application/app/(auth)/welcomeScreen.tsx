@@ -75,7 +75,7 @@ export default function WelcomeScreen() {
 
       setCurrentStore(newStore);
       addStoreToContext(newStore);
-      seedDatabase(newStore.id);
+      // seedDatabase(newStore.id);
       router.replace("/");
     } catch (err: any) {
       console.error("Create store error:", err);
