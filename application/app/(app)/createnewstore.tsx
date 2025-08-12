@@ -1,27 +1,25 @@
+import { useStore } from "@/contexts/StoreContext";
+import { importStoreFromJson, previewImportFile } from "@/utils/importStore";
+import { addStore } from "@/utils/storesDb";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system";
+import { useNavigation, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Image,
-  ScrollView,
-  Modal,
+  View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useNavigation, useRouter } from "expo-router";
-import * as DocumentPicker from "expo-document-picker";
-import * as FileSystem from "expo-file-system";
-import { addStore } from "@/utils/storesDb";
-import { useStore } from "@/contexts/StoreContext";
-import { seedDatabase } from "@/utils/stocksDb";
-import { importStoreFromJson, previewImportFile } from "@/utils/importStore";
 
 const STORAGE_KEY = "activeStoreId";
 
@@ -66,22 +64,18 @@ export default function AddNewStoreScreen() {
       const { success, id } = await addStore({ name: name.trim() });
       if (!success || id == null) throw new Error("Failed to insert store");
 
-      // Create the store object
       const newStore = {
         id,
         name: name.trim(),
         createdAt: new Date().toISOString(),
       };
 
-      // Persist and update context
       await AsyncStorage.setItem(STORAGE_KEY, id.toString());
 
-      // Update both current store and add to allStores
       setCurrentStore(newStore);
       addStoreToContext(newStore);
-      seedDatabase(newStore.id);
+      // seedDatabase(newStore.id);
 
-      // Show success message and navigate
       Alert.alert(
         "Store Created!",
         `"${name.trim()}" has been created successfully.`,
@@ -111,16 +105,14 @@ export default function AddNewStoreScreen() {
         const file = result.assets[0];
         setImportFileName(file.name);
 
-        // Read file content
         const fileContent = await FileSystem.readAsStringAsync(file.uri);
         setImportFile(fileContent);
 
-        // Preview the import
         const previewResult = await previewImportFile(fileContent);
 
         if (previewResult.success) {
           setImportPreview(previewResult.preview);
-          // Auto-fill store name if not provided
+
           if (!name.trim() && previewResult.preview) {
             setName(previewResult.preview.storeName);
           }
@@ -156,7 +148,6 @@ export default function AddNewStoreScreen() {
       return Alert.alert("Validation", "Please select an import file");
     }
 
-    // Show confirmation dialog
     Alert.alert(
       "Confirm Import",
       `Import "${
@@ -195,21 +186,17 @@ export default function AddNewStoreScreen() {
       setShowProgressModal(false);
 
       if (result.success && result.storeId) {
-        // Create the store object
         const newStore = {
           id: result.storeId,
           name: name.trim(),
           createdAt: new Date().toISOString(),
         };
 
-        // Persist and update context
         await AsyncStorage.setItem(STORAGE_KEY, result.storeId.toString());
 
-        // Update both current store and add to allStores
         setCurrentStore(newStore);
         addStoreToContext(newStore);
 
-        // Show success message
         const summary = result.importSummary;
         Alert.alert(
           "Import Successful!",

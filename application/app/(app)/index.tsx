@@ -113,16 +113,16 @@ const BUTTONS: {
     border: "rgba(125, 134, 139, 0.3)",
     text: "rgb(92, 112, 121)",
   },
-  {
-    key: "logs",
-    label: "Logs",
-    icon: "error",
-    navigateTo: "/(app)/errorlogs",
-    description: "App logs will apear here.",
-    bg: "#d4a5af42",
-    border: "#8f707742",
-    text: "#9d4054ff",
-  },
+  // {
+  //   key: "logs",
+  //   label: "Logs",
+  //   icon: "error",
+  //   navigateTo: "/(app)/errorlogs",
+  //   description: "App logs will apear here.",
+  //   bg: "#d4a5af42",
+  //   border: "#8f707742",
+  //   text: "#9d4054ff",
+  // },
 ];
 
 export default function HomeScreen() {
@@ -201,7 +201,10 @@ export default function HomeScreen() {
       {
         text: "Store Settings",
         onPress: () => {
-          console.log("Store settings pressed");
+          closeSidebar();
+          setTimeout(() => {
+            router.push(`/(app)/editstore?storeId=${currentStore?.id}`);
+          }, 100);
         },
       },
       {
@@ -235,7 +238,7 @@ export default function HomeScreen() {
         style: "cancel",
       },
     ]);
-  }, [closeSidebar, router, refreshStores]);
+  }, [closeSidebar, router, refreshStores, currentStore?.id]);
 
   const renderStoreItem = useCallback(
     (store: Store) => {
