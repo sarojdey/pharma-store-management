@@ -352,18 +352,29 @@ export default function OutOfStock() {
         <TouchableOpacity
           style={[
             styles.changeButton,
-            {
-              backgroundColor: "rgb(255, 226, 226)",
-              borderColor: "rgb(196, 147, 147)",
-            },
+            tabOutOfStock
+              ? {
+                  backgroundColor: "rgb(255, 226, 226)",
+                  borderColor: "rgb(196, 147, 147)",
+                }
+              : { backgroundColor: "#eeeeeeff", borderColor: "#b5b5b53e" },
           ]}
           activeOpacity={0.7}
           onPress={() => {
             setTabOutOfStock(true);
           }}
         >
-          <FontAwesome5 name="box-open" size={18} color="rgb(189, 63, 63)" />
-          <Text style={[styles.changeLabel, { color: "rgb(189, 63, 63)" }]}>
+          <FontAwesome5
+            name="box-open"
+            size={18}
+            color={tabOutOfStock ? "rgb(189, 63, 63)" : "#90909085"}
+          />
+          <Text
+            style={[
+              styles.changeLabel,
+              { color: tabOutOfStock ? "rgb(189, 63, 63)" : "#90909085" },
+            ]}
+          >
             Out of Stock
           </Text>
         </TouchableOpacity>
@@ -371,18 +382,29 @@ export default function OutOfStock() {
         <TouchableOpacity
           style={[
             styles.changeButton,
-            {
-              backgroundColor: "rgb(255, 239, 226)",
-              borderColor: "rgb(196, 169, 147)",
-            },
+            !tabOutOfStock
+              ? {
+                  backgroundColor: "rgb(255, 239, 226)",
+                  borderColor: "rgb(196, 169, 147)",
+                }
+              : { backgroundColor: "#eeeeeeff", borderColor: "#b5b5b53e" },
           ]}
           activeOpacity={0.7}
           onPress={() => {
             setTabOutOfStock(false);
           }}
         >
-          <FontAwesome name="warning" size={18} color="rgb(197, 118, 45)" />
-          <Text style={[styles.changeLabel, { color: "rgb(197, 118, 45)" }]}>
+          <FontAwesome
+            name="warning"
+            size={18}
+            color={!tabOutOfStock ? "rgb(197, 118, 45)" : "#90909085"}
+          />
+          <Text
+            style={[
+              styles.changeLabel,
+              { color: !tabOutOfStock ? "rgb(197, 118, 45)" : "#90909085" },
+            ]}
+          >
             Low in Stock
           </Text>
         </TouchableOpacity>
