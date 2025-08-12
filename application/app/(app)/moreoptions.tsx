@@ -12,6 +12,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system";
+import { getStockForExport } from "@/utils/stocksDb";
 
 // Options Configuration
 const MORE_OPTIONS = [
@@ -39,12 +43,11 @@ const MORE_OPTIONS = [
     iconFamily: "Feather",
     color: "#9c27b0",
   },
-
   {
-    key: "refreshStores",
-    title: "Refresh Stores",
-    description: "Reload all store data",
-    icon: "refresh-cw",
+    key: "exportStock",
+    title: "Export Stock Data",
+    description: "Export stock data as PDF",
+    icon: "download",
     iconFamily: "Feather",
     color: "#4caf50",
   },
@@ -53,18 +56,158 @@ const MORE_OPTIONS = [
 export default function MoreOptionsScreen() {
   const navigation = useNavigation();
   const router = useRouter();
-  const { currentStore, refreshAllStores } = useStore();
+  const { currentStore } = useStore();
 
-  const refreshStores = useCallback(async () => {
-    try {
-      await refreshAllStores();
-      console.log("Refreshed stores from context");
-      Alert.alert("Success", "Stores refreshed successfully");
-    } catch (error) {
-      console.error("Error refreshing stores:", error);
-      Alert.alert("Error", "Failed to refresh stores");
+  const exportStockToPDF = useCallback(async () => {
+    if (!currentStore?.id) {
+      Alert.alert("Error", "No store selected.");
+      return;
     }
-  }, [refreshAllStores]);
+
+    try {
+      const stockData = await getStockForExport(currentStore.id);
+
+      if (stockData.length === 0) {
+        Alert.alert("No Data", "No stock data to export.");
+        return;
+      }
+
+      const currentDate = new Date().toLocaleDateString("en-IN");
+      const fileName = `stock-data-${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
+
+      const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Stock Data</title>
+        <style>
+          @page {
+            size: A4;
+            margin: 20mm;
+          }
+          body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            font-size: 12px;
+            color: #222;
+            margin: 0;
+            padding: 0;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #aaa;
+            padding-bottom: 10px;
+          }
+          .header h1 {
+            font-size: 24px;
+            margin: 0;
+            color: #333;
+          }
+          .header-info {
+            font-size: 13px;
+            color: #666;
+            margin-top: 4px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            page-break-inside: auto;
+          }
+          th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+            page-break-inside: avoid;
+          }
+          th {
+            background-color: #f0f0f0;
+            font-weight: 600;
+            font-size: 13px;
+          }
+          td {
+            font-size: 12px;
+            vertical-align: middle;
+          }
+          tbody tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+          }
+          thead {
+            display: table-header-group;
+          }
+          .medicine-col {
+            text-align: left;
+            padding-left: 10px;
+          }
+          .serial-col {
+            width: 20%;
+          }
+          .medicine-col {
+            width: 80%;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Stock Data</h1>
+          <div class="header-info">Date: ${currentDate}</div>
+          <div class="header-info">Total Items: ${stockData.length}</div>
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th class="serial-col">Serial No.</th>
+              <th class="medicine-col">Medicine Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${stockData
+              .map(
+                (stock, index) => `
+              <tr>
+                <td class="serial-col">${index + 1}</td>
+                <td class="medicine-col">${stock.medicineName}</td>
+              </tr>
+            `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+
+      const { uri: tempUri } = await Print.printToFileAsync({
+        html: htmlContent,
+        base64: false,
+      });
+
+      const newPath = FileSystem.documentDirectory + fileName;
+
+      await FileSystem.moveAsync({
+        from: tempUri,
+        to: newPath,
+      });
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(newPath, {
+          mimeType: "application/pdf",
+          dialogTitle: "Share Stock Data PDF",
+          UTI: "com.adobe.pdf",
+        });
+      } else {
+        Alert.alert("Success", "PDF generated successfully!");
+      }
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      Alert.alert("Error", "Failed to generate PDF. Please try again.");
+    }
+  }, [currentStore?.id]);
 
   const handleOptionPress = useCallback(
     async (option: any) => {
@@ -78,16 +221,14 @@ export default function MoreOptionsScreen() {
         case "exportStore":
           router.push("/(app)/exportstore");
           break;
-
-        case "refreshStores":
-          await refreshStores();
+        case "exportStock":
+          await exportStockToPDF();
           break;
-
         default:
           break;
       }
     },
-    [router, currentStore?.id, refreshStores]
+    [router, currentStore?.id, exportStockToPDF]
   );
 
   const renderIcon = useCallback((option: any) => {

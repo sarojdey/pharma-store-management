@@ -69,129 +69,137 @@ export default function OrderLists() {
       }.pdf`;
 
       const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Order List</title>
-        <style>
-          @page {
-            size: A4;
-            margin: 20mm;
-          }
-          body {
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            font-size: 12px;
-            color: #222;
-            margin: 0;
-            padding: 0;
-          }
-          .header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #aaa;
-            padding-bottom: 10px;
-          }
-          .header h1 {
-            font-size: 24px;
-            margin: 0;
-            color: #333;
-          }
-          .header-info {
-            font-size: 13px;
-            color: #666;
-            margin-top: 4px;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-          }
-          th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: center;
-          }
-          th {
-            background-color: #f0f0f0;
-            font-weight: 600;
-            font-size: 13px;
-          }
-          td {
-            font-size: 12px;
-            vertical-align: middle;
-          }
-          .medicine-col,
-          .supplier-col {
-            text-align: left;
-            padding-left: 10px;
-          }
-          .serial-col {
-            width: 10%;
-          }
-          .medicine-col {
-            width: 35%;
-          }
-          .quantity-col {
-            width: 15%;
-          }
-          .date-col {
-            width: 20%;
-          }
-          .supplier-col {
-            width: 20%;
-          }
-          .na-text {
-            color: #aaa;
-            font-style: italic;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>Order List</h1>
-          <div class="header-info">Date: ${currentDate}</div>
-          <div class="header-info">Total Items: ${orderLists.length}</div>
-        </div>
-        
-        <table>
-          <thead>
-            <tr>
-              <th class="serial-col">Serial No.</th>
-              <th class="medicine-col">Medicine Name</th>
-              <th class="quantity-col">Quantity</th>
-              <th class="date-col">Date Added</th>
-              <th class="supplier-col">Supplier</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${orderLists
-              .map(
-                (order, index) => `
-              <tr>
-                <td class="serial-col">${index + 1}</td>
-                <td class="medicine-col">
-                  <span class="medicine-name">${order.medicineName}</span>
-                </td>
-                <td class="quantity-col">${order.quantity}</td>
-                <td class="date-col">${formatDate(order.createdAt)}</td>
-                <td class="supplier-col">
-                  ${
-                    order.supplierName
-                      ? order.supplierName
-                      : '<span class="na-text">N/A</span>'
-                  }
-                </td>
-              </tr>
-            `
-              )
-              .join("")}
-          </tbody>
-        </table>
-      </body>
-      </html>
-    `;
-
+     <!DOCTYPE html>
+     <html>
+     <head>
+       <meta charset="utf-8">
+       <title>Order List</title>
+       <style>
+         @page {
+           size: A4;
+           margin: 20mm;
+         }
+         body {
+           font-family: "Helvetica Neue", Arial, sans-serif;
+           font-size: 12px;
+           color: #222;
+           margin: 0;
+           padding: 0;
+         }
+         .header {
+           text-align: center;
+           margin-bottom: 20px;
+           border-bottom: 1px solid #aaa;
+           padding-bottom: 10px;
+         }
+         .header h1 {
+           font-size: 24px;
+           margin: 0;
+           color: #333;
+         }
+         .header-info {
+           font-size: 13px;
+           color: #666;
+           margin-top: 4px;
+         }
+         table {
+           width: 100%;
+           border-collapse: collapse;
+           margin-top: 15px;
+           page-break-inside: auto;
+         }
+         th, td {
+           border: 1px solid #ccc;
+           padding: 8px;
+           text-align: center;
+           page-break-inside: avoid;
+         }
+         th {
+           background-color: #f0f0f0;
+           font-weight: 600;
+           font-size: 13px;
+         }
+         td {
+           font-size: 12px;
+           vertical-align: middle;
+         }
+         tbody tr {
+           page-break-inside: avoid;
+           page-break-after: auto;
+         }
+         thead {
+           display: table-header-group;
+         }
+         .medicine-col,
+         .supplier-col {
+           text-align: left;
+           padding-left: 10px;
+         }
+         .serial-col {
+           width: 10%;
+         }
+         .medicine-col {
+           width: 35%;
+         }
+         .quantity-col {
+           width: 15%;
+         }
+         .date-col {
+           width: 20%;
+         }
+         .supplier-col {
+           width: 20%;
+         }
+         .na-text {
+           color: #aaa;
+           font-style: italic;
+         }
+       </style>
+     </head>
+     <body>
+       <div class="header">
+         <h1>Order List</h1>
+         <div class="header-info">Date: ${currentDate}</div>
+         <div class="header-info">Total Items: ${orderLists.length}</div>
+       </div>
+       
+       <table>
+         <thead>
+           <tr>
+             <th class="serial-col">Serial No.</th>
+             <th class="medicine-col">Medicine Name</th>
+             <th class="quantity-col">Quantity</th>
+             <th class="date-col">Date Added</th>
+             <th class="supplier-col">Supplier</th>
+           </tr>
+         </thead>
+         <tbody>
+           ${orderLists
+             .map(
+               (order, index) => `
+             <tr>
+               <td class="serial-col">${index + 1}</td>
+               <td class="medicine-col">
+                 <span class="medicine-name">${order.medicineName}</span>
+               </td>
+               <td class="quantity-col">${order.quantity}</td>
+               <td class="date-col">${formatDate(order.createdAt)}</td>
+               <td class="supplier-col">
+                 ${
+                   order.supplierName
+                     ? order.supplierName
+                     : '<span class="na-text">N/A</span>'
+                 }
+               </td>
+             </tr>
+           `
+             )
+             .join("")}
+         </tbody>
+       </table>
+     </body>
+     </html>
+   `;
       const { uri: tempUri } = await Print.printToFileAsync({
         html: htmlContent,
         base64: false,

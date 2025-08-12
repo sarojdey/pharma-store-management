@@ -189,6 +189,62 @@ export const exportStoreToFile = async (
   }
 };
 
+export const exportStoreToInternalFile = async (
+  store: Store,
+  options: {
+    includeHistory?: boolean;
+    dateRange?: {
+      startDate: string;
+      endDate: string;
+    };
+    customFileName?: string;
+  } = {}
+): Promise<{ success: boolean; filePath?: string; error?: any }> => {
+  try {
+    // Get export data
+    const exportResult = await exportStoreData(store, options);
+
+    if (!exportResult.success || !exportResult.data) {
+      return {
+        success: false,
+        error: exportResult.error || "Failed to prepare export data",
+      };
+    }
+
+    // Generate filename
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, "-")
+      .split("T")[0];
+    const fileName =
+      options.customFileName ||
+      `${store.name.replace(/[^a-zA-Z0-9]/g, "_")}_export_${timestamp}.json`;
+
+    // Create file path
+    const filePath = `${FileSystem.documentDirectory}${fileName}`;
+
+    // Write JSON to file
+    await FileSystem.writeAsStringAsync(
+      filePath,
+      JSON.stringify(exportResult.data, null, 2),
+      { encoding: FileSystem.EncodingType.UTF8 }
+    );
+
+    console.log(`✅ Export file created: ${filePath}`);
+
+    return {
+      success: true,
+      filePath: filePath,
+    };
+  } catch (error) {
+    console.error("❌ Error creating export file:", error);
+    return {
+      success: false,
+      error: error,
+    };
+  }
+};
+
 export const exportAndShareStoreData = async (
   store: Store,
   options: {
@@ -201,7 +257,7 @@ export const exportAndShareStoreData = async (
   } = {}
 ): Promise<{ success: boolean; shared?: boolean; error?: any }> => {
   try {
-    const fileResult = await exportStoreToFile(store, options);
+    const fileResult = await exportStoreToInternalFile(store, options);
 
     if (!fileResult.success || !fileResult.filePath) {
       return {

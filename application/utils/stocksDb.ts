@@ -405,3 +405,23 @@ export const getStockReport = async (
     return [];
   }
 };
+// Add this new function to your stocksDb.js file
+
+export const getStockForExport = async (
+  storeId: number
+): Promise<{ medicineName: string }[]> => {
+  try {
+    const query = `SELECT 
+      medicineName
+    FROM drugs 
+    WHERE store_id = ?
+    GROUP BY medicineName
+    ORDER BY medicineName`;
+
+    const result = await db.getAllAsync(query, [storeId]);
+    return result as { medicineName: string }[];
+  } catch (error) {
+    console.error("Error fetching stock for export:", error);
+    return [];
+  }
+};

@@ -252,7 +252,7 @@ export default function HomeScreen() {
             />
           </View>
           <View>
-            <Text style={styles.appTitle}>Medicine Stockist</Text>
+            <Text style={styles.appTitle}>{currentStore.name}</Text>
           </View>
         </View>
         <TouchableOpacity onPress={openSidebar}>
@@ -418,15 +418,16 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   logoContainer: {
+    marginTop: 2,
     height: 24,
     width: 24,
     justifyContent: "center",
     alignItems: "center",
   },
   appTitle: {
-    fontWeight: "500",
-    fontSize: 18,
-    color: "#212121",
+    fontWeight: "600",
+    fontSize: 20,
+    color: "#323232ff",
   },
   currentStoreInfo: {
     backgroundColor: "#ffffff",
@@ -488,7 +489,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     textAlign: "center",
-    fontWeight: "500",
+    fontWeight: "700",
     marginTop: 8,
   },
   description: {

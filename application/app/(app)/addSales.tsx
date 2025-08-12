@@ -281,6 +281,9 @@ export default function AddSale() {
         return;
       }
 
+      // Calculate unit price
+      const unitPrice = selectedMedicine.mrp / selectedMedicine.unitPerPackage;
+
       const saleData = {
         medicineId: selectedMedicine.id,
         medicineName: selectedMedicine.medicineName,
@@ -313,7 +316,7 @@ export default function AddSale() {
             },
             currentStore?.id
           );
-          const totalAmount = saleQuantity * selectedMedicine.mrp;
+          const totalAmount = saleQuantity * unitPrice;
 
           Alert.alert(
             "Sale Added Successfully",
@@ -454,7 +457,14 @@ export default function AddSale() {
                       : "units"}
                   </Text>
                   <Text style={styles.selectedMedicineDetail}>
-                    MRP: ₹{selectedMedicine.mrp}
+                    Package MRP: ₹{selectedMedicine.mrp} (
+                    {selectedMedicine.unitPerPackage} units)
+                  </Text>
+                  <Text style={styles.selectedMedicineDetail}>
+                    Unit Price: ₹
+                    {(
+                      selectedMedicine.mrp / selectedMedicine.unitPerPackage
+                    ).toFixed(2)}
                   </Text>
                   <Text
                     style={[
@@ -517,11 +527,17 @@ export default function AddSale() {
                     {selectedMedicine.medicineType.toLowerCase()}(s)
                   </Text>
                   <Text style={styles.salesSummaryItem}>
-                    Unit Price: ₹{selectedMedicine.mrp}
+                    Unit Price: ₹
+                    {(
+                      selectedMedicine.mrp / selectedMedicine.unitPerPackage
+                    ).toFixed(2)}
                   </Text>
                   <Text style={styles.salesSummaryTotal}>
                     Total Amount: ₹
-                    {(saleQuantity * selectedMedicine.mrp).toFixed(2)}
+                    {(
+                      saleQuantity *
+                      (selectedMedicine.mrp / selectedMedicine.unitPerPackage)
+                    ).toFixed(2)}
                   </Text>
                 </View>
               )}
