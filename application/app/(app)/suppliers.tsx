@@ -159,7 +159,11 @@ export default function Suppliers() {
           ) : (
             <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
               {suppliers.map((supplier) => (
-                <SupplierCard key={supplier.id} supplier={supplier} />
+                <SupplierCard
+                  onUpdate={loadSuppliers}
+                  key={supplier.id}
+                  supplier={supplier}
+                />
               ))}
             </View>
           )}

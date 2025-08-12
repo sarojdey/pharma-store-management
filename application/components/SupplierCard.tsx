@@ -1,13 +1,75 @@
 import { Supplier } from "@/types";
+import { useStore } from "@/contexts/StoreContext";
+import { addHistory } from "@/utils/historyDb";
+import { deleteSupplier } from "@/utils/supplierDb";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 
-export default function SupplierCard({ supplier }: { supplier: Supplier }) {
+interface SupplierCardProps {
+  supplier: Supplier;
+  onUpdate: () => void;
+}
+
+export default function SupplierCard({
+  supplier,
+  onUpdate,
+}: SupplierCardProps) {
+  const { currentStore } = useStore();
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Delete Supplier",
+      `Are you sure you want to delete this supplier?\n\nSupplier: ${supplier.supplierName}\nLocation: ${supplier.location}\nPhone: ${supplier.phone}`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            if (!currentStore?.id) {
+              Alert.alert("Error", "No store selected.");
+              return;
+            }
+
+            try {
+              if (!supplier.id) {
+                Alert.alert("Error", "Invalid supplier ID.");
+                return;
+              }
+
+              const result = await deleteSupplier(supplier.id, currentStore.id);
+              if (result.success) {
+                await addHistory(
+                  {
+                    operation: `Supplier deleted - Supplier: ${supplier.supplierName}, Location: ${supplier.location}, Phone: ${supplier.phone}`,
+                  },
+                  currentStore.id
+                );
+                onUpdate();
+              } else {
+                Alert.alert("Error", "Failed to delete supplier");
+              }
+            } catch (error) {
+              console.error("Error deleting supplier:", error);
+              Alert.alert("Error", "Failed to delete supplier");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <Text style={styles.supplierName}>{supplier.supplierName}</Text>
-        <AntDesign name="form" size={20} color="#aaa" />
+        <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+          <MaterialIcons name="delete" size={20} color="#888" />
+        </TouchableOpacity>
       </View>
 
       <View
@@ -64,7 +126,11 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 4,
+  },
+  deleteButton: {
+    padding: 4,
   },
   orderButton: {
     borderWidth: 1,
@@ -72,9 +138,8 @@ const styles = StyleSheet.create({
     padding: 12,
     borderColor: "#ccc",
   },
-
   supplierName: {
-    maxWidth: "90%",
+    maxWidth: "85%",
     fontSize: 17,
     fontWeight: "600",
     color: "rgb(25, 76, 116)",

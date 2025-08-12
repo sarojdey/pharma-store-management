@@ -116,12 +116,12 @@ const BUTTONS: {
   {
     key: "logs",
     label: "Logs",
-    icon: "log",
+    icon: "error",
     navigateTo: "/(app)/errorlogs",
     description: "App logs will apear here.",
-    bg: "rgba(201, 194, 192, 0.1)",
-    border: "rgba(139, 129, 125, 0.3)",
-    text: "rgba(121, 101, 92, 1)",
+    bg: "#d4a5af42",
+    border: "#8f707742",
+    text: "#9d4054ff",
   },
 ];
 
