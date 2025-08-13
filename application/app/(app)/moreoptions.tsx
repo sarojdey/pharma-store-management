@@ -246,7 +246,7 @@ export default function MoreOptionsScreen() {
     <View style={styles.wrapper}>
       <View style={styles.topbar}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-sharp" size={24} color="#333" />
+          <Ionicons name="arrow-back-sharp" size={24} color="#535353ff" />
         </TouchableOpacity>
         <Text style={styles.topbarTitle}>More Options</Text>
       </View>
@@ -279,7 +279,7 @@ export default function MoreOptionsScreen() {
                     {option.description}
                   </Text>
                 </View>
-                <Feather name="chevron-right" size={20} color="#ccc" />
+                <Feather name="chevron-right" size={20} color="#8b8b8bff" />
               </TouchableOpacity>
             ))}
           </View>
@@ -295,13 +295,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   topbar: {
+    height: 70,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f9f9f9",
     borderBottomWidth: 1,
     borderTopWidth: 1,
-    borderBottomColor: "#ccc",
-    borderTopColor: "#ccc",
+    borderBottomColor: "#c3c3c3a6",
+    borderTopColor: "#c3c3c3a6",
     paddingHorizontal: 10,
     paddingVertical: 16,
     gap: 10,
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
   topbarTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#333",
+    color: "#535353ff",
     flex: 1,
     textAlign: "center",
     paddingRight: 40,
@@ -334,15 +335,15 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 14,
     marginBottom: 10,
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "#c3c3c3a6",
   },
   optionIconContainer: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
@@ -352,12 +353,12 @@ const styles = StyleSheet.create({
   },
   optionTitle: {
     fontSize: 16,
-    fontWeight: "500",
-    color: "#212121",
+    fontWeight: "600",
+    color: "#535353ff",
     marginBottom: 2,
   },
   optionDescription: {
     fontSize: 13,
-    color: "#666",
+    color: "#8b8b8bff",
   },
 });

@@ -196,8 +196,8 @@ export default function HomeScreen() {
         >
           <Ionicons
             name={isCurrentStore ? "storefront" : "storefront-outline"}
-            size={30}
-            color={isCurrentStore ? "rgb(70, 125, 168)" : "#666"}
+            size={26}
+            color={isCurrentStore ? "#4167a8ff" : "#535353ff"}
           />
           <View style={styles.storeInfo}>
             <Text
@@ -256,7 +256,7 @@ export default function HomeScreen() {
           </View>
         </View>
         <TouchableOpacity onPress={openSidebar}>
-          <Feather name="menu" size={24} color="#212121" />
+          <Feather name="menu" size={24} color="#535353ff" />
         </TouchableOpacity>
       </View>
 
@@ -334,7 +334,7 @@ export default function HomeScreen() {
                 onPress={closeSidebar}
                 style={styles.closeButton}
               >
-                <AntDesign name="close" size={24} color="#212121" />
+                <AntDesign name="close" size={24} color="#535353ff" />
               </TouchableOpacity>
             </View>
 
@@ -353,7 +353,7 @@ export default function HomeScreen() {
                 activeOpacity={0.7}
                 onPress={handleMoreOptions}
               >
-                <MaterialIcons name="more-vert" size={24} color="#666" />
+                <MaterialIcons name="more-vert" size={24} color="#4167a8ff" />
                 <Text style={styles.moreOptionsText}>More Options</Text>
               </TouchableOpacity>
             </View>
@@ -405,15 +405,16 @@ const styles = StyleSheet.create({
   header: {
     position: "relative",
     top: 0,
+    height: 70,
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f9f9f9",
     borderBottomWidth: 1,
     borderTopWidth: 1,
-    borderBottomColor: "#ccc",
-    borderTopColor: "#ccc",
+    borderBottomColor: "#c3c3c3a6",
+    borderTopColor: "#c3c3c3a6",
     padding: 18,
     zIndex: 1000,
   },
@@ -427,7 +428,7 @@ const styles = StyleSheet.create({
   appTitle: {
     fontWeight: "600",
     fontSize: 20,
-    color: "#323232ff",
+    color: "#535353ff",
   },
   currentStoreInfo: {
     backgroundColor: "#ffffff",
@@ -437,16 +438,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e5e7eb",
   },
-  currentStoreTitle: {
-    fontSize: 14,
-    color: "#6b7280",
-    marginBottom: 4,
-  },
-  currentStoreName: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1f2937",
-  },
+
   chartButton: {
     width: "48%",
     flexDirection: "row",
@@ -454,16 +446,16 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: "#ccc",
-    backgroundColor: "#f5f5f5",
+    borderColor: "#c3c3c3a6",
+    backgroundColor: "#f9f9f9",
     borderRadius: 8,
   },
   chartLabel: {
-    color: "#212121",
-    fontWeight: "500",
+    color: "#535353ff",
+    fontWeight: "600",
   },
   chartIcon: {
-    color: "#212121",
+    color: "#535353ff",
     marginRight: 8,
   },
   scrollContainer: {
@@ -484,7 +476,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   label: {
     fontSize: 16,
@@ -493,7 +485,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   description: {
-    fontSize: 12,
+    fontSize: 13,
     textAlign: "center",
     flexWrap: "wrap",
   },
@@ -512,7 +504,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     width: SIDEBAR_WIDTH,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f9f9f9",
     zIndex: 2000,
     shadowColor: "#000",
     shadowOffset: {
@@ -524,17 +516,18 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   sidebarHeader: {
+    height: 70,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    borderBottomColor: "#c3c3c3a6",
   },
   sidebarTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#212121",
+    color: "#535353ff",
   },
   closeButton: {
     padding: 4,
@@ -546,10 +539,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#666",
+    color: "#8b8b8bff",
     marginBottom: 15,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
   userList: {
     flex: 1,
@@ -566,21 +557,21 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   currentUser: {
-    backgroundColor: "rgba(201, 231, 255, 0.1)",
+    backgroundColor: "#d6e5ff35",
     borderWidth: 1,
-    borderColor: "rgba(97, 129, 155, 0.30)",
+    borderColor: "#50628240",
   },
   storeInfo: {
     flex: 1,
     marginLeft: 12,
   },
   userName: {
-    fontSize: 17,
-    color: "#333",
-    fontWeight: "500",
+    fontSize: 16,
+    color: "#535353ff",
+    fontWeight: "600",
   },
   currentUserName: {
-    color: "rgb(70, 125, 168)",
+    color: "#4167a8ff",
     fontWeight: "600",
   },
   activeIndicator: {
@@ -595,12 +586,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 12,
     borderRadius: 8,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#d6e5ff35",
+    borderWidth: 1,
+    borderColor: "#50628240",
   },
   moreOptionsText: {
     marginLeft: 8,
     fontSize: 16,
-    color: "#666",
-    fontWeight: "500",
+    color: "#4167a8ff",
+    fontWeight: "600",
   },
 });

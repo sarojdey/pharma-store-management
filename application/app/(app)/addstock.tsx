@@ -637,21 +637,20 @@ export default function AddInventoryItem() {
                   )}
                 />
               </FormField>
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  isSubmitting && styles.submitButtonDisabled,
+                ]}
+                onPress={handleSubmit(onSubmit)}
+                activeOpacity={0.8}
+                disabled={isSubmitting}
+              >
+                <Text style={styles.submitButtonText}>
+                  {isRestockMode ? "Add to Stock" : "Add to Inventory"}
+                </Text>
+              </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              style={[
-                styles.submitButton,
-                isSubmitting && styles.submitButtonDisabled,
-              ]}
-              onPress={handleSubmit(onSubmit)}
-              activeOpacity={0.8}
-              disabled={isSubmitting}
-            >
-              <Text style={styles.submitButtonText}>
-                {isRestockMode ? "Add to Stock" : "Add to Inventory"}
-              </Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -663,16 +662,17 @@ const styles = StyleSheet.create({
   wrapper: { flex: 1, position: "relative" },
 
   topbar: {
+    height: 70,
     position: "absolute",
     top: 0,
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#f9f9f9",
     borderBottomWidth: 1,
     borderTopWidth: 1,
-    borderBottomColor: "#ccc",
-    borderTopColor: "#ccc",
+    borderBottomColor: "#c3c3c3a6",
+    borderTopColor: "#c3c3c3a6",
     paddingHorizontal: 10,
     paddingVertical: 16,
     zIndex: 1000,
@@ -746,17 +746,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   submitButton: {
-    backgroundColor: "rgba(223, 241, 255, 0.49)",
+    backgroundColor: "#d6e5ff35",
     borderWidth: 1,
-    borderColor: "rgb(152, 175, 192)",
+    borderColor: "#50628240",
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 20,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 10,
   },
   submitButtonText: {
-    color: "rgb(57, 104, 139)",
+    color: "#4167a8ff",
     fontSize: 16,
     fontWeight: "600",
   },
