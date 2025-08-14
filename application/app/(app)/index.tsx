@@ -243,10 +243,17 @@ export default function HomeScreen() {
   return (
     <View style={{ flex: 1, position: "relative" }}>
       <View style={styles.header}>
-        <View style={{ flexDirection: "row", gap: 8 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 8,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <View style={styles.logoContainer}>
             <Image
-              source={require("../../assets/images/capsule.png")}
+              source={require("../../assets/images/applogo.png")}
               style={{ height: "100%", width: "100%" }}
               resizeMode="contain"
             />
@@ -419,9 +426,8 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   logoContainer: {
-    marginTop: 2,
-    height: 24,
-    width: 24,
+    height: 40,
+    width: 40,
     justifyContent: "center",
     alignItems: "center",
   },
