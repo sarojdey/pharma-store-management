@@ -104,7 +104,7 @@ const MedicineDropdownItem: React.FC<MedicineDropdownItemProps> = ({
           ]}
         >
           Stock: {item.quantity}{" "}
-          {item.medicineType === "Tablet" ? "tablet(s)" : "units"}
+          {item.medicineType === "Tablet" || item.medicineType === "Capsule" ? item.medicineType.toLowerCase() + "(s)" : "units"}
         </Text>
         <Text
           style={[
@@ -243,6 +243,8 @@ export default function EditSale() {
     switch (medicineType) {
       case "Tablet":
         return "Number of Tablets";
+      case "Capsule":
+        return "Number of Capsules";
       case "Syrup":
         return "Number of Bottles";
       case "Injectable":
@@ -260,6 +262,8 @@ export default function EditSale() {
     switch (medicineType) {
       case "Tablet":
         return "e.g., 10 tablets";
+      case "Capsule":
+        return "e.g., 10 capsules";
       case "Syrup":
         return "e.g., 2 bottles";
       case "Injectable":
@@ -663,8 +667,8 @@ export default function EditSale() {
                   )}
                   <Text style={styles.selectedMedicineDetail}>
                     Current Stock: {selectedMedicine.quantity}{" "}
-                    {selectedMedicine.medicineType === "Tablet"
-                      ? "tablet(s)"
+                    {selectedMedicine.medicineType === "Tablet" || selectedMedicine.medicineType === "Capsule"
+                      ? selectedMedicine.medicineType.toLowerCase() + "(s)"
                       : "units"}
                     {originalSale.medicineId === selectedMedicine.id &&
                       ` (+${originalSale.quantity} from original sale)`}

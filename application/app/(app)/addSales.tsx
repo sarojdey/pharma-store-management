@@ -103,7 +103,7 @@ const MedicineDropdownItem: React.FC<MedicineDropdownItemProps> = ({
           ]}
         >
           Stock: {item.quantity}{" "}
-          {item.medicineType === "Tablet" ? "tablet(s)" : "units"}
+          {item.medicineType === "Tablet" || item.medicineType === "Capsule" ? item.medicineType.toLowerCase() + "(s)" : "units"}
         </Text>
         <Text
           style={[
@@ -198,6 +198,8 @@ export default function AddSale() {
     switch (medicineType) {
       case "Tablet":
         return "Number of Tablets";
+      case "Capsule":
+        return "Number of Capsules";
       case "Syrup":
         return "Number of Bottles";
       case "Injectable":
@@ -215,6 +217,8 @@ export default function AddSale() {
     switch (medicineType) {
       case "Tablet":
         return "e.g., 10 tablets";
+      case "Capsule":
+        return "e.g., 10 capsules";
       case "Syrup":
         return "e.g., 2 bottles";
       case "Injectable":
@@ -438,8 +442,8 @@ export default function AddSale() {
                   )}
                   <Text style={styles.selectedMedicineDetail}>
                     Available Stock: {selectedMedicine.quantity}{" "}
-                    {selectedMedicine.medicineType === "Tablet"
-                      ? "tablet(s)"
+                    {selectedMedicine.medicineType === "Tablet" || selectedMedicine.medicineType === "Capsule"
+                      ? selectedMedicine.medicineType.toLowerCase() + "(s)"
                       : "units"}
                   </Text>
                   <Text style={styles.selectedMedicineDetail}>
@@ -497,9 +501,9 @@ export default function AddSale() {
                       />
                     )}
                   />
-                  {selectedMedicine.medicineType === "Tablet" && (
+                  {(selectedMedicine.medicineType === "Tablet" || selectedMedicine.medicineType === "Capsule") && (
                     <Text style={styles.helperText}>
-                      Available: {selectedMedicine.quantity} tablet(s)
+                      Available: {selectedMedicine.quantity} {selectedMedicine.medicineType.toLowerCase()}(s)
                     </Text>
                   )}
                 </FormField>

@@ -79,7 +79,7 @@ const schema = z
   )
   .refine(
     (data) => {
-      if (data.medicineType === "Tablet" || data.medicineType === "Other") {
+      if (data.medicineType === "Tablet" || data.medicineType === "Capsule" || data.medicineType === "Other") {
         return data.unitPerPackage !== undefined && data.unitPerPackage >= 1;
       }
       return true;
@@ -152,6 +152,8 @@ export default function AddInventoryItem() {
     switch (medicineType) {
       case "Tablet":
         return "No. of Strips";
+      case "Capsule":
+        return "No. of Strips";
       case "Syrup":
         return "No. of Bottles";
       case "Injectable":
@@ -168,7 +170,7 @@ export default function AddInventoryItem() {
   };
 
   const shouldShowUnitPerPackage = () => {
-    return medicineType === "Tablet" || medicineType === "Other";
+    return medicineType === "Tablet" || medicineType === "Capsule" || medicineType === "Other";
   };
 
   const onSubmit = async (data: z.infer<typeof schema>) => {
@@ -373,6 +375,7 @@ export default function AddInventoryItem() {
                         style={styles.picker}
                       >
                         <Picker.Item label="Tablet" value="Tablet" />
+                        <Picker.Item label="Capsule" value="Capsule" />
                         <Picker.Item label="Syrup" value="Syrup" />
                         <Picker.Item label="Injectable" value="Injectable" />
                         <Picker.Item label="Ointment" value="Ointment" />
