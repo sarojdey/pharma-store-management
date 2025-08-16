@@ -39,17 +39,17 @@ export default function SaleCard({ sale }: { sale: Sale }) {
 
           <View style={styles.metricCard}>
             <View style={styles.metricContent}>
-              <Text style={styles.metricLabel}>MRP</Text>
-              <Text style={styles.metricValue}>₹{sale.mrp}</Text>
+              <Text style={styles.metricLabel}>MRP per Unit</Text>
+              <Text style={styles.metricValue}>₹{(sale.mrp / sale.unitPerPackage).toFixed(2)}</Text>
             </View>
           </View>
         </View>
 
-        <View style={[styles.metricsGrid, { marginBottom: 0 }]}>
+        <View style={styles.metricsGrid}>
           <View style={styles.metricCard}>
             <View style={styles.metricContent}>
-              <Text style={styles.metricLabel}>Price</Text>
-              <Text style={styles.metricValue}>₹{sale.price}</Text>
+              <Text style={styles.metricLabel}>Price per Unit</Text>
+              <Text style={styles.metricValue}>₹{(sale.price / sale.unitPerPackage).toFixed(2)}</Text>
             </View>
           </View>
 
@@ -57,7 +57,7 @@ export default function SaleCard({ sale }: { sale: Sale }) {
             <View style={styles.metricContent}>
               <Text style={styles.metricLabel}>Total Profit</Text>
               <Text style={styles.metricValue}>
-                ₹{(sale.mrp - sale.price) * sale.quantity}
+                ₹{((sale.mrp - sale.price) * sale.quantity / sale.unitPerPackage).toFixed(2)}
               </Text>
             </View>
           </View>

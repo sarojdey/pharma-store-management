@@ -16,6 +16,14 @@ import {
   View,
 } from "react-native";
 
+const EXPIRY_WARNING_DAYS = 30;
+
+const textColorMap: Record<string, string> = {
+  expired: "#bd3f3fff",
+  expiring: "#c5762dff",
+  consumable: "#444",
+};
+
 const MedicineDetails = () => {
   const { id } = useLocalSearchParams();
   const [drug, setDrug] = useState<Drug | null>(null);
@@ -108,11 +116,18 @@ const MedicineDetails = () => {
 
   const currentDate = new Date();
   const expiryDate = new Date(drug.expiryDate);
-  const isExpired = expiryDate < currentDate;
-  const daysLeft = Math.ceil(
-    (expiryDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const isExpiringSoon = daysLeft <= 30 && daysLeft > 0;
+  const daysLeft =
+    (expiryDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24);
+
+  const expiryStatus =
+    expiryDate.getTime() < currentDate.setHours(0, 0, 0, 0)
+      ? "expired"
+      : daysLeft <= EXPIRY_WARNING_DAYS
+      ? "expiring"
+      : "consumable";
+
+  const isExpired = expiryStatus === "expired";
+  const isExpiringSoon = expiryStatus === "expiring";
 
   const isOutOfStock = drug.quantity === 0;
   const isLowStock = drug.quantity > 0 && drug.quantity <= 10;
@@ -197,13 +212,11 @@ const MedicineDetails = () => {
                 style={[
                   styles.value,
                   item.label === "Quantity" && isOutOfStock
-                    ? styles.outOfStockText
+                    ? { color: textColorMap.expired }
                     : item.label === "Quantity" && isLowStock
-                    ? styles.lowStockText
-                    : item.label === "Expiry Date" && isExpired
-                    ? styles.expiredText
-                    : item.label === "Expiry Date" && isExpiringSoon
-                    ? styles.expiringSoonText
+                    ? { color: textColorMap.expiring }
+                    : item.label === "Expiry Date"
+                    ? { color: textColorMap[expiryStatus] }
                     : {},
                 ]}
               >
@@ -324,18 +337,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     flex: 1,
     textAlign: "right",
-  },
-  expiredText: {
-    color: "#d32f2f",
-  },
-  expiringSoonText: {
-    color: "#f57c00",
-  },
-  outOfStockText: {
-    color: "#d32f2f",
-  },
-  lowStockText: {
-    color: "#ffa000",
   },
 });
 

@@ -237,12 +237,9 @@ const SalesReportTable: React.FC = () => {
             showsHorizontalScrollIndicator={true}
             style={styles.horizontalScroll}
           >
-            <ScrollView
-              showsVerticalScrollIndicator={true}
-              style={styles.verticalScroll}
-            >
-              <View style={styles.table}>
-                {/* Header */}
+            <View style={styles.tableContainer}>
+              {/* Sticky Header */}
+              <View style={styles.stickyHeader}>
                 <View style={styles.headerRow}>
                   <Text
                     style={[styles.cell, styles.headerCell, styles.serialCol]}
@@ -257,10 +254,10 @@ const SalesReportTable: React.FC = () => {
                   <Text
                     style={[styles.cell, styles.headerCell, styles.priceCol]}
                   >
-                    Price
+                    Price per Unit
                   </Text>
                   <Text style={[styles.cell, styles.headerCell, styles.mrpCol]}>
-                    MRP
+                    MRP per Unit
                   </Text>
                   <Text
                     style={[styles.cell, styles.headerCell, styles.quantityCol]}
@@ -278,81 +275,123 @@ const SalesReportTable: React.FC = () => {
                     Total Profit
                   </Text>
                 </View>
-
-                {/* Data Rows */}
-                {groupedSales.map((item, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.dataRow,
-                      index === groupedSales.length - 1 && styles.lastRow,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.serialCol,
-                        index === groupedSales.length - 1 && styles.lastRowCell,
-                      ]}
-                    >
-                      {index + 1}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.medicineCol,
-                        index === groupedSales.length - 1 && styles.lastRowCell,
-                      ]}
-                    >
-                      {item.medicineName}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.priceCol,
-                        index === groupedSales.length - 1 && styles.lastRowCell,
-                      ]}
-                    >
-                      ₹{item.price.toFixed(2)}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.mrpCol,
-                        index === groupedSales.length - 1 && styles.lastRowCell,
-                      ]}
-                    >
-                      ₹{item.mrp.toFixed(2)}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.quantityCol,
-                        index === groupedSales.length - 1 && styles.lastRowCell,
-                      ]}
-                    >
-                      {item.quantitySold}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.profitCol,
-                        styles.lastCell,
-                        index === groupedSales.length - 1 && styles.lastRowCell,
-                      ]}
-                    >
-                      ₹{item.totalProfit.toFixed(2)}
-                    </Text>
-                  </View>
-                ))}
               </View>
-            </ScrollView>
+
+              {/* Scrollable Body */}
+              <ScrollView
+                showsVerticalScrollIndicator={true}
+                style={styles.tableBody}
+              >
+                <View style={styles.table}>
+                  {/* Data Rows */}
+                  {groupedSales.map((item, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.dataRow,
+                        index === groupedSales.length - 1 && styles.lastRow,
+                      ]}
+                    >
+                      <Text
+                        style={[styles.cell, styles.dataCell, styles.serialCol]}
+                      >
+                        {index + 1}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.cell,
+                          styles.dataCell,
+                          styles.medicineCol,
+                        ]}
+                      >
+                        {item.medicineName}
+                      </Text>
+                      <Text
+                        style={[styles.cell, styles.dataCell, styles.priceCol]}
+                      >
+                        ₹{(item.price / item.unitPerPackage).toFixed(2)}
+                      </Text>
+                      <Text
+                        style={[styles.cell, styles.dataCell, styles.mrpCol]}
+                      >
+                        ₹{(item.mrp / item.unitPerPackage).toFixed(2)}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.cell,
+                          styles.dataCell,
+                          styles.quantityCol,
+                        ]}
+                      >
+                        {item.quantitySold}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.cell,
+                          styles.dataCell,
+                          styles.profitCol,
+                          styles.lastCell,
+                        ]}
+                      >
+                        ₹
+                        {(
+                          ((item.mrp - item.price) * item.quantitySold) /
+                          item.unitPerPackage
+                        ).toFixed(2)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+
+              {/* Totals Row */}
+              <View style={styles.totalsRow}>
+                <View style={styles.totalSection}>
+                  <Text style={styles.totalLabel}>Total Revenue</Text>
+                  <Text style={styles.totalValue}>
+                    ₹
+                    {groupedSales
+                      .reduce(
+                        (sum, item) =>
+                          sum +
+                          (item.mrp * item.quantitySold) / item.unitPerPackage,
+                        0
+                      )
+                      .toFixed(2)}
+                  </Text>
+                </View>
+                <View style={styles.totalSection}>
+                  <Text style={styles.totalLabel}>Total Cost</Text>
+                  <Text style={styles.totalValue}>
+                    ₹
+                    {groupedSales
+                      .reduce(
+                        (sum, item) =>
+                          sum +
+                          (item.price * item.quantitySold) /
+                            item.unitPerPackage,
+                        0
+                      )
+                      .toFixed(2)}
+                  </Text>
+                </View>
+                <View style={[styles.totalSection, styles.lastTotalSection]}>
+                  <Text style={styles.totalLabel}>Total Profit</Text>
+                  <Text style={styles.totalValue}>
+                    ₹
+                    {groupedSales
+                      .reduce(
+                        (sum, item) =>
+                          sum +
+                          ((item.mrp - item.price) * item.quantitySold) /
+                            item.unitPerPackage,
+                        0
+                      )
+                      .toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+            </View>
           </ScrollView>
         )}
       </View>
@@ -528,16 +567,66 @@ const styles = StyleSheet.create({
   horizontalScroll: {
     flex: 1,
   },
-  verticalScroll: {
+  tableContainer: {
     flex: 1,
     paddingHorizontal: 10,
     paddingVertical: 10,
   },
-  table: {
+  stickyHeader: {
+    backgroundColor: "#ffff",
     borderWidth: 1,
+    borderBottomWidth: 0,
     borderRadius: 10,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     borderColor: "#aabbdc45",
     overflow: "hidden",
+  },
+  tableBody: {
+    flex: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: "#aabbdc45",
+    backgroundColor: "#fcfcfc",
+  },
+  table: {
+    backgroundColor: "#fcfcfc",
+    borderBottomWidth: 1,
+    borderColor: "#aabbdc45",
+  },
+  totalsRow: {
+    flexDirection: "row",
+    backgroundColor: "#f0f5ff91",
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderRadius: 10,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderColor: "#aabbdc45",
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+  },
+  totalSection: {
+    flex: 1,
+    alignItems: "center",
+    borderRightWidth: 1,
+    borderRightColor: "#aabbdc45",
+    paddingHorizontal: 8,
+  },
+  lastTotalSection: {
+    borderRightWidth: 0,
+  },
+  totalLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#3e5176ff",
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  totalValue: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#3e5176ff",
   },
   headerRow: {
     flexDirection: "row",
@@ -574,6 +663,11 @@ const styles = StyleSheet.create({
   dataCell: {
     fontSize: 14,
     color: "#555",
+  },
+  totalsCell: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#2c5aa0",
   },
   serialCol: {
     width: 80,

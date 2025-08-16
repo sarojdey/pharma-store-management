@@ -396,6 +396,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     width: "100%",
+    height: 70,
     zIndex: 1000,
   },
   header: {
@@ -419,7 +420,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   scrollContent: {
-    marginTop: 60, // Adjust based on topbar height
+    marginTop: 70,
   },
 
   section: {

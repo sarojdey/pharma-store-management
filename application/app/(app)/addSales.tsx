@@ -620,7 +620,6 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   scrollView: {
-    marginTop: 60,
     flex: 1,
   },
   scrollContent: {

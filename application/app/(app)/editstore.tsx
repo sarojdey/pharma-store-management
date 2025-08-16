@@ -324,6 +324,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     width: "100%",
+    height: 70,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#f5f5f5",
@@ -338,7 +339,7 @@ const styles = StyleSheet.create({
   },
 
   scrollView: {
-    marginTop: 60,
+    marginTop: 70,
     flex: 1,
   },
   scrollContent: {

@@ -75,7 +75,7 @@ export default function AddNewStoreScreen() {
 
       setCurrentStore(newStore);
       addStoreToContext(newStore);
-      seedDatabase(newStore.id);
+      // seedDatabase(newStore.id);
       Alert.alert(
         "Store Created!",
         `"${name.trim()}" has been created successfully.`,
@@ -518,6 +518,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     width: "100%",
+    height: 70,
     zIndex: 1000,
   },
   header: {
@@ -551,7 +552,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    paddingTop: 70,
+    paddingTop: 80,
   },
 
   modeToggleSection: {

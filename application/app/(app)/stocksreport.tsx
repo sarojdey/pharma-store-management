@@ -237,12 +237,9 @@ const StockReportTable: React.FC = () => {
             showsHorizontalScrollIndicator={true}
             style={styles.horizontalScroll}
           >
-            <ScrollView
-              showsVerticalScrollIndicator={true}
-              style={styles.verticalScroll}
-            >
-              <View style={styles.table}>
-                {/* Header */}
+            <View style={styles.tableContainer}>
+              {/* Sticky Header */}
+              <View style={styles.stickyHeader}>
                 <View style={styles.headerRow}>
                   <Text
                     style={[styles.cell, styles.headerCell, styles.serialCol]}
@@ -270,97 +267,149 @@ const StockReportTable: React.FC = () => {
                     Price
                   </Text>
                   <Text
-                    style={[
-                      styles.cell,
-                      styles.headerCell,
-                      styles.mrpCol,
-                      styles.lastCell,
-                    ]}
+                    style={[styles.cell, styles.headerCell, styles.mrpCol]}
                   >
                     MRP
                   </Text>
-                </View>
-
-                {/* Data Rows */}
-                {groupedStocks.map((item, index) => (
-                  <View
-                    key={index}
+                  <Text
+                    style={[styles.cell, styles.headerCell, styles.pricePerUnitCol]}
+                  >
+                    Price per Unit
+                  </Text>
+                  <Text
                     style={[
-                      styles.dataRow,
-                      index === groupedStocks.length - 1 && styles.lastRow,
+                      styles.cell,
+                      styles.headerCell,
+                      styles.mrpPerUnitCol,
+                      styles.lastCell,
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.serialCol,
-                        index === groupedStocks.length - 1 &&
-                          styles.lastRowCell,
-                      ]}
-                    >
-                      {index + 1}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.medicineCol,
-                        index === groupedStocks.length - 1 &&
-                          styles.lastRowCell,
-                      ]}
-                    >
-                      {item.medicineName}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.quantityCol,
-                        index === groupedStocks.length - 1 &&
-                          styles.lastRowCell,
-                      ]}
-                    >
-                      {item.quantity}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.unitCol,
-                        index === groupedStocks.length - 1 &&
-                          styles.lastRowCell,
-                      ]}
-                    >
-                      {item.unitPerPackage}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.priceCol,
-                        index === groupedStocks.length - 1 &&
-                          styles.lastRowCell,
-                      ]}
-                    >
-                      ₹{item.price.toFixed(2)}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.cell,
-                        styles.dataCell,
-                        styles.mrpCol,
-                        styles.lastCell,
-                        index === groupedStocks.length - 1 &&
-                          styles.lastRowCell,
-                      ]}
-                    >
-                      ₹{item.mrp.toFixed(2)}
-                    </Text>
-                  </View>
-                ))}
+                    MRP per Unit
+                  </Text>
+                </View>
               </View>
-            </ScrollView>
+
+              {/* Scrollable Body */}
+              <ScrollView
+                showsVerticalScrollIndicator={true}
+                style={styles.tableBody}
+              >
+                <View style={styles.table}>
+                  {/* Data Rows */}
+                  {groupedStocks.map((item, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.dataRow,
+                        index === groupedStocks.length - 1 && styles.lastRow,
+                      ]}
+                    >
+                      <Text
+                        style={[styles.cell, styles.dataCell, styles.serialCol]}
+                      >
+                        {index + 1}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.cell,
+                          styles.dataCell,
+                          styles.medicineCol,
+                        ]}
+                      >
+                        {item.medicineName}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.cell,
+                          styles.dataCell,
+                          styles.quantityCol,
+                        ]}
+                      >
+                        {item.quantity}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.cell,
+                          styles.dataCell,
+                          styles.unitCol,
+                        ]}
+                      >
+                        {item.unitPerPackage}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.cell,
+                          styles.dataCell,
+                          styles.priceCol,
+                        ]}
+                      >
+                        ₹{item.price.toFixed(2)}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.cell,
+                          styles.dataCell,
+                          styles.mrpCol,
+                        ]}
+                      >
+                        ₹{item.mrp.toFixed(2)}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.cell,
+                          styles.dataCell,
+                          styles.pricePerUnitCol,
+                        ]}
+                      >
+                        ₹{(item.price / item.unitPerPackage).toFixed(2)}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.cell,
+                          styles.dataCell,
+                          styles.mrpPerUnitCol,
+                          styles.lastCell,
+                        ]}
+                      >
+                        ₹{(item.mrp / item.unitPerPackage).toFixed(2)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+
+              {/* Totals Row */}
+              <View style={styles.totalsRow}>
+                <View style={styles.totalSection}>
+                  <Text style={styles.totalLabel}>Net Price</Text>
+                  <Text style={styles.totalValue}>
+                    ₹
+                    {groupedStocks
+                      .reduce(
+                        (sum, item) =>
+                          sum +
+                          (item.price * item.quantity) / item.unitPerPackage,
+                        0
+                      )
+                      .toFixed(2)}
+                  </Text>
+                </View>
+                <View style={[styles.totalSection, styles.lastTotalSection]}>
+                  <Text style={styles.totalLabel}>Net MRP</Text>
+                  <Text style={styles.totalValue}>
+                    ₹
+                    {groupedStocks
+                      .reduce(
+                        (sum, item) =>
+                          sum +
+                          (item.mrp * item.quantity) / item.unitPerPackage,
+                        0
+                      )
+                      .toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+            </View>
           </ScrollView>
         )}
       </View>
@@ -536,16 +585,66 @@ const styles = StyleSheet.create({
   horizontalScroll: {
     flex: 1,
   },
-  verticalScroll: {
+  tableContainer: {
     flex: 1,
     paddingHorizontal: 10,
     paddingVertical: 10,
   },
-  table: {
+  stickyHeader: {
+    backgroundColor: "#ffff",
     borderWidth: 1,
+    borderBottomWidth: 0,
     borderRadius: 10,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     borderColor: "#aabbdc45",
     overflow: "hidden",
+  },
+  tableBody: {
+    flex: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: "#aabbdc45",
+    backgroundColor: "#fcfcfc",
+  },
+  table: {
+    backgroundColor: "#fcfcfc",
+    borderBottomWidth: 1,
+    borderColor: "#aabbdc45",
+  },
+  totalsRow: {
+    flexDirection: "row",
+    backgroundColor: "#f0f5ff91",
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderRadius: 10,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderColor: "#aabbdc45",
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+  },
+  totalSection: {
+    flex: 1,
+    alignItems: "center",
+    borderRightWidth: 1,
+    borderRightColor: "#aabbdc45",
+    paddingHorizontal: 8,
+  },
+  lastTotalSection: {
+    borderRightWidth: 0,
+  },
+  totalLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#3e5176ff",
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  totalValue: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#3e5176ff",
   },
   headerRow: {
     flexDirection: "row",
@@ -601,6 +700,12 @@ const styles = StyleSheet.create({
   },
   mrpCol: {
     width: 100,
+  },
+  pricePerUnitCol: {
+    width: 120,
+  },
+  mrpPerUnitCol: {
+    width: 120,
   },
   overlay: {
     position: "absolute",
