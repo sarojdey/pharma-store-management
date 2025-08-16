@@ -667,7 +667,7 @@ const styles = StyleSheet.create({
   },
 
   scrollContainer: {
-    minHeight: "100%",
+    flexGrow: 1,
     alignItems: "center",
     padding: 18,
   },

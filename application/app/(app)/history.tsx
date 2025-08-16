@@ -194,18 +194,7 @@ export default function HistoryPage() {
   return (
     <View style={{ flex: 1, position: "relative" }}>
       <TopBar
-        title="History"
         rightComponent={
-          history.length > 0 ? (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={handleResetHistory}
-            >
-              <MaterialIcons name="delete-outline" size={20} color="#d32f2f" />
-            </TouchableOpacity>
-          ) : null
-        }
-        bottomComponent={
           <View style={styles.actionButtons}>
             <TouchableOpacity style={styles.sortButton} onPress={toggleSort}>
               <MaterialIcons
@@ -229,6 +218,19 @@ export default function HistoryPage() {
                 color="rgb(70, 125, 168)"
               />
             </TouchableOpacity>
+
+            {history.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={handleResetHistory}
+              >
+                <MaterialIcons
+                  name="delete-outline"
+                  size={20}
+                  color="#d32f2f"
+                />
+              </TouchableOpacity>
+            )}
           </View>
         }
       />
@@ -252,7 +254,7 @@ export default function HistoryPage() {
               </Text>
             </View>
           ) : (
-            <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 110 }}>
+            <View style={{ flex: 1, width: "100%", gap: 14 }}>
               {history.map((historyItem) => (
                 <HistoryCard key={historyItem.id} history={historyItem} />
               ))}
@@ -395,7 +397,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(211, 47, 47, 0.3)",
   },
   scrollContainer: {
-    minHeight: "100%",
+    flexGrow: 1,
     alignItems: "center",
     padding: 18,
   },

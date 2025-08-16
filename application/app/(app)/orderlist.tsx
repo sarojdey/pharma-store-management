@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   scrollContainer: {
-    minHeight: "100%",
+    flexGrow: 1,
     alignItems: "center",
     padding: 18,
   },

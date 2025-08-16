@@ -1,5 +1,6 @@
 import { useStore } from "@/contexts/StoreContext";
 import { importStoreFromJson, previewImportFile } from "@/utils/importStore";
+import { seedDatabase } from "@/utils/stocksDb";
 import { addStore } from "@/utils/storesDb";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -74,7 +75,7 @@ export default function AddNewStoreScreen() {
 
       setCurrentStore(newStore);
       addStoreToContext(newStore);
-
+      seedDatabase(newStore.id);
       Alert.alert(
         "Store Created!",
         `"${name.trim()}" has been created successfully.`,

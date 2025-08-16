@@ -155,7 +155,7 @@ export default function Suppliers() {
               </Text>
             </View>
           ) : (
-            <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
+            <View style={{ flex: 1, width: "100%", gap: 14 }}>
               {suppliers.map((supplier) => (
                 <SupplierCard
                   onUpdate={loadSuppliers}
@@ -194,7 +194,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
-    flex: 1,
     position: "relative",
   },
   searchInput: {
@@ -221,7 +220,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   scrollContainer: {
-    minHeight: "100%",
+    flexGrow: 1,
     alignItems: "center",
     padding: 18,
   },

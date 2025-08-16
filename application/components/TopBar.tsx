@@ -11,8 +11,6 @@ interface TopBarProps {
   leftComponent?: React.ReactNode;
   centerComponent?: React.ReactNode;
   rightComponent?: React.ReactNode;
-  bottomComponent?: React.ReactNode; // For additional rows like action buttons
-
   position?: "relative" | "absolute";
   customStyle?: object;
 }
@@ -24,7 +22,6 @@ export default function TopBar({
   leftComponent,
   centerComponent,
   rightComponent,
-  bottomComponent,
   position = "relative",
   customStyle,
 }: TopBarProps) {
@@ -40,9 +37,7 @@ export default function TopBar({
 
   return (
     <View style={[styles.topbar, { position }, customStyle]}>
-      {/* Main header row */}
       <View style={styles.headerRow}>
-        {/* Left Section */}
         <View style={styles.leftSection}>
           {leftComponent ||
             (showBackButton && (
@@ -55,20 +50,15 @@ export default function TopBar({
             ))}
         </View>
 
-        {/* Center Section */}
         <View style={styles.centerSection}>
           {centerComponent ||
             (title && <Text style={styles.title}>{title}</Text>)}
         </View>
 
-        {/* Right Section */}
-        <View style={styles.rightSection}>{rightComponent}</View>
+        {rightComponent && (
+          <View style={styles.rightSection}>{rightComponent}</View>
+        )}
       </View>
-
-      {/* Optional bottom row for action buttons */}
-      {bottomComponent && (
-        <View style={styles.bottomRow}>{bottomComponent}</View>
-      )}
     </View>
   );
 }
@@ -91,10 +81,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 18,
   },
-  bottomRow: {
-    paddingHorizontal: 14,
-    paddingBottom: 14,
-  },
+
   leftSection: {
     minWidth: 40,
     alignItems: "flex-start",
@@ -102,7 +89,8 @@ const styles = StyleSheet.create({
   centerSection: {
     flex: 1,
     alignItems: "center",
-    marginHorizontal: 15,
+    marginRight: 15,
+    marginLeft: 5,
   },
   rightSection: {
     minWidth: 40,
