@@ -13,14 +13,15 @@ import {
   View,
 } from "react-native";
 
-import { addSale } from "@/utils/salesDb";
-import { getAllDrugs, updateDrug } from "@/utils/stocksDb";
+import { getSaleById, updateSale, deleteSale } from "@/utils/salesDb";
+import { getAllDrugs, updateDrug, getDrugById } from "@/utils/stocksDb";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Drug } from "@/types";
+import { Drug, Sale } from "@/types";
 import { useStore } from "@/contexts/StoreContext";
 import { addHistory } from "@/utils/historyDb";
 import TopBar from "@/components/TopBar";
@@ -122,7 +123,8 @@ const MedicineDropdownItem: React.FC<MedicineDropdownItemProps> = ({
   </TouchableOpacity>
 );
 
-const salesSchema = z.object({
+// Form schema for editing sales
+const editSalesSchema = z.object({
   medicineId: z.number().int().positive("Please select a medicine"),
   saleQuantity: z
     .number()
@@ -130,18 +132,28 @@ const salesSchema = z.object({
     .positive("Quantity must be greater than 0"),
 });
 
-type FormData = z.infer<typeof salesSchema>;
+type FormData = z.infer<typeof editSalesSchema>;
 
-export default function AddSale() {
+export default function EditSale() {
   const [showMedicineDropdown, setShowMedicineDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [medicines, setMedicines] = useState<Drug[]>([]);
   const [filteredMedicines, setFilteredMedicines] = useState<Drug[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [originalSale, setOriginalSale] = useState<Sale | null>(null);
 
+  // Separate state for selected medicine (UI display only)
   const [selectedMedicine, setSelectedMedicine] = useState<Drug | null>(null);
 
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const { currentStore } = useStore();
+
+  const { saleId } = params;
+  const parsedSaleId = Array.isArray(saleId)
+    ? Number(saleId[0])
+    : Number(saleId);
 
   const {
     control,
@@ -151,7 +163,7 @@ export default function AddSale() {
     setValue,
     formState: { errors },
   } = useForm<FormData>({
-    resolver: zodResolver(salesSchema),
+    resolver: zodResolver(editSalesSchema),
     defaultValues: {
       medicineId: 0,
       saleQuantity: 0,
@@ -161,6 +173,7 @@ export default function AddSale() {
   const saleQuantity = watch("saleQuantity");
 
   useEffect(() => {
+    loadSaleData();
     loadMedicines();
   }, []);
 
@@ -175,6 +188,40 @@ export default function AddSale() {
     }
   }, [searchQuery, medicines]);
 
+  const loadSaleData = async () => {
+    try {
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
+        return;
+      }
+
+      const saleData = await getSaleById(parsedSaleId, currentStore.id);
+
+      if (!saleData) {
+        Alert.alert("Error", "Sale not found.", [
+          { text: "OK", onPress: () => router.back() },
+        ]);
+        return;
+      }
+
+      const sale = saleData as Sale;
+      setOriginalSale(sale);
+
+      // Load the medicine data for this sale
+      const medicineData = await getDrugById(sale.medicineId, currentStore.id);
+      if (medicineData) {
+        setSelectedMedicine(medicineData);
+        setSearchQuery(medicineData.medicineName);
+      }
+
+      setValue("medicineId", sale.medicineId);
+      setValue("saleQuantity", sale.quantity);
+    } catch (error) {
+      console.error("Error loading sale data:", error);
+      Alert.alert("Error", "Failed to load sale data");
+    }
+  };
+
   const loadMedicines = async () => {
     try {
       if (!currentStore?.id) {
@@ -183,11 +230,9 @@ export default function AddSale() {
       }
       const allDrugs = await getAllDrugs(currentStore?.id);
       const typedDrugs = allDrugs as Drug[];
-      const availableDrugs = typedDrugs.filter(
-        (drug: Drug) => drug.quantity > 0
-      );
-      setMedicines(availableDrugs);
-      setFilteredMedicines(availableDrugs);
+      // Include all medicines (even those with 0 stock) for editing purposes
+      setMedicines(typedDrugs);
+      setFilteredMedicines(typedDrugs);
     } catch (error) {
       console.error("Error loading medicines:", error);
       Alert.alert("Error", "Failed to load medicines");
@@ -228,7 +273,12 @@ export default function AddSale() {
     }
   };
 
-  const validateSaleQuantity = (quantity: number, medicine: Drug | null) => {
+  // Validation function for edit
+  const validateEditSaleQuantity = (
+    quantity: number,
+    medicine: Drug | null,
+    originalQuantity: number
+  ) => {
     if (!medicine) {
       return { isValid: false, error: "Please select a medicine first" };
     }
@@ -241,13 +291,25 @@ export default function AddSale() {
       return { isValid: false, error: "Quantity must be a whole number" };
     }
 
-    if (quantity > medicine.quantity) {
-      return {
-        isValid: false,
-        error: `Only ${
-          medicine.quantity
-        } ${medicine.medicineType.toLowerCase()}(s) available in stock`,
-      };
+    // If same medicine, check if we have enough stock considering the original sale
+    if (originalSale && medicine.id === originalSale.medicineId) {
+      const availableStock = medicine.quantity + originalQuantity; // Add back original quantity
+      if (quantity > availableStock) {
+        return {
+          isValid: false,
+          error: `Only ${availableStock} ${medicine.medicineType.toLowerCase()}(s) available in stock (including original sale)`,
+        };
+      }
+    } else {
+      // Different medicine, check current stock
+      if (quantity > medicine.quantity) {
+        return {
+          isValid: false,
+          error: `Only ${
+            medicine.quantity
+          } ${medicine.medicineType.toLowerCase()}(s) available in stock`,
+        };
+      }
     }
 
     return { isValid: true };
@@ -259,9 +321,20 @@ export default function AddSale() {
     try {
       const { medicineId, saleQuantity } = data;
 
-      const validationResult = validateSaleQuantity(
+      if (!originalSale || !selectedMedicine) {
+        Alert.alert(
+          "Error",
+          "Original sale data or selected medicine not found"
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate with selected medicine
+      const validationResult = validateEditSaleQuantity(
         saleQuantity,
-        selectedMedicine
+        selectedMedicine,
+        originalSale.quantity
       );
       if (!validationResult.isValid) {
         Alert.alert("Validation Error", validationResult.error);
@@ -269,15 +342,58 @@ export default function AddSale() {
         return;
       }
 
-      if (!selectedMedicine) {
-        Alert.alert("Error", "Please select a medicine");
+      if (!currentStore?.id) {
+        Alert.alert("Error", "No store selected.");
         setIsSubmitting(false);
         return;
       }
 
+      // Calculate stock adjustments
+      const isSameMedicine = originalSale.medicineId === medicineId;
+      const quantityDifference = saleQuantity - originalSale.quantity;
+
+      // Update stock quantities
+      if (isSameMedicine) {
+        // Same medicine, just adjust the difference
+        if (quantityDifference !== 0) {
+          const newQuantity = selectedMedicine.quantity - quantityDifference;
+          await updateDrug(
+            medicineId,
+            { quantity: newQuantity },
+            currentStore.id
+          );
+        }
+      } else {
+        // Different medicine, restore old and deduct from new
+        // Restore quantity to original medicine
+        const originalMedicine = await getDrugById(
+          originalSale.medicineId,
+          currentStore.id
+        );
+        if (originalMedicine) {
+          const restoredQuantity =
+            originalMedicine.quantity + originalSale.quantity;
+          await updateDrug(
+            originalSale.medicineId,
+            { quantity: restoredQuantity },
+            currentStore.id
+          );
+        }
+
+        // Deduct quantity from new medicine
+        const newQuantity = selectedMedicine.quantity - saleQuantity;
+        await updateDrug(
+          medicineId,
+          { quantity: newQuantity },
+          currentStore.id
+        );
+      }
+
+      // Calculate unit price for the new medicine
       const unitPrice = selectedMedicine.mrp / selectedMedicine.unitPerPackage;
 
-      const saleData = {
+      // Update sale record
+      const updateData = {
         medicineId: selectedMedicine.id,
         medicineName: selectedMedicine.medicineName,
         quantity: saleQuantity,
@@ -286,65 +402,139 @@ export default function AddSale() {
         mrp: selectedMedicine.mrp,
       };
 
-      if (!currentStore?.id) {
-        Alert.alert("Error", "No store selected.");
-        setIsSubmitting(false);
-        return;
-      }
+      const updateResult = await updateSale(
+        parsedSaleId,
+        updateData,
+        currentStore.id
+      );
 
-      const saleResult = await addSale(saleData, currentStore.id);
-
-      if (saleResult.success) {
-        const newQuantity = selectedMedicine.quantity - saleQuantity;
-        const updateResult = await updateDrug(
-          selectedMedicine.id,
-          { quantity: newQuantity },
+      if (updateResult.success) {
+        await addHistory(
+          {
+            operation: `Sale updated - Medicine: ${updateData.medicineName}, Sale ID: ${parsedSaleId}, New Quantity: ${updateData.quantity}`,
+          },
           currentStore?.id
         );
 
-        if (updateResult.success) {
-          await addHistory(
-            {
-              operation: `Sale added - Medicine: ${saleData.medicineName}, Sale ID: ${saleResult.id}, Quantity: ${saleData.quantity}`,
-            },
-            currentStore?.id
-          );
-          const totalAmount = saleQuantity * unitPrice;
+        const totalAmount = saleQuantity * unitPrice;
 
-          Alert.alert(
-            "Sale Added Successfully",
-            `Medicine: ${
-              selectedMedicine.medicineName
-            }\nQuantity: ${saleQuantity}\nTotal Amount: ₹${totalAmount.toFixed(
-              2
-            )}\nRemaining Stock: ${newQuantity}`,
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  reset();
-                  setSelectedMedicine(null);
-                  setSearchQuery("");
-                  loadMedicines();
-                },
+        Alert.alert(
+          "Sale Updated Successfully",
+          `Medicine: ${
+            selectedMedicine.medicineName
+          }\nNew Quantity: ${saleQuantity}\nNew Total Amount: ₹${totalAmount.toFixed(
+            2
+          )}`,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                router.back();
               },
-            ]
-          );
-        } else {
-          Alert.alert("Warning", "Sale recorded but failed to update stock");
-        }
+            },
+          ]
+        );
       } else {
-        Alert.alert("Error", "Failed to add sale record");
+        Alert.alert("Error", "Failed to update sale record");
       }
     } catch (error) {
       console.error("Error submitting sale:", error);
-      Alert.alert("Error", "An error occurred while processing the sale");
+      Alert.alert("Error", "An error occurred while updating the sale");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleDelete = () => {
+    if (!originalSale) return;
+
+    Alert.alert(
+      "Delete Sale",
+      `Are you sure you want to delete this sale record?\n\nMedicine: ${originalSale.medicineName}\nQuantity: ${originalSale.quantity}`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete & Restore Stock",
+          onPress: () => confirmDelete(true),
+        },
+        {
+          text: "Delete Only",
+          style: "destructive",
+          onPress: () => confirmDelete(false),
+        },
+      ]
+    );
+  };
+
+  const confirmDelete = async (restoreStock: boolean) => {
+    setIsDeleting(true);
+
+    try {
+      if (!originalSale || !currentStore?.id) {
+        Alert.alert("Error", "Original sale data or store not found.");
+        return;
+      }
+
+      // Restore stock if requested and medicine still exists
+      if (restoreStock) {
+        const originalMedicine = await getDrugById(
+          originalSale.medicineId,
+          currentStore.id
+        );
+        if (originalMedicine) {
+          const restoredQuantity =
+            originalMedicine.quantity + originalSale.quantity;
+          await updateDrug(
+            originalSale.medicineId,
+            { quantity: restoredQuantity },
+            currentStore.id
+          );
+        }
+      }
+
+      // Delete sale record
+      const result = await deleteSale(parsedSaleId, currentStore.id);
+
+      if (result.success) {
+        await addHistory(
+          {
+            operation: `Sale deleted - Medicine: ${
+              originalSale.medicineName
+            }, Sale ID: ${parsedSaleId}${
+              restoreStock ? ", Stock restored" : ""
+            }`,
+          },
+          currentStore?.id
+        );
+
+        Alert.alert(
+          "Sale Deleted",
+          restoreStock
+            ? `Sale record deleted and stock restored for ${originalSale.medicineName}`
+            : `Sale record deleted for ${originalSale.medicineName}`,
+          [
+            {
+              text: "OK",
+              onPress: () => router.replace("/(app)/sales"),
+            },
+          ]
+        );
+      } else {
+        Alert.alert("Error", "Failed to delete sale record");
+      }
+    } catch (error) {
+      console.error("Error deleting sale:", error);
+      Alert.alert("Error", "An error occurred while deleting the sale");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const selectMedicine = (medicine: Drug) => {
+    // Update both form state and UI state
     setValue("medicineId", medicine.id);
     setSelectedMedicine(medicine);
     setShowMedicineDropdown(false);
@@ -369,6 +559,7 @@ export default function AddSale() {
     if (diffDays <= 30) return "expiring";
     return "consumable";
   };
+
   const stockStatus = (quantity: number) => {
     return quantity === 0
       ? "out of stock"
@@ -377,9 +568,20 @@ export default function AddSale() {
       : "in stock";
   };
 
+  if (!originalSale) {
+    return (
+      <View style={styles.wrapper}>
+        <TopBar title="Edit Sale" />
+        <View style={styles.loadingContainer}>
+          <Text>Loading sale data...</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.wrapper}>
-      <TopBar title="Add Sale" />
+      <TopBar title="Edit Sale" />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -393,6 +595,29 @@ export default function AddSale() {
         >
           <View style={styles.container}>
             <View style={styles.formCard}>
+              {/* Original Sale Info */}
+              <View style={styles.originalSaleInfo}>
+                <Text style={styles.originalSaleTitle}>
+                  Original Sale Details:
+                </Text>
+                <Text style={styles.originalSaleDetail}>
+                  Medicine: {originalSale.medicineName}
+                </Text>
+                <Text style={styles.originalSaleDetail}>
+                  Quantity: {originalSale.quantity}
+                </Text>
+                <Text style={styles.originalSaleDetail}>
+                  Total Amount: ₹
+                  {(
+                    (originalSale.mrp / originalSale.unitPerPackage) *
+                    originalSale.quantity
+                  ).toFixed(2)}
+                </Text>
+                <Text style={styles.originalSaleDetail}>
+                  Sale Date: {formatDate(originalSale.createdAt)}
+                </Text>
+              </View>
+
               <FormField
                 label="Select Medicine"
                 required
@@ -437,10 +662,12 @@ export default function AddSale() {
                     </Text>
                   )}
                   <Text style={styles.selectedMedicineDetail}>
-                    Available Stock: {selectedMedicine.quantity}{" "}
+                    Current Stock: {selectedMedicine.quantity}{" "}
                     {selectedMedicine.medicineType === "Tablet"
                       ? "tablet(s)"
                       : "units"}
+                    {originalSale.medicineId === selectedMedicine.id &&
+                      ` (+${originalSale.quantity} from original sale)`}
                   </Text>
                   <Text style={styles.selectedMedicineDetail}>
                     Package MRP: ₹{selectedMedicine.mrp} (
@@ -497,17 +724,20 @@ export default function AddSale() {
                       />
                     )}
                   />
-                  {selectedMedicine.medicineType === "Tablet" && (
-                    <Text style={styles.helperText}>
-                      Available: {selectedMedicine.quantity} tablet(s)
-                    </Text>
-                  )}
+                  <Text style={styles.helperText}>
+                    Available: {selectedMedicine.quantity}
+                    {originalSale.medicineId === selectedMedicine.id &&
+                      ` (+${originalSale.quantity} from original sale)`}{" "}
+                    {selectedMedicine.medicineType.toLowerCase()}(s)
+                  </Text>
                 </FormField>
               )}
 
               {selectedMedicine && saleQuantity > 0 && (
                 <View style={styles.salesSummary}>
-                  <Text style={styles.salesSummaryTitle}>Sale Summary:</Text>
+                  <Text style={styles.salesSummaryTitle}>
+                    Updated Sale Summary:
+                  </Text>
                   <Text style={styles.salesSummaryItem}>
                     Quantity: {saleQuantity}{" "}
                     {selectedMedicine.medicineType.toLowerCase()}(s)
@@ -519,30 +749,61 @@ export default function AddSale() {
                     ).toFixed(2)}
                   </Text>
                   <Text style={styles.salesSummaryTotal}>
-                    Total Amount: ₹
+                    New Total Amount: ₹
                     {(
                       saleQuantity *
                       (selectedMedicine.mrp / selectedMedicine.unitPerPackage)
                     ).toFixed(2)}
                   </Text>
+                  {originalSale && (
+                    <Text style={styles.salesSummaryItem}>
+                      Original Amount: ₹
+                      {(
+                        (originalSale.mrp / originalSale.unitPerPackage) *
+                        originalSale.quantity
+                      ).toFixed(2)}
+                    </Text>
+                  )}
                 </View>
               )}
             </View>
 
-            <TouchableOpacity
-              style={[
-                styles.submitButton,
-                (!selectedMedicine || isSubmitting || saleQuantity <= 0) &&
-                  styles.submitButtonDisabled,
-              ]}
-              onPress={handleSubmit(onSubmit)}
-              activeOpacity={0.8}
-              disabled={!selectedMedicine || isSubmitting || saleQuantity <= 0}
-            >
-              <Text style={styles.submitButtonText}>
-                {isSubmitting ? "Processing..." : "Add Sale"}
-              </Text>
-            </TouchableOpacity>
+            {/* Button Row */}
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[
+                  styles.deleteButton,
+                  isDeleting && styles.deleteButtonDisabled,
+                ]}
+                onPress={handleDelete}
+                activeOpacity={0.8}
+                disabled={isDeleting || isSubmitting}
+              >
+                <Text style={styles.deleteButtonText}>
+                  {isDeleting ? "Deleting..." : "Delete Sale"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  (!selectedMedicine || isSubmitting || saleQuantity <= 0) &&
+                    styles.submitButtonDisabled,
+                ]}
+                onPress={handleSubmit(onSubmit)}
+                activeOpacity={0.8}
+                disabled={
+                  !selectedMedicine ||
+                  isSubmitting ||
+                  saleQuantity <= 0 ||
+                  isDeleting
+                }
+              >
+                <Text style={styles.submitButtonText}>
+                  {isSubmitting ? "Updating..." : "Update Sale"}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -685,40 +946,30 @@ const styles = StyleSheet.create({
     borderColor: "#ef4444",
     backgroundColor: "#fef2f2",
   },
-  dateInput: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  dateText: {
-    fontSize: 16,
-    color: "#1e293b",
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  halfWidth: {
+  loadingContainer: {
     flex: 1,
-  },
-  submitButton: {
-    backgroundColor: "rgba(223, 241, 255, 0.49)",
-    borderWidth: 1,
-    borderColor: "rgb(152, 175, 192)",
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 60,
   },
-  submitButtonText: {
-    color: "rgb(57, 104, 139)",
+  originalSaleInfo: {
+    backgroundColor: "#fff7ed",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#fed7aa",
+  },
+  originalSaleTitle: {
     fontSize: 16,
     fontWeight: "600",
+    color: "#c2410c",
+    marginBottom: 8,
   },
-  submitButtonDisabled: {
-    opacity: 0.6,
+  originalSaleDetail: {
+    fontSize: 14,
+    color: "#374151",
+    marginBottom: 4,
   },
   error: {
     color: "#ef4444",
@@ -750,10 +1001,6 @@ const styles = StyleSheet.create({
     color: "#374151",
     marginBottom: 4,
   },
-  expiryWarning: {
-    color: "#dc2626",
-    fontWeight: "600",
-  },
   salesSummary: {
     backgroundColor: "#d5ffe241",
     padding: 16,
@@ -779,18 +1026,48 @@ const styles = StyleSheet.create({
     color: "#15803d",
     marginTop: 8,
   },
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    overflow: "hidden",
-    marginTop: 4,
-    padding: 2,
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
   },
-  picker: {
-    height: 55,
-    width: "100%",
-    color: "#111",
+  submitButton: {
+    flex: 1,
+    backgroundColor: "rgba(223, 241, 255, 0.49)",
+    borderWidth: 1,
+    borderColor: "rgb(152, 175, 192)",
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  submitButtonText: {
+    color: "rgb(57, 104, 139)",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  deleteButton: {
+    flex: 1,
+    backgroundColor: "rgba(254, 226, 226, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgb(248, 113, 113)",
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deleteButtonText: {
+    color: "rgb(220, 38, 38)",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  deleteButtonDisabled: {
+    opacity: 0.6,
   },
   modalOverlay: {
     flex: 1,

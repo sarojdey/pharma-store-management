@@ -2,7 +2,7 @@ import { useStore } from "@/contexts/StoreContext";
 import Feather from "@expo/vector-icons/Feather";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useNavigation, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useCallback } from "react";
 import {
   Alert,
@@ -16,8 +16,8 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
 import { getStockForExport } from "@/utils/stocksDb";
+import TopBar from "@/components/TopBar";
 
-// Options Configuration
 const MORE_OPTIONS = [
   {
     key: "storeSettings",
@@ -54,7 +54,6 @@ const MORE_OPTIONS = [
 ];
 
 export default function MoreOptionsScreen() {
-  const navigation = useNavigation();
   const router = useRouter();
   const { currentStore } = useStore();
 
@@ -244,12 +243,7 @@ export default function MoreOptionsScreen() {
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.topbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-sharp" size={24} color="#535353ff" />
-        </TouchableOpacity>
-        <Text style={styles.topbarTitle}>More Options</Text>
-      </View>
+      <TopBar title="More Options" />
 
       <ScrollView
         style={styles.scrollView}
@@ -293,27 +287,6 @@ const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
     backgroundColor: "#f5f5f5",
-  },
-  topbar: {
-    height: 70,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f9f9f9",
-    borderBottomWidth: 1,
-    borderTopWidth: 1,
-    borderBottomColor: "#c3c3c3a6",
-    borderTopColor: "#c3c3c3a6",
-    paddingHorizontal: 10,
-    paddingVertical: 16,
-    gap: 10,
-  },
-  topbarTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#535353ff",
-    flex: 1,
-    textAlign: "center",
-    paddingRight: 40,
   },
   scrollView: {
     flex: 1,

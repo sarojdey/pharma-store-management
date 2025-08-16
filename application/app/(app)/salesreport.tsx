@@ -594,7 +594,6 @@ const styles = StyleSheet.create({
   profitCol: {
     width: 120,
   },
-  // Bottom sheet styles
   overlay: {
     position: "absolute",
     top: 0,

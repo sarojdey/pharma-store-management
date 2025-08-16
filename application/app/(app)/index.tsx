@@ -392,12 +392,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: "center",
   },
-  errorSubtext: {
-    fontSize: 14,
-    color: "#6b7280",
-    textAlign: "center",
-    marginBottom: 16,
-  },
   retryButton: {
     backgroundColor: "#4a90e2",
     paddingHorizontal: 24,
@@ -435,14 +429,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 20,
     color: "#535353ff",
-  },
-  currentStoreInfo: {
-    backgroundColor: "#ffffff",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
   },
 
   chartButton: {

@@ -381,7 +381,6 @@ export const getStockReport = async (
 
     const params: any[] = [storeId];
 
-    // Add date filtering if provided (filtering by when drugs were added/updated)
     if (startDate && endDate) {
       query += " AND DATE(createdAt) BETWEEN DATE(?) AND DATE(?)";
       params.push(startDate, endDate);
@@ -398,14 +397,12 @@ export const getStockReport = async (
 
     const result = await db.getAllAsync(query, params);
 
-    // Type assertion with runtime validation
     return result as GroupedStock[];
   } catch (error) {
     console.error("Error fetching stock report:", error);
     return [];
   }
 };
-// Add this new function to your stocksDb.js file
 
 export const getStockForExport = async (
   storeId: number

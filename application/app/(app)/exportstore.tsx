@@ -43,7 +43,6 @@ export default function ExportStoreComponent({
   const [loading, setLoading] = useState(false);
   const [loadingPreview, setLoadingPreview] = useState(true);
 
-  // Export options
   const [includeHistory, setIncludeHistory] = useState(true);
   const [exportType, setExportType] = useState<"share" | "save">("share");
 
@@ -330,7 +329,7 @@ export default function ExportStoreComponent({
                 Save to Device
               </Text>
               <Text style={styles.exportTypeDescription}>
-                Save export file to device's Downloads folder
+                Save export file to device&apos;s Downloads folder
               </Text>
             </View>
             {exportType === "save" && (

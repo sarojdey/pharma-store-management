@@ -9,7 +9,6 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useNavigation } from "@react-navigation/native";
 import { useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -24,6 +23,7 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
+import TopBar from "@/components/TopBar";
 
 const SORT_OPTIONS: Record<string, string> = {
   medicineName: "Name",
@@ -83,7 +83,6 @@ export default function OutOfStock() {
       path: ["maxQty"],
     });
 
-  const navigation = useNavigation();
   const filterAnim = useRef(new Animated.Value(300)).current;
   const sortAnim = useRef(new Animated.Value(300)).current;
 
@@ -311,51 +310,56 @@ export default function OutOfStock() {
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.topbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-sharp" size={24} color="#333" />
-        </TouchableOpacity>
-
-        <View style={styles.searchContainer}>
-          <TextInput
-            placeholder="Search..."
-            placeholderTextColor="#666"
-            style={styles.searchInput}
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-          />
-          <TouchableOpacity style={styles.iconButton} onPress={onSearch}>
-            <Ionicons
-              name="search-outline"
-              size={24}
-              color="rgb(70, 125, 168)"
+      <TopBar
+        centerComponent={
+          <View style={styles.searchContainer}>
+            <TextInput
+              placeholder="Search..."
+              placeholderTextColor="#666"
+              style={styles.searchInput}
+              value={searchTerm}
+              onChangeText={setSearchTerm}
             />
-          </TouchableOpacity>
-          {searchTerm.length > 0 && (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={handleClearSearch}
-            >
-              <Ionicons name="close" size={20} color="#666" />
+            <TouchableOpacity style={styles.iconButton} onPress={onSearch}>
+              <Ionicons
+                name="search-outline"
+                size={24}
+                color="rgb(70, 125, 168)"
+              />
             </TouchableOpacity>
-          )}
-        </View>
-
-        <TouchableOpacity onPress={openFilter}>
-          <Ionicons name="filter-outline" size={24} color="#333" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={openSort}>
-          <Ionicons name="swap-vertical-outline" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
+            {searchTerm.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={handleClearSearch}
+              >
+                <Ionicons name="close" size={20} color="#666" />
+              </TouchableOpacity>
+            )}
+          </View>
+        }
+        rightComponent={
+          <View style={styles.actionButtons}>
+            <TouchableOpacity onPress={openFilter}>
+              <Ionicons name="filter-outline" size={24} color="#535353ff" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={openSort}>
+              <Ionicons
+                name="swap-vertical-outline"
+                size={24}
+                color="#535353ff"
+              />
+            </TouchableOpacity>
+          </View>
+        }
+      />
       <View style={[styles.grid, { marginBottom: 20, marginTop: 10 }]}>
         <TouchableOpacity
           style={[
             styles.changeButton,
             tabOutOfStock
               ? {
-                  backgroundColor: "rgb(255, 226, 226)",
-                  borderColor: "rgb(196, 147, 147)",
+                  backgroundColor: "#ffefefff",
+                  borderColor: "#a151513e",
                 }
               : { backgroundColor: "#eeeeeeff", borderColor: "#b5b5b53e" },
           ]}
@@ -367,12 +371,12 @@ export default function OutOfStock() {
           <FontAwesome5
             name="box-open"
             size={18}
-            color={tabOutOfStock ? "rgb(189, 63, 63)" : "#90909085"}
+            color={tabOutOfStock ? "#bd3f3fff" : "#90909085"}
           />
           <Text
             style={[
               styles.changeLabel,
-              { color: tabOutOfStock ? "rgb(189, 63, 63)" : "#90909085" },
+              { color: tabOutOfStock ? "#bd3f3fff" : "#90909085" },
             ]}
           >
             Out of Stock
@@ -384,8 +388,8 @@ export default function OutOfStock() {
             styles.changeButton,
             !tabOutOfStock
               ? {
-                  backgroundColor: "rgb(255, 239, 226)",
-                  borderColor: "rgb(196, 169, 147)",
+                  backgroundColor: "#fff6eeff",
+                  borderColor: "#9c765235",
                 }
               : { backgroundColor: "#eeeeeeff", borderColor: "#b5b5b53e" },
           ]}
@@ -397,12 +401,12 @@ export default function OutOfStock() {
           <FontAwesome
             name="warning"
             size={18}
-            color={!tabOutOfStock ? "rgb(197, 118, 45)" : "#90909085"}
+            color={!tabOutOfStock ? "#c5762dff" : "#90909085"}
           />
           <Text
             style={[
               styles.changeLabel,
-              { color: !tabOutOfStock ? "rgb(197, 118, 45)" : "#90909085" },
+              { color: !tabOutOfStock ? "#c5762dff" : "#90909085" },
             ]}
           >
             Low in Stock
@@ -426,7 +430,7 @@ export default function OutOfStock() {
               </Text>
             </View>
           ) : (
-            <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
+            <View style={{ flex: 1, width: "100%", gap: 14 }}>
               {drugs.map((d) => (
                 <DrugCard haveActionButton key={d.id} drug={d} />
               ))}
@@ -687,22 +691,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  topbar: {
-    position: "absolute",
-    top: 0,
-    width: "100%",
+  actionButtons: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#f5f5f5",
-    borderBottomWidth: 1,
-    borderTopWidth: 1,
-    borderBottomColor: "#ccc",
-    borderTopColor: "#ccc",
-    paddingHorizontal: 10,
-    paddingVertical: 12,
-    zIndex: 1000,
-    gap: 10,
+    gap: 12,
   },
 
   searchContainer: {
@@ -712,7 +704,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
-    flex: 1,
   },
 
   searchInput: {
@@ -738,9 +729,10 @@ const styles = StyleSheet.create({
   },
 
   scrollContainer: {
-    minHeight: "100%",
+    flexGrow: 1,
     alignItems: "center",
     padding: 18,
+    paddingBottom: 100,
   },
 
   overlay: {
@@ -780,13 +772,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "500",
     marginBottom: 5,
-    alignSelf: "flex-start",
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
     alignSelf: "flex-start",
   },
 
@@ -974,8 +959,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   changeLabel: {
-    color: "#212121",
-    fontWeight: "600",
+    fontWeight: "700",
     fontSize: 17,
   },
 });

@@ -1,5 +1,6 @@
 import { Sale } from "@/types";
-import { StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString + "Z");
@@ -14,8 +15,12 @@ const formatDate = (dateString: string) => {
 };
 
 export default function SaleCard({ sale }: { sale: Sale }) {
+  const handleCardPress = () => {
+    router.push(`/(app)/editsale?saleId=${sale.id}`);
+  };
+
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={handleCardPress} activeOpacity={0.7}>
       <View style={styles.cardContent}>
         <View style={styles.header}>
           <Text style={styles.saleId}>Sale ID: {sale.id}</Text>
@@ -58,7 +63,7 @@ export default function SaleCard({ sale }: { sale: Sale }) {
           </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

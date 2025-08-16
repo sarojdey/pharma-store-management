@@ -163,7 +163,6 @@ export default function EditStock() {
         if (stockData.purchaseInvoiceNumber)
           setValue("purchaseInvoiceNumber", stockData.purchaseInvoiceNumber);
 
-        // Store current medicine name for delete confirmation
         setCurrentMedicineName(stockData.medicineName);
       } catch (error) {
         console.error("Error loading stock data:", error);

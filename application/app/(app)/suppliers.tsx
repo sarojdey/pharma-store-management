@@ -1,7 +1,7 @@
 import SupplierCard from "@/components/SupplierCard";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { router, useNavigation, useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import React, { useState, useCallback } from "react";
 import {
   ScrollView,
@@ -18,9 +18,9 @@ import { Supplier } from "@/types";
 import { getAllSuppliers, searchSuppliers } from "@/utils/supplierDb";
 import Loader from "@/components/Loader";
 import { useStore } from "@/contexts/StoreContext";
+import TopBar from "@/components/TopBar";
 
 export default function Suppliers() {
-  const navigation = useNavigation();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -96,43 +96,41 @@ export default function Suppliers() {
 
   return (
     <View style={{ flex: 1, position: "relative" }}>
-      <View style={styles.topbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-sharp" size={24} color="#333" />
-        </TouchableOpacity>
-
-        <View style={styles.searchContainer}>
-          <TextInput
-            placeholder="Search suppliers..."
-            placeholderTextColor="#666"
-            style={styles.searchInput}
-            value={searchTerm}
-            onChangeText={handleSearchChange}
-          />
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => handleSearch(searchTerm)}
-          >
-            {isSearching ? (
-              <ActivityIndicator size={24} color="rgb(70, 125, 168)" />
-            ) : (
-              <Ionicons
-                name="search-outline"
-                size={24}
-                color="rgb(70, 125, 168)"
-              />
-            )}
-          </TouchableOpacity>
-          {searchTerm.length > 0 && (
+      <TopBar
+        centerComponent={
+          <View style={styles.searchContainer}>
+            <TextInput
+              placeholder="Search suppliers..."
+              placeholderTextColor="#666"
+              style={styles.searchInput}
+              value={searchTerm}
+              onChangeText={handleSearchChange}
+            />
             <TouchableOpacity
-              style={styles.clearButton}
-              onPress={handleClearSearch}
+              style={styles.iconButton}
+              onPress={() => handleSearch(searchTerm)}
             >
-              <Ionicons name="close" size={20} color="#666" />
+              {isSearching ? (
+                <ActivityIndicator size={24} color="rgb(70, 125, 168)" />
+              ) : (
+                <Ionicons
+                  name="search-outline"
+                  size={24}
+                  color="rgb(70, 125, 168)"
+                />
+              )}
             </TouchableOpacity>
-          )}
-        </View>
-      </View>
+            {searchTerm.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={handleClearSearch}
+              >
+                <Ionicons name="close" size={20} color="#666" />
+              </TouchableOpacity>
+            )}
+          </View>
+        }
+      />
 
       <TouchableOpacity
         style={styles.add}
@@ -174,7 +172,6 @@ export default function Suppliers() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { flex: 1, position: "relative" },
   add: {
     display: "flex",
     position: "absolute",
@@ -189,23 +186,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1000,
-  },
-  topbar: {
-    position: "absolute",
-    top: 0,
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#f5f5f5",
-    borderBottomWidth: 1,
-    borderTopWidth: 1,
-    borderBottomColor: "#ccc",
-    borderTopColor: "#ccc",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    zIndex: 1000,
-    gap: 10,
   },
   searchContainer: {
     flexDirection: "row",

@@ -602,7 +602,6 @@ const styles = StyleSheet.create({
   mrpCol: {
     width: 100,
   },
-  // Bottom sheet styles
   overlay: {
     position: "absolute",
     top: 0,

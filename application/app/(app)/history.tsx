@@ -2,7 +2,7 @@ import HistoryCard from "@/components/HistoryCard";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useFocusEffect, useNavigation } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import React, { useCallback, useRef, useState } from "react";
 import {
   Alert,
@@ -20,11 +20,11 @@ import Loader from "@/components/Loader";
 import { History } from "@/types";
 import { getAllHistory, resetHistoryDb } from "@/utils/historyDb";
 import { useStore } from "@/contexts/StoreContext";
+import TopBar from "@/components/TopBar";
 
 type SortOrder = "asc" | "desc";
 
 export default function HistoryPage() {
-  const navigation = useNavigation();
   const [history, setHistory] = useState<History[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -193,47 +193,45 @@ export default function HistoryPage() {
 
   return (
     <View style={{ flex: 1, position: "relative" }}>
-      <View style={styles.topbar}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back-sharp" size={24} color="#333" />
-          </TouchableOpacity>
-          <Text style={styles.title}>History</Text>
-          {history.length > 0 && (
+      <TopBar
+        title="History"
+        rightComponent={
+          history.length > 0 ? (
             <TouchableOpacity
               style={styles.clearButton}
               onPress={handleResetHistory}
             >
               <MaterialIcons name="delete-outline" size={20} color="#d32f2f" />
             </TouchableOpacity>
-          )}
-        </View>
+          ) : null
+        }
+        bottomComponent={
+          <View style={styles.actionButtons}>
+            <TouchableOpacity style={styles.sortButton} onPress={toggleSort}>
+              <MaterialIcons
+                name={sortOrder === "asc" ? "arrow-upward" : "arrow-downward"}
+                size={18}
+                color="rgb(70, 125, 168)"
+              />
+              <Text style={styles.sortButtonText}>Date</Text>
+            </TouchableOpacity>
 
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.sortButton} onPress={toggleSort}>
-            <MaterialIcons
-              name={sortOrder === "asc" ? "arrow-upward" : "arrow-downward"}
-              size={18}
-              color="rgb(70, 125, 168)"
-            />
-            <Text style={styles.sortButtonText}>Date</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.filterButton,
-              isFiltered && { backgroundColor: "rgba(186, 255, 234, 1)" },
-            ]}
-            onPress={openFilter}
-          >
-            <Ionicons
-              name={isFiltered ? "filter" : "filter-outline"}
-              size={20}
-              color="rgb(70, 125, 168)"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
+            <TouchableOpacity
+              style={[
+                styles.filterButton,
+                isFiltered && { backgroundColor: "rgba(186, 255, 234, 1)" },
+              ]}
+              onPress={openFilter}
+            >
+              <Ionicons
+                name={isFiltered ? "filter" : "filter-outline"}
+                size={20}
+                color="rgb(70, 125, 168)"
+              />
+            </TouchableOpacity>
+          </View>
+        }
+      />
 
       {loading ? (
         <Loader />
@@ -357,32 +355,6 @@ export default function HistoryPage() {
 }
 
 const styles = StyleSheet.create({
-  topbar: {
-    position: "absolute",
-    top: 0,
-    width: "100%",
-    zIndex: 1000,
-  },
-  header: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#f5f5f5",
-    borderBottomWidth: 1,
-    borderTopWidth: 1,
-    borderBottomColor: "#ccc",
-    borderTopColor: "#ccc",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    flex: 1,
-    textAlign: "center",
-  },
   actionButtons: {
     flexDirection: "row",
     alignItems: "center",

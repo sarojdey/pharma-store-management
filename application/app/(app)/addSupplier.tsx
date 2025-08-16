@@ -3,7 +3,6 @@ import { addHistory } from "@/utils/historyDb";
 import { addSupplier } from "@/utils/supplierDb";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigation } from "expo-router";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -20,6 +19,7 @@ import {
   View,
 } from "react-native";
 import { z } from "zod";
+import TopBar from "@/components/TopBar";
 
 const schema = z.object({
   supplierName: z.string().min(1, "Supplier name is required"),
@@ -33,7 +33,6 @@ const schema = z.object({
 
 export default function AddInventoryItem() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigation = useNavigation();
   const { currentStore } = useStore();
   const {
     control,
@@ -110,23 +109,7 @@ export default function AddInventoryItem() {
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.topbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-sharp" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "600",
-            color: "#333",
-            flex: 1,
-            textAlign: "center",
-            paddingRight: 40,
-          }}
-        >
-          Add Supplier
-        </Text>
-      </View>
+      <TopBar title="Add Supplier" />
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -236,22 +219,6 @@ export default function AddInventoryItem() {
 const styles = StyleSheet.create({
   wrapper: { flex: 1, position: "relative" },
 
-  topbar: {
-    position: "absolute",
-    top: 0,
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f5f5f5",
-    borderBottomWidth: 1,
-    borderTopWidth: 1,
-    borderBottomColor: "#ccc",
-    borderTopColor: "#ccc",
-    paddingHorizontal: 10,
-    paddingVertical: 16,
-    zIndex: 1000,
-    gap: 10,
-  },
 
   scrollView: {
     marginTop: 60,

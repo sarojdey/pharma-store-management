@@ -74,7 +74,6 @@ export default function AddNewStoreScreen() {
 
       setCurrentStore(newStore);
       addStoreToContext(newStore);
-      // seedDatabase(newStore.id);
 
       Alert.alert(
         "Store Created!",

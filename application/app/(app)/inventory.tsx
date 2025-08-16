@@ -3,12 +3,12 @@ import Loader from "@/components/Loader";
 import { useStore } from "@/contexts/StoreContext";
 import { Drug } from "@/types";
 import { searchDrugs } from "@/utils/stocksDb";
+import TopBar from "@/components/TopBar";
 
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useNavigation } from "@react-navigation/native";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import {
@@ -83,7 +83,6 @@ export default function HomeScreen() {
       path: ["maxQty"],
     });
 
-  const navigation = useNavigation();
   const filterAnim = useRef(new Animated.Value(300)).current;
   const sortAnim = useRef(new Animated.Value(300)).current;
 
@@ -310,43 +309,48 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.topbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-sharp" size={24} color="#333" />
-        </TouchableOpacity>
-
-        <View style={styles.searchContainer}>
-          <TextInput
-            placeholder="Search..."
-            placeholderTextColor="#666"
-            style={styles.searchInput}
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-          />
-          <TouchableOpacity style={styles.iconButton} onPress={onSearch}>
-            <Ionicons
-              name="search-outline"
-              size={24}
-              color="rgb(70, 125, 168)"
+      <TopBar
+        centerComponent={
+          <View style={styles.searchContainer}>
+            <TextInput
+              placeholder="Search..."
+              placeholderTextColor="#666"
+              style={styles.searchInput}
+              value={searchTerm}
+              onChangeText={setSearchTerm}
             />
-          </TouchableOpacity>
-          {searchTerm.length > 0 && (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={handleClearSearch}
-            >
-              <Ionicons name="close" size={20} color="#666" />
+            <TouchableOpacity style={styles.iconButton} onPress={onSearch}>
+              <Ionicons
+                name="search-outline"
+                size={24}
+                color="rgb(70, 125, 168)"
+              />
             </TouchableOpacity>
-          )}
-        </View>
-
-        <TouchableOpacity onPress={openFilter}>
-          <Ionicons name="filter-outline" size={24} color="#333" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={openSort}>
-          <Ionicons name="swap-vertical-outline" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
+            {searchTerm.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={handleClearSearch}
+              >
+                <Ionicons name="close" size={20} color="#666" />
+              </TouchableOpacity>
+            )}
+          </View>
+        }
+        rightComponent={
+          <View style={styles.actionButtons}>
+            <TouchableOpacity onPress={openFilter}>
+              <Ionicons name="filter-outline" size={24} color="#535353ff" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={openSort}>
+              <Ionicons
+                name="swap-vertical-outline"
+                size={24}
+                color="#535353ff"
+              />
+            </TouchableOpacity>
+          </View>
+        }
+      />
       {isLoading ? (
         <Loader />
       ) : (
@@ -364,7 +368,7 @@ export default function HomeScreen() {
               </Text>
             </View>
           ) : (
-            <View style={{ flex: 1, width: "100%", gap: 14, marginTop: 70 }}>
+            <View style={{ flex: 1, width: "100%", gap: 14 }}>
               {drugs.map((d) => (
                 <DrugCard haveActionButton={false} key={d.id} drug={d} />
               ))}
@@ -625,22 +629,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  topbar: {
-    position: "absolute",
-    top: 0,
-    width: "100%",
+  actionButtons: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#f5f5f5",
-    borderBottomWidth: 1,
-    borderTopWidth: 1,
-    borderBottomColor: "#ccc",
-    borderTopColor: "#ccc",
-    paddingHorizontal: 10,
-    paddingVertical: 12,
-    zIndex: 1000,
-    gap: 10,
+    gap: 12,
   },
 
   searchContainer: {
@@ -650,7 +642,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
-    flex: 1,
   },
 
   searchInput: {
@@ -718,13 +709,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "500",
     marginBottom: 5,
-    alignSelf: "flex-start",
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
     alignSelf: "flex-start",
   },
 

@@ -102,7 +102,6 @@ export default function EditStore() {
           currentStore.id
         );
 
-        // Refresh stores and update current store if it's the one being edited
         await refreshAllStores();
 
         if (currentStore.id === parsedStoreId) {
@@ -130,7 +129,6 @@ export default function EditStore() {
   };
 
   const handleDelete = () => {
-    // Check if this is the only store
     if (allStores.length <= 1) {
       Alert.alert(
         "Cannot Delete Store",
@@ -174,7 +172,6 @@ export default function EditStore() {
           currentStore?.id
         );
 
-        // If the deleted store is the current store, switch to another store
         if (currentStore?.id === parsedStoreId) {
           const remainingStores = allStores.filter(
             (store) => store.id !== parsedStoreId

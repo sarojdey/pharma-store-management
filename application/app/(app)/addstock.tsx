@@ -3,7 +3,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-import { useNavigation, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -22,6 +22,7 @@ import { addDrug } from "../../utils/stocksDb";
 import { Drug } from "@/types";
 import { useStore } from "@/contexts/StoreContext";
 import { addHistory } from "@/utils/historyDb";
+import TopBar from "@/components/TopBar";
 
 const schema = z
   .object({
@@ -93,7 +94,6 @@ export default function AddInventoryItem() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRestockMode, setIsRestockMode] = useState(false);
-  const navigation = useNavigation();
   const params = useLocalSearchParams();
   const { currentStore } = useStore();
   const {
@@ -145,7 +145,7 @@ export default function AddInventoryItem() {
       }
     }
   }, [params.drugDetails, setValue]);
-
+  const navigation = useNavigation();
   const medicineType = watch("medicineType");
 
   const getPackageLabel = () => {
@@ -266,23 +266,7 @@ export default function AddInventoryItem() {
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.topbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-sharp" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "600",
-            color: "#333",
-            flex: 1,
-            textAlign: "center",
-            paddingRight: 40,
-          }}
-        >
-          {isRestockMode ? "Restock Medicine" : "Add Medicine"}
-        </Text>
-      </View>
+      <TopBar title={isRestockMode ? "Restock Medicine" : "Add Medicine"} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -661,26 +645,7 @@ export default function AddInventoryItem() {
 const styles = StyleSheet.create({
   wrapper: { flex: 1, position: "relative" },
 
-  topbar: {
-    height: 70,
-    position: "absolute",
-    top: 0,
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f9f9f9",
-    borderBottomWidth: 1,
-    borderTopWidth: 1,
-    borderBottomColor: "#c3c3c3a6",
-    borderTopColor: "#c3c3c3a6",
-    paddingHorizontal: 10,
-    paddingVertical: 16,
-    zIndex: 1000,
-    gap: 10,
-  },
-
   scrollView: {
-    marginTop: 60,
     flex: 1,
   },
   scrollContent: {
