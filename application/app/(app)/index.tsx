@@ -23,6 +23,10 @@ import {
 const { width: screenWidth } = Dimensions.get("window");
 const SIDEBAR_WIDTH = screenWidth * 0.8;
 
+const truncateStoreName = (name: string, maxLength: number = 20): string => {
+  return name.length > maxLength ? `${name.substring(0, maxLength)}...` : name;
+};
+
 const BUTTONS: {
   key: string;
   label: string;
@@ -205,8 +209,10 @@ export default function HomeScreen() {
                 styles.userName,
                 isCurrentStore && styles.currentUserName,
               ]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
             >
-              {store.name}
+              {truncateStoreName(store.name)}
             </Text>
           </View>
 
@@ -259,7 +265,7 @@ export default function HomeScreen() {
             />
           </View>
           <View>
-            <Text style={styles.appTitle}>{currentStore.name}</Text>
+            <Text style={styles.appTitle} numberOfLines={1} ellipsizeMode="tail">{truncateStoreName(currentStore.name)}</Text>
           </View>
         </View>
         <TouchableOpacity onPress={openSidebar}>
@@ -336,7 +342,7 @@ export default function HomeScreen() {
             ]}
           >
             <View style={styles.sidebarHeader}>
-              <Text style={styles.sidebarTitle}>{currentStore.name}</Text>
+              <Text style={styles.sidebarTitle} numberOfLines={1} ellipsizeMode="tail">{truncateStoreName(currentStore.name)}</Text>
               <TouchableOpacity
                 onPress={closeSidebar}
                 style={styles.closeButton}
