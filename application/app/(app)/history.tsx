@@ -89,13 +89,19 @@ export default function HistoryPage() {
         {
           text: "Clear",
           style: "destructive",
-          onPress: () => {
-            resetHistoryDb();
+          onPress: async () => {
+            try {
+              resetHistoryDb();
+              await loadHistory();
+            } catch (error) {
+              console.error("Error clearing history:", error);
+              Alert.alert("Error", "Failed to clear history. Please try again.");
+            }
           },
         },
       ]
     );
-  }, []);
+  }, [loadHistory]);
 
   const toggleSort = () => {
     const newOrder = sortOrder === "asc" ? "desc" : "asc";

@@ -219,9 +219,7 @@ export default function AddInventoryItem() {
 const styles = StyleSheet.create({
   wrapper: { flex: 1, position: "relative" },
 
-
   scrollView: {
-    marginTop: 60,
     flex: 1,
   },
   scrollContent: {
