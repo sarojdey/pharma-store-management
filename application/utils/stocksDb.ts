@@ -406,17 +406,18 @@ export const getStockReport = async (
 
 export const getStockForExport = async (
   storeId: number
-): Promise<{ medicineName: string }[]> => {
+): Promise<{ medicineName: string; rackNo: string | null }[]> => {
   try {
     const query = `SELECT 
-      medicineName
+      medicineName,
+      rackNo
     FROM drugs 
     WHERE store_id = ?
-    GROUP BY medicineName
-    ORDER BY medicineName`;
+    GROUP BY medicineName, rackNo
+    ORDER BY medicineName, rackNo`;
 
     const result = await db.getAllAsync(query, [storeId]);
-    return result as { medicineName: string }[];
+    return result as { medicineName: string; rackNo: string | null }[];
   } catch (error) {
     console.error("Error fetching stock for export:", error);
     return [];

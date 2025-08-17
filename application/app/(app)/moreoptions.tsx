@@ -143,10 +143,13 @@ export default function MoreOptionsScreen() {
             padding-left: 10px;
           }
           .serial-col {
-            width: 20%;
+            width: 15%;
           }
           .medicine-col {
-            width: 80%;
+            width: 65%;
+          }
+          .rack-col {
+            width: 20%;
           }
         </style>
       </head>
@@ -162,6 +165,7 @@ export default function MoreOptionsScreen() {
             <tr>
               <th class="serial-col">Serial No.</th>
               <th class="medicine-col">Medicine Name</th>
+              <th class="rack-col">Rack No.</th>
             </tr>
           </thead>
           <tbody>
@@ -171,6 +175,7 @@ export default function MoreOptionsScreen() {
               <tr>
                 <td class="serial-col">${index + 1}</td>
                 <td class="medicine-col">${stock.medicineName}</td>
+                <td class="rack-col">${stock.rackNo || 'N/A'}</td>
               </tr>
             `
               )
