@@ -164,8 +164,8 @@ export default function MoreOptionsScreen() {
           <thead>
             <tr>
               <th class="serial-col">Serial No.</th>
+              <th class="rack-col">Rack No.</th> 
               <th class="medicine-col">Medicine Name</th>
-              <th class="rack-col">Rack No.</th>
             </tr>
           </thead>
           <tbody>
@@ -174,8 +174,8 @@ export default function MoreOptionsScreen() {
                 (stock, index) => `
               <tr>
                 <td class="serial-col">${index + 1}</td>
+                <td class="rack-col">${stock.rackNo || "N/A"}</td>
                 <td class="medicine-col">${stock.medicineName}</td>
-                <td class="rack-col">${stock.rackNo || 'N/A'}</td>
               </tr>
             `
               )
