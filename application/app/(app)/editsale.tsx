@@ -583,8 +583,6 @@ export default function EditSale() {
         >
           <View style={styles.container}>
             <View style={styles.formCard}>
-              {/** */}
-              //
               <View style={styles.originalSaleInfo}>
                 <Text style={styles.originalSaleTitle}>
                   Original Sale Details:
@@ -753,8 +751,6 @@ export default function EditSale() {
                 </View>
               )}
             </View>
-            {/** */}
-            //{" "}
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={[

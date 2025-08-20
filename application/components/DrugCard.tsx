@@ -4,8 +4,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 import { router } from "expo-router";
-import { TouchableOpacity } from "react-native";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const LOW_STOCK_THRESHOLD = 30;
 const EXPIRY_WARNING_DAYS = 30;

@@ -202,7 +202,7 @@ const MedicineDetails = () => {
               key={index}
               style={[
                 styles.detailRow,
-                medicineData.length - 1 != index
+                medicineData.length - 1 !== index
                   ? { borderBottomWidth: 1, borderBottomColor: "#f0f0f0" }
                   : {},
               ]}

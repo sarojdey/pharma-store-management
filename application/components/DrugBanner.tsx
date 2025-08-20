@@ -55,7 +55,6 @@ export default function DrugBanner({
     Syringe: require("../assets/images/syringe.png"),
   };
 
-  const randomNumber = Math.floor(Math.random() * 5);
   return (
     <LinearGradient
       colors={[colorPalettes[3].dark, colorPalettes[3].primary]}

@@ -1,7 +1,6 @@
 import { useStore } from "@/contexts/StoreContext";
 import { addHistory } from "@/utils/historyDb";
 import { addSupplier } from "@/utils/supplierDb";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";

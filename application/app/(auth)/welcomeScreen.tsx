@@ -20,7 +20,6 @@ import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system";
 import { addStore } from "@/utils/storesDb";
 import { useStore } from "@/contexts/StoreContext";
-import { seedDatabase } from "@/utils/stocksDb";
 import { importStoreFromJson, previewImportFile } from "@/utils/importStore";
 
 const STORAGE_KEY = "activeStoreId";

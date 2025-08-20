@@ -19,7 +19,6 @@ import {
 } from "react-native";
 import { z } from "zod";
 import { getDrugById, updateDrug, deleteDrug } from "@/utils/stocksDb";
-import { Drug } from "@/types";
 import { useStore } from "@/contexts/StoreContext";
 import { addHistory } from "@/utils/historyDb";
 
@@ -77,7 +76,7 @@ const schema = z
   )
   .refine(
     (data) => {
-      if (data.medicineType === "Tablet" || data.medicineType === "Other") {
+      if (data.medicineType === "Tablet" || data.medicineType === "Capsule" || data.medicineType === "Other") {
         return data.unitPerPackage !== undefined && data.unitPerPackage >= 1;
       }
       return true;
@@ -181,6 +180,8 @@ export default function EditStock() {
     switch (medicineType) {
       case "Tablet":
         return "No. of Strips";
+      case "Capsule":
+        return "No. of Strips";
       case "Syrup":
         return "No. of Bottles";
       case "Injectable":
@@ -197,7 +198,7 @@ export default function EditStock() {
   };
 
   const shouldShowUnitPerPackage = () => {
-    return medicineType === "Tablet" || medicineType === "Other";
+    return medicineType === "Tablet" || medicineType === "Capsule" || medicineType === "Other";
   };
 
   const onSubmit = async (data: z.infer<typeof schema>) => {
@@ -457,6 +458,7 @@ export default function EditStock() {
                         style={styles.picker}
                       >
                         <Picker.Item label="Tablet" value="Tablet" />
+                        <Picker.Item label="Capsule" value="Capsule" />
                         <Picker.Item label="Syrup" value="Syrup" />
                         <Picker.Item label="Injectable" value="Injectable" />
                         <Picker.Item label="Ointment" value="Ointment" />
