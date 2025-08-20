@@ -280,6 +280,9 @@ export const searchDrugs = async ({
       .toISOString()
       .split("T")[0];
 
+    // Handle date filtering based on mode and user filters
+    const hasDateFilter = filterBy === "expiryDate" && filterValue !== undefined;
+
     switch (mode) {
       case "noStockAlert":
         conditions.push("quantity = 0");
@@ -288,12 +291,36 @@ export const searchDrugs = async ({
         conditions.push("quantity > 0 AND quantity <= 30");
         break;
       case "expiredAlert":
-        conditions.push("expiryDate < ?");
-        values.push(todayStr);
+        if (hasDateFilter) {
+          // For expired mode with filter: apply filter but only on expired items
+          if (Array.isArray(filterValue) && filterValue.length === 2) {
+            conditions.push("expiryDate < ? AND expiryDate BETWEEN ? AND ?");
+            values.push(todayStr, filterValue[0], filterValue[1]);
+          } else {
+            conditions.push("expiryDate < ? AND expiryDate = ?");
+            values.push(todayStr, filterValue);
+          }
+        } else {
+          // Default: return only expired items
+          conditions.push("expiryDate < ?");
+          values.push(todayStr);
+        }
         break;
       case "expiringAlert":
-        conditions.push("expiryDate BETWEEN ? AND ?");
-        values.push(todayStr, futureDateStr);
+        if (hasDateFilter) {
+          // For expiring mode with filter: apply filter but ensure no expired items
+          if (Array.isArray(filterValue) && filterValue.length === 2) {
+            conditions.push("expiryDate >= ? AND expiryDate BETWEEN ? AND ?");
+            values.push(todayStr, filterValue[0], filterValue[1]);
+          } else {
+            conditions.push("expiryDate >= ? AND expiryDate = ?");
+            values.push(todayStr, filterValue);
+          }
+        } else {
+          // Default: return only expiring items (30 days from today)
+          conditions.push("expiryDate BETWEEN ? AND ?");
+          values.push(todayStr, futureDateStr);
+        }
         break;
     }
 
@@ -302,8 +329,9 @@ export const searchDrugs = async ({
       values.push(`%${searchTerm}%`);
     }
 
-    if (filterBy && filterValue !== undefined) {
-      const validFilterColumns = ["expiryDate", "quantity"];
+    // Handle non-date filters (like quantity)
+    if (filterBy && filterValue !== undefined && filterBy !== "expiryDate") {
+      const validFilterColumns = ["quantity"];
       if (!validFilterColumns.includes(filterBy)) {
         throw new Error(`Invalid filterBy value: ${filterBy}`);
       }

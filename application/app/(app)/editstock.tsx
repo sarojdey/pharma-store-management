@@ -545,7 +545,6 @@ export default function EditStock() {
                 </View>
               </View>
 
-              {/* Package-based quantity fields */}
               {shouldShowUnitPerPackage() ? (
                 <View style={styles.row}>
                   <View style={styles.halfWidth}>
@@ -709,7 +708,6 @@ export default function EditStock() {
               </FormField>
             </View>
 
-            {/* Button Row */}
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={[

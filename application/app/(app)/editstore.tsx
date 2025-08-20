@@ -280,7 +280,6 @@ export default function EditStore() {
               </FormField>
             </View>
 
-            {/* Button Row */}
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={[

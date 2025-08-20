@@ -256,7 +256,6 @@ export default function AddNewStoreScreen() {
             </View>
           </View>
           <View style={styles.container}>
-            {/* Mode Toggle */}
             <View style={styles.modeToggleSection}>
               <View style={styles.modeToggle}>
                 <TouchableOpacity
@@ -312,9 +311,7 @@ export default function AddNewStoreScreen() {
               </View>
             </View>
 
-            {/* Form Section */}
             <View style={styles.formSection}>
-              {/* Import File Selection */}
               {importMode && (
                 <View style={styles.inputContainer}>
                   <TouchableOpacity
@@ -351,7 +348,6 @@ export default function AddNewStoreScreen() {
                 </View>
               )}
 
-              {/* Import Preview */}
               {importMode && importPreview && (
                 <View style={styles.previewContainer}>
                   <Text style={styles.previewTitle}>Import Preview</Text>
@@ -398,7 +394,6 @@ export default function AddNewStoreScreen() {
                 </View>
               )}
 
-              {/* Store Name Input */}
               <View style={styles.inputContainer}>
                 <View style={styles.inputRow}>
                   <View style={styles.iconContainer}>
@@ -427,7 +422,6 @@ export default function AddNewStoreScreen() {
                 </View>
               </View>
 
-              {/* Action Button */}
               <TouchableOpacity
                 style={[
                   styles.button,
@@ -471,7 +465,6 @@ export default function AddNewStoreScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Import Progress Modal */}
       <Modal
         visible={showProgressModal}
         transparent={true}

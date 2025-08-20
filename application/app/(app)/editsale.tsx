@@ -104,7 +104,9 @@ const MedicineDropdownItem: React.FC<MedicineDropdownItemProps> = ({
           ]}
         >
           Stock: {item.quantity}{" "}
-          {item.medicineType === "Tablet" || item.medicineType === "Capsule" ? item.medicineType.toLowerCase() + "(s)" : "units"}
+          {item.medicineType === "Tablet" || item.medicineType === "Capsule"
+            ? item.medicineType.toLowerCase() + "(s)"
+            : "units"}
         </Text>
         <Text
           style={[
@@ -123,7 +125,6 @@ const MedicineDropdownItem: React.FC<MedicineDropdownItemProps> = ({
   </TouchableOpacity>
 );
 
-// Form schema for editing sales
 const editSalesSchema = z.object({
   medicineId: z.number().int().positive("Please select a medicine"),
   saleQuantity: z
@@ -143,7 +144,6 @@ export default function EditSale() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [originalSale, setOriginalSale] = useState<Sale | null>(null);
 
-  // Separate state for selected medicine (UI display only)
   const [selectedMedicine, setSelectedMedicine] = useState<Drug | null>(null);
 
   const router = useRouter();
@@ -207,7 +207,6 @@ export default function EditSale() {
       const sale = saleData as Sale;
       setOriginalSale(sale);
 
-      // Load the medicine data for this sale
       const medicineData = await getDrugById(sale.medicineId, currentStore.id);
       if (medicineData) {
         setSelectedMedicine(medicineData);
@@ -230,7 +229,7 @@ export default function EditSale() {
       }
       const allDrugs = await getAllDrugs(currentStore?.id);
       const typedDrugs = allDrugs as Drug[];
-      // Include all medicines (even those with 0 stock) for editing purposes
+
       setMedicines(typedDrugs);
       setFilteredMedicines(typedDrugs);
     } catch (error) {
@@ -277,7 +276,6 @@ export default function EditSale() {
     }
   };
 
-  // Validation function for edit
   const validateEditSaleQuantity = (
     quantity: number,
     medicine: Drug | null,
@@ -295,9 +293,8 @@ export default function EditSale() {
       return { isValid: false, error: "Quantity must be a whole number" };
     }
 
-    // If same medicine, check if we have enough stock considering the original sale
     if (originalSale && medicine.id === originalSale.medicineId) {
-      const availableStock = medicine.quantity + originalQuantity; // Add back original quantity
+      const availableStock = medicine.quantity + originalQuantity;
       if (quantity > availableStock) {
         return {
           isValid: false,
@@ -305,7 +302,6 @@ export default function EditSale() {
         };
       }
     } else {
-      // Different medicine, check current stock
       if (quantity > medicine.quantity) {
         return {
           isValid: false,
@@ -334,7 +330,6 @@ export default function EditSale() {
         return;
       }
 
-      // Validate with selected medicine
       const validationResult = validateEditSaleQuantity(
         saleQuantity,
         selectedMedicine,
@@ -352,13 +347,10 @@ export default function EditSale() {
         return;
       }
 
-      // Calculate stock adjustments
       const isSameMedicine = originalSale.medicineId === medicineId;
       const quantityDifference = saleQuantity - originalSale.quantity;
 
-      // Update stock quantities
       if (isSameMedicine) {
-        // Same medicine, just adjust the difference
         if (quantityDifference !== 0) {
           const newQuantity = selectedMedicine.quantity - quantityDifference;
           await updateDrug(
@@ -368,8 +360,6 @@ export default function EditSale() {
           );
         }
       } else {
-        // Different medicine, restore old and deduct from new
-        // Restore quantity to original medicine
         const originalMedicine = await getDrugById(
           originalSale.medicineId,
           currentStore.id
@@ -384,7 +374,6 @@ export default function EditSale() {
           );
         }
 
-        // Deduct quantity from new medicine
         const newQuantity = selectedMedicine.quantity - saleQuantity;
         await updateDrug(
           medicineId,
@@ -393,10 +382,8 @@ export default function EditSale() {
         );
       }
 
-      // Calculate unit price for the new medicine
       const unitPrice = selectedMedicine.mrp / selectedMedicine.unitPerPackage;
 
-      // Update sale record
       const updateData = {
         medicineId: selectedMedicine.id,
         medicineName: selectedMedicine.medicineName,
@@ -482,7 +469,6 @@ export default function EditSale() {
         return;
       }
 
-      // Restore stock if requested and medicine still exists
       if (restoreStock) {
         const originalMedicine = await getDrugById(
           originalSale.medicineId,
@@ -499,7 +485,6 @@ export default function EditSale() {
         }
       }
 
-      // Delete sale record
       const result = await deleteSale(parsedSaleId, currentStore.id);
 
       if (result.success) {
@@ -538,7 +523,6 @@ export default function EditSale() {
   };
 
   const selectMedicine = (medicine: Drug) => {
-    // Update both form state and UI state
     setValue("medicineId", medicine.id);
     setSelectedMedicine(medicine);
     setShowMedicineDropdown(false);
@@ -599,7 +583,8 @@ export default function EditSale() {
         >
           <View style={styles.container}>
             <View style={styles.formCard}>
-              {/* Original Sale Info */}
+              {/** */}
+              //
               <View style={styles.originalSaleInfo}>
                 <Text style={styles.originalSaleTitle}>
                   Original Sale Details:
@@ -621,7 +606,6 @@ export default function EditSale() {
                   Sale Date: {formatDate(originalSale.createdAt)}
                 </Text>
               </View>
-
               <FormField
                 label="Select Medicine"
                 required
@@ -651,7 +635,6 @@ export default function EditSale() {
                   />
                 </TouchableOpacity>
               </FormField>
-
               {selectedMedicine && (
                 <View style={styles.selectedMedicineInfo}>
                   <Text style={styles.selectedMedicineTitle}>
@@ -667,7 +650,8 @@ export default function EditSale() {
                   )}
                   <Text style={styles.selectedMedicineDetail}>
                     Current Stock: {selectedMedicine.quantity}{" "}
-                    {selectedMedicine.medicineType === "Tablet" || selectedMedicine.medicineType === "Capsule"
+                    {selectedMedicine.medicineType === "Tablet" ||
+                    selectedMedicine.medicineType === "Capsule"
                       ? selectedMedicine.medicineType.toLowerCase() + "(s)"
                       : "units"}
                     {originalSale.medicineId === selectedMedicine.id &&
@@ -699,7 +683,6 @@ export default function EditSale() {
                   </Text>
                 </View>
               )}
-
               {selectedMedicine && (
                 <FormField
                   label={getQuantityLabel(selectedMedicine.medicineType)}
@@ -736,7 +719,6 @@ export default function EditSale() {
                   </Text>
                 </FormField>
               )}
-
               {selectedMedicine && saleQuantity > 0 && (
                 <View style={styles.salesSummary}>
                   <Text style={styles.salesSummaryTitle}>
@@ -771,8 +753,8 @@ export default function EditSale() {
                 </View>
               )}
             </View>
-
-            {/* Button Row */}
+            {/** */}
+            //{" "}
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 style={[
@@ -812,7 +794,6 @@ export default function EditSale() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Medicine Selection Modal */}
       <Modal
         visible={showMedicineDropdown}
         animationType="slide"

@@ -190,13 +190,23 @@ export default function Expiry() {
 
   const onSearch = () => fetchDrugs();
 
-  const getDateRange = (days: number) => {
+  const getDateRange = (days: number, isPastRange = false) => {
     const today = new Date();
-    const futureDate = new Date(today.getTime() + days * 24 * 60 * 60 * 1000);
-    return [
-      today.toISOString().split("T")[0],
-      futureDate.toISOString().split("T")[0],
-    ];
+    if (isPastRange) {
+      // For expired items: get range from X days ago to today
+      const pastDate = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
+      return [
+        pastDate.toISOString().split("T")[0],
+        today.toISOString().split("T")[0],
+      ];
+    } else {
+      // For expiring items: get range from today to X days in future
+      const futureDate = new Date(today.getTime() + days * 24 * 60 * 60 * 1000);
+      return [
+        today.toISOString().split("T")[0],
+        futureDate.toISOString().split("T")[0],
+      ];
+    }
   };
 
   const handleClearSearch = () => {
@@ -246,7 +256,7 @@ export default function Expiry() {
       if (activeFilterTab === "expiry") {
         const days = Number(selectedPreset.split(" ")[0]);
         updatedFilterBy = "expiryDate";
-        updatedFilterValue = getDateRange(days) as [string, string];
+        updatedFilterValue = getDateRange(days, tabExpired) as [string, string];
       } else {
         updatedFilterBy = "quantity";
         updatedFilterValue = [0, Number(selectedPreset)];
